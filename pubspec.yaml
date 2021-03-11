@@ -1,8 +1,7 @@
 name: crop_your_image
 description: A new Flutter package project.
 version: 0.0.1
-author:
-homepage:
+homepage: https://github.com/chooyan-eng/crop_your_image
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
