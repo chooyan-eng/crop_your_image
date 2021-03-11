@@ -4,19 +4,19 @@ const dotSize = 16.0;
 const dotPadding = 32.0;
 const dotTotalSize = dotSize + dotPadding * 2;
 
-class MyHomePage extends StatefulWidget {
+class Crop extends StatefulWidget {
   final String imageName;
 
-  const MyHomePage({
+  const Crop({
     Key? key,
     required this.imageName,
   }) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _CropState createState() => _CropState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _CropState extends State<Crop> {
   late TransformationController _controller;
   late Rect _rect;
   Uint8List? _croppedImage;
@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
           if (_croppedImage == null)
             IgnorePointer(
               child: ClipPath(
-                clipper: InvertedCircleClipper(_rect),
+                clipper: _CropAreaClipper(_rect),
                 child: Container(
                   width: double.infinity,
                   height: double.infinity,
@@ -247,10 +247,10 @@ class _DotControl extends StatelessWidget {
   }
 }
 
-class InvertedCircleClipper extends CustomClipper<Path> {
+class _CropAreaClipper extends CustomClipper<Path> {
   final Rect rect;
 
-  InvertedCircleClipper(this.rect);
+  _CropAreaClipper(this.rect);
 
   @override
   Path getClip(Size size) {
