@@ -1,6 +1,6 @@
 # crop_your_image
 
-A new Flutter package project.
+crop_your_image helps your app to embed Widgets for cropping images.
 
 ## Getting Started
 
