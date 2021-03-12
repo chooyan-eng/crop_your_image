@@ -38,7 +38,7 @@ Widget build(BuildContext context) {
 You can call `_controller.crop()` to crop a image.
 
 ```
-child: ElevatedButton(
+ElevatedButton(
   child: Text('Crop it!')
   onPressed: _cropController.crop,
 ),
