@@ -1,3 +1,9 @@
+## [0.0.6] - 2021.03.12
+
+* change the type of `image` parameters to `UInt8List`.
+* return cropped data via `onCropped` callback.
+* now Crop Widget is available at any place and any size.
+
 ## [0.0.5] - 2021.03.12
 
 * Enable controling crop actions via CropController.

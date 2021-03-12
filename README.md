@@ -17,19 +17,25 @@ Place `Crop` Widget wherever you want.
 ```
 Widget build(BuildContext context) {
   return Crop(
-    imageName: 'assets/images/big_pic.png',
+    image: _imageData,
+    onCropped: (image) {
+      // do something with image data 
+    }
   );
 }
 ```
+`image` is Image data whose type is `UInt8List`, and the result of cropping can be obtained via `onCropped` callback.
 
 If you want to controll from your own designed Widgets, create `CropController` and pass it to `controller` property of `Crop`.
-
 ```
 final _controller = CropController();
 
 Widget build(BuildContext context) {
   return Crop(
-    imageName: 'assets/images/big_pic.png',
+    image: _imageData,
+    onCropped: (image) {
+      // do something with image data 
+    }
     controller: _controller,
   );
 }
