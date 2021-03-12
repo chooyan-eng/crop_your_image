@@ -1,14 +1,45 @@
 # crop_your_image
 
-crop_your_image helps your app to embed Widgets for cropping images.
+A flutter plugin which provides a Widget for cropping images.
 
-## Getting Started
+crop_your_image is controllable via `CropController` from whatever your Widgets designed with your brand.
 
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
+## Note
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+Please note that this package is developping (not achieved even alpha). It doesn't have enough functionality, is quite buggy, isn't available confortably.
+
+The basic idea is written above. I will appreciate your idea or suggestions to achieve it.
+
+## Usage
+
+Place `Crop` Widget wherever you want.
+
+```
+Widget build(BuildContext context) {
+  return Crop(
+    imageName: 'assets/images/big_pic.png',
+  );
+}
+```
+
+If you want to controll from your own designed Widgets, create `CropController` and pass it to `controller` property of `Crop`.
+
+```
+final _controller = CropController();
+
+Widget build(BuildContext context) {
+  return Crop(
+    imageName: 'assets/images/big_pic.png',
+    controller: _controller,
+  );
+}
+```
+
+You can call `_controller.crop()` to crop a image.
+
+```
+child: ElevatedButton(
+  child: Text('Crop it!')
+  onPressed: _cropController.crop,
+),
+```

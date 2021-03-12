@@ -1,3 +1,7 @@
+## [0.0.5] - 2021.03.12
+
+* Enable controling crop actions via CropController.
+
 ## [0.0.4] - 2021.03.12
 
 * Rename classes.
