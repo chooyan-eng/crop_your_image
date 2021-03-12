@@ -6,8 +6,11 @@ const dotTotalSize = dotSize + (dotPadding * 2);
 
 /// Widget for the entry point of crop_your_image.
 class Crop extends StatefulWidget {
-  /// image file name in assets
-  final String imageName;
+  /// original image data
+  final Uint8List image;
+
+  /// callback when cropping completed
+  final ValueChanged<Uint8List> onCropped;
 
   /// conroller for control crop actions
   final CropController? controller;
@@ -17,7 +20,8 @@ class Crop extends StatefulWidget {
 
   const Crop({
     Key? key,
-    required this.imageName,
+    required this.image,
+    required this.onCropped,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -30,7 +34,6 @@ class _CropState extends State<Crop> {
   late CropController _cropController;
   late TransformationController _controller;
   late Rect _rect;
-  Uint8List? _croppedImage;
   image.Image? _targetImage;
 
   @override
@@ -38,15 +41,14 @@ class _CropState extends State<Crop> {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()..onCrop = _crop;
 
+    final decodedImage = image.decodeImage(widget.image);
+    setState(() {
+      _targetImage = decodedImage;
+    });
+
     _controller = TransformationController()
       ..addListener(() => setState(() {}));
-    rootBundle.load(widget.imageName).then((assetData) {
-      final dataList = assetData.buffer.asUint8List();
-      final decodedImage = image.decodeImage(dataList);
-      setState(() {
-        _targetImage = decodedImage;
-      });
-    });
+
     super.initState();
   }
 
@@ -79,9 +81,8 @@ class _CropState extends State<Crop> {
         (_rect.width * screenSizeRatio).toInt(),
         (_rect.height * screenSizeRatio).toInt(),
       ));
-      setState(() {
-        _croppedImage = Uint8List.fromList(cropResult);
-      });
+
+      widget.onCropped(Uint8List.fromList(cropResult));
     } else {
       print('data is null');
     }
@@ -99,94 +100,87 @@ class _CropState extends State<Crop> {
             color: Colors.blue.shade50,
             width: double.infinity,
             height: double.infinity,
-            child: _croppedImage == null
-                ? Image.asset(widget.imageName)
-                : Image.memory(_croppedImage!),
+            child: Image.memory(widget.image),
           ),
         ),
-        if (_croppedImage == null)
-          IgnorePointer(
-            child: ClipPath(
-              clipper: _CropAreaClipper(_rect),
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black.withAlpha(100),
-              ),
+        IgnorePointer(
+          child: ClipPath(
+            clipper: _CropAreaClipper(_rect),
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.black.withAlpha(100),
             ),
           ),
-        if (_croppedImage == null)
-          Positioned(
-            left: _rect.left - (dotTotalSize / 2),
-            top: _rect.top - (dotTotalSize / 2),
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  _rect = Rect.fromLTRB(
-                    _rect.left + details.delta.dx,
-                    _rect.top + details.delta.dy,
-                    _rect.right,
-                    _rect.bottom,
-                  );
-                });
-              },
-              child: DotControl(),
-            ),
+        ),
+        Positioned(
+          left: _rect.left - (dotTotalSize / 2),
+          top: _rect.top - (dotTotalSize / 2),
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _rect = Rect.fromLTRB(
+                  _rect.left + details.delta.dx,
+                  _rect.top + details.delta.dy,
+                  _rect.right,
+                  _rect.bottom,
+                );
+              });
+            },
+            child: DotControl(),
           ),
-        if (_croppedImage == null)
-          Positioned(
-            left: _rect.right - (dotTotalSize / 2),
-            top: _rect.top - (dotTotalSize / 2),
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  _rect = Rect.fromLTRB(
-                    _rect.left,
-                    _rect.top + details.delta.dy,
-                    _rect.right + details.delta.dx,
-                    _rect.bottom,
-                  );
-                });
-              },
-              child: DotControl(),
-            ),
+        ),
+        Positioned(
+          left: _rect.right - (dotTotalSize / 2),
+          top: _rect.top - (dotTotalSize / 2),
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _rect = Rect.fromLTRB(
+                  _rect.left,
+                  _rect.top + details.delta.dy,
+                  _rect.right + details.delta.dx,
+                  _rect.bottom,
+                );
+              });
+            },
+            child: DotControl(),
           ),
-        if (_croppedImage == null)
-          Positioned(
-            left: _rect.left - (dotTotalSize / 2),
-            top: _rect.bottom - (dotTotalSize / 2),
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  _rect = Rect.fromLTRB(
-                    _rect.left + details.delta.dx,
-                    _rect.top,
-                    _rect.right,
-                    _rect.bottom + details.delta.dy,
-                  );
-                });
-              },
-              child: DotControl(),
-            ),
+        ),
+        Positioned(
+          left: _rect.left - (dotTotalSize / 2),
+          top: _rect.bottom - (dotTotalSize / 2),
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _rect = Rect.fromLTRB(
+                  _rect.left + details.delta.dx,
+                  _rect.top,
+                  _rect.right,
+                  _rect.bottom + details.delta.dy,
+                );
+              });
+            },
+            child: DotControl(),
           ),
-        if (_croppedImage == null)
-          Positioned(
-            left: _rect.right - (dotTotalSize / 2),
-            top: _rect.bottom - (dotTotalSize / 2),
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  _rect = Rect.fromLTRB(
-                    _rect.left,
-                    _rect.top,
-                    _rect.right + details.delta.dx,
-                    _rect.bottom + details.delta.dy,
-                  );
-                });
-              },
-              child: DotControl(),
-            ),
+        ),
+        Positioned(
+          left: _rect.right - (dotTotalSize / 2),
+          top: _rect.bottom - (dotTotalSize / 2),
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _rect = Rect.fromLTRB(
+                  _rect.left,
+                  _rect.top,
+                  _rect.right + details.delta.dx,
+                  _rect.bottom + details.delta.dy,
+                );
+              });
+            },
+            child: DotControl(),
           ),
+        ),
         Visibility(
           visible: widget.showDebugSheet,
           child: _buildDebugSheet(context),

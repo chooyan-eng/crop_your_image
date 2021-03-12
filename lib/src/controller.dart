@@ -7,6 +7,7 @@ class CropController {
     _delegate = value;
   }
 
+  /// crop given image with current configuration
   void crop() => _delegate.onCrop();
 }
 
