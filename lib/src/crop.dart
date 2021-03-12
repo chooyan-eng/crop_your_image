@@ -5,7 +5,7 @@ const dotPadding = 32.0; // padding for touchable area
 const dotTotalSize = dotSize + (dotPadding * 2);
 
 /// Widget for the entry point of crop_your_image.
-class Crop extends StatefulWidget {
+class Crop extends StatelessWidget {
   /// original image data
   final Uint8List image;
 
@@ -27,10 +27,45 @@ class Crop extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CropState createState() => _CropState();
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (c, constraints) {
+        final newData = MediaQuery.of(c).copyWith(
+          size: constraints.biggest,
+        );
+        return MediaQuery(
+          data: newData,
+          child: _CropEditor(
+            image: image,
+            onCropped: onCropped,
+            controller: controller,
+            showDebugSheet: showDebugSheet,
+          ),
+        );
+      },
+    );
+  }
 }
 
-class _CropState extends State<Crop> {
+class _CropEditor extends StatefulWidget {
+  final Uint8List image;
+  final ValueChanged<Uint8List> onCropped;
+  final CropController? controller;
+  final bool showDebugSheet;
+
+  const _CropEditor({
+    Key? key,
+    required this.image,
+    required this.onCropped,
+    this.controller,
+    this.showDebugSheet = false,
+  }) : super(key: key);
+
+  @override
+  _CropEditorState createState() => _CropEditorState();
+}
+
+class _CropEditorState extends State<_CropEditor> {
   late CropController _cropController;
   late TransformationController _controller;
   late Rect _rect;
