@@ -7,3 +7,5 @@ import 'package:image/image.dart' as image;
 import 'package:flutter/services.dart' show rootBundle;
 
 part 'src/crop.dart';
+part 'src/dot.dart';
+part 'src/controller.dart';

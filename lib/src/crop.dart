@@ -1,15 +1,25 @@
 part of crop_your_image;
 
-const dotSize = 16.0;
-const dotPadding = 32.0;
-const dotTotalSize = dotSize + dotPadding * 2;
+const dotSize = 16.0; // visible dot size
+const dotPadding = 32.0; // padding for touchable area
+const dotTotalSize = dotSize + (dotPadding * 2);
 
+/// Widget for the entry point of crop_your_image.
 class Crop extends StatefulWidget {
+  /// image file name in assets
   final String imageName;
+
+  /// conroller for control crop actions
+  final CropController? controller;
+
+  /// flag to show debug sheet
+  final bool showDebugSheet;
 
   const Crop({
     Key? key,
     required this.imageName,
+    this.controller,
+    this.showDebugSheet = false,
   }) : super(key: key);
 
   @override
@@ -17,6 +27,7 @@ class Crop extends StatefulWidget {
 }
 
 class _CropState extends State<Crop> {
+  late CropController _cropController;
   late TransformationController _controller;
   late Rect _rect;
   Uint8List? _croppedImage;
@@ -24,6 +35,9 @@ class _CropState extends State<Crop> {
 
   @override
   void initState() {
+    _cropController = widget.controller ?? CropController();
+    _cropController.delegate = CropControllerDelegate()..onCrop = _crop;
+
     _controller = TransformationController()
       ..addListener(() => setState(() {}));
     rootBundle.load(widget.imageName).then((assetData) {
@@ -48,6 +62,7 @@ class _CropState extends State<Crop> {
     super.didChangeDependencies();
   }
 
+  /// crop given image with given area.
   void _crop() async {
     if (_targetImage != null) {
       final screenSize = MediaQuery.of(context).size;
@@ -74,173 +89,149 @@ class _CropState extends State<Crop> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          _crop();
-        },
-      ),
-      body: Stack(
-        children: [
-          InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 4.0,
-            transformationController: _controller,
-            child: Container(
-              color: Colors.blue.shade50,
-              width: double.infinity,
-              height: double.infinity,
-              child: _croppedImage == null
-                  ? Image.asset(widget.imageName)
-                  : Image.memory(_croppedImage!),
+    return Stack(
+      children: [
+        InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          transformationController: _controller,
+          child: Container(
+            color: Colors.blue.shade50,
+            width: double.infinity,
+            height: double.infinity,
+            child: _croppedImage == null
+                ? Image.asset(widget.imageName)
+                : Image.memory(_croppedImage!),
+          ),
+        ),
+        if (_croppedImage == null)
+          IgnorePointer(
+            child: ClipPath(
+              clipper: _CropAreaClipper(_rect),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withAlpha(100),
+              ),
             ),
           ),
-          if (_croppedImage == null)
-            IgnorePointer(
-              child: ClipPath(
-                clipper: _CropAreaClipper(_rect),
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.black.withAlpha(100),
-                ),
-              ),
-            ),
-          if (_croppedImage == null)
-            Positioned(
-              left: _rect.left - (dotTotalSize / 2),
-              top: _rect.top - (dotTotalSize / 2),
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _rect = Rect.fromLTRB(
-                      _rect.left + details.delta.dx,
-                      _rect.top + details.delta.dy,
-                      _rect.right,
-                      _rect.bottom,
-                    );
-                  });
-                },
-                child: _DotControl(),
-              ),
-            ),
-          if (_croppedImage == null)
-            Positioned(
-              left: _rect.right - (dotTotalSize / 2),
-              top: _rect.top - (dotTotalSize / 2),
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _rect = Rect.fromLTRB(
-                      _rect.left,
-                      _rect.top + details.delta.dy,
-                      _rect.right + details.delta.dx,
-                      _rect.bottom,
-                    );
-                  });
-                },
-                child: _DotControl(),
-              ),
-            ),
-          if (_croppedImage == null)
-            Positioned(
-              left: _rect.left - (dotTotalSize / 2),
-              top: _rect.bottom - (dotTotalSize / 2),
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _rect = Rect.fromLTRB(
-                      _rect.left + details.delta.dx,
-                      _rect.top,
-                      _rect.right,
-                      _rect.bottom + details.delta.dy,
-                    );
-                  });
-                },
-                child: _DotControl(),
-              ),
-            ),
-          if (_croppedImage == null)
-            Positioned(
-              left: _rect.right - (dotTotalSize / 2),
-              top: _rect.bottom - (dotTotalSize / 2),
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  setState(() {
-                    _rect = Rect.fromLTRB(
-                      _rect.left,
-                      _rect.top,
-                      _rect.right + details.delta.dx,
-                      _rect.bottom + details.delta.dy,
-                    );
-                  });
-                },
-                child: _DotControl(),
-              ),
-            ),
+        if (_croppedImage == null)
           Positioned(
-            bottom: 0,
-            left: 0,
-            child: Container(
-              color: Colors.green.withAlpha(200),
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SCREEN: height ${screenSize.height} / width ${screenSize.width}',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  if (_targetImage != null)
-                    Text(
-                      'IMAGE: height ${_targetImage!.height} / width ${_targetImage!.width}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  Text(
-                    '$_rect',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    'CONTROLLER: ${_controller.value.getMaxScaleOnAxis()}\n${_controller.value}',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  if (_targetImage != null)
-                    Text(
-                      '${_targetImage!.width * _controller.value.getMaxScaleOnAxis()}\n${_controller.value.entry(0, 3).abs() + screenSize.width}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+            left: _rect.left - (dotTotalSize / 2),
+            top: _rect.top - (dotTotalSize / 2),
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _rect = Rect.fromLTRB(
+                    _rect.left + details.delta.dx,
+                    _rect.top + details.delta.dy,
+                    _rect.right,
+                    _rect.bottom,
+                  );
+                });
+              },
+              child: DotControl(),
             ),
-          )
-        ],
-      ),
+          ),
+        if (_croppedImage == null)
+          Positioned(
+            left: _rect.right - (dotTotalSize / 2),
+            top: _rect.top - (dotTotalSize / 2),
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _rect = Rect.fromLTRB(
+                    _rect.left,
+                    _rect.top + details.delta.dy,
+                    _rect.right + details.delta.dx,
+                    _rect.bottom,
+                  );
+                });
+              },
+              child: DotControl(),
+            ),
+          ),
+        if (_croppedImage == null)
+          Positioned(
+            left: _rect.left - (dotTotalSize / 2),
+            top: _rect.bottom - (dotTotalSize / 2),
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _rect = Rect.fromLTRB(
+                    _rect.left + details.delta.dx,
+                    _rect.top,
+                    _rect.right,
+                    _rect.bottom + details.delta.dy,
+                  );
+                });
+              },
+              child: DotControl(),
+            ),
+          ),
+        if (_croppedImage == null)
+          Positioned(
+            left: _rect.right - (dotTotalSize / 2),
+            top: _rect.bottom - (dotTotalSize / 2),
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _rect = Rect.fromLTRB(
+                    _rect.left,
+                    _rect.top,
+                    _rect.right + details.delta.dx,
+                    _rect.bottom + details.delta.dy,
+                  );
+                });
+              },
+              child: DotControl(),
+            ),
+          ),
+        Visibility(
+          visible: widget.showDebugSheet,
+          child: _buildDebugSheet(context),
+        ),
+      ],
     );
   }
-}
 
-class _DotControl extends StatelessWidget {
-  const _DotControl({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  /// build debug sheet containing current scale, position, image size, etc.
+  Widget _buildDebugSheet(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
     return Container(
-      color: Colors.transparent,
-      width: dotTotalSize,
-      height: dotTotalSize,
-      child: Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(dotSize),
-          child: Container(
-            width: dotSize,
-            height: dotSize,
-            color: Colors.white,
-          ),
+      color: Colors.green.withAlpha(200),
+      width: MediaQuery.of(context).size.width,
+      padding: const EdgeInsets.all(16),
+      child: Positioned(
+        bottom: 0,
+        left: 0,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'SCREEN: height ${screenSize.height} / width ${screenSize.width}',
+              style: TextStyle(color: Colors.white),
+            ),
+            if (_targetImage != null)
+              Text(
+                'IMAGE: height ${_targetImage!.height} / width ${_targetImage!.width}',
+                style: TextStyle(color: Colors.white),
+              ),
+            Text(
+              '$_rect',
+              style: TextStyle(color: Colors.white),
+            ),
+            Text(
+              'CONTROLLER: ${_controller.value.getMaxScaleOnAxis()}\n${_controller.value}',
+              style: TextStyle(color: Colors.white),
+            ),
+            if (_targetImage != null)
+              Text(
+                '${_targetImage!.width * _controller.value.getMaxScaleOnAxis()}\n${_controller.value.entry(0, 3).abs() + screenSize.width}',
+                style: TextStyle(color: Colors.white),
+              ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
