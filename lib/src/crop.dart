@@ -132,8 +132,7 @@ class _CropEditorState extends State<_CropEditor> {
     return Stack(
       children: [
         InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
+          scaleEnabled: false,
           transformationController: _controller,
           child: Container(
             color: Colors.blue.shade50,
