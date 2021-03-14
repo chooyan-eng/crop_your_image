@@ -1,3 +1,7 @@
+## [0.1.0] - 2021.03.14
+
+* prevent Dot controls from exceeding thier horizontal / vertical limits.
+
 ## [0.0.6] - 2021.03.12
 
 * change the type of `image` parameters to `UInt8List`.
