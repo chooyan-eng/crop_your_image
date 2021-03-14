@@ -70,6 +70,8 @@ class _CropEditorState extends State<_CropEditor> {
   late TransformationController _controller;
   late Rect _rect;
   image.Image? _targetImage;
+  late double _imageTop;
+  late double _imageBottom;
 
   @override
   void initState() {
@@ -96,6 +98,11 @@ class _CropEditorState extends State<_CropEditor> {
     _rect = Rect.fromLTWH(centerX - initialSize / 2, centerY - initialSize / 2,
         initialSize, initialSize);
 
+    final imageRatio = _targetImage!.width / _targetImage!.height;
+    final imageScreenHeight = screenSize.width / imageRatio;
+    _imageTop = (screenSize.height - imageScreenHeight) / 2;
+    _imageBottom = _imageTop + imageScreenHeight;
+
     super.didChangeDependencies();
   }
 
@@ -105,14 +112,10 @@ class _CropEditorState extends State<_CropEditor> {
       final screenSize = MediaQuery.of(context).size;
       final screenSizeRatio = _targetImage!.width / screenSize.width;
 
-      final imageRatio = _targetImage!.width / _targetImage!.height;
-      final imageScreenHeight = screenSize.width / imageRatio;
-      final imageTop = (screenSize.height - imageScreenHeight) / 2;
-
       final cropResult = image.encodePng(image.copyCrop(
         _targetImage!,
         (_rect.left.toInt() * screenSizeRatio).toInt(),
-        ((_rect.top.toInt() - imageTop) * screenSizeRatio).toInt(),
+        ((_rect.top.toInt() - _imageTop) * screenSizeRatio).toInt(),
         (_rect.width * screenSizeRatio).toInt(),
         (_rect.height * screenSizeRatio).toInt(),
       ));
@@ -125,6 +128,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final rightLimit = MediaQuery.of(context).size.width;
     return Stack(
       children: [
         InteractiveViewer(
@@ -155,8 +159,9 @@ class _CropEditorState extends State<_CropEditor> {
             onPanUpdate: (details) {
               setState(() {
                 _rect = Rect.fromLTRB(
-                  _rect.left + details.delta.dx,
-                  _rect.top + details.delta.dy,
+                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40)),
+                  min(max(_rect.top + details.delta.dy, _imageTop),
+                      _rect.bottom - 40),
                   _rect.right,
                   _rect.bottom,
                 );
@@ -173,8 +178,11 @@ class _CropEditorState extends State<_CropEditor> {
               setState(() {
                 _rect = Rect.fromLTRB(
                   _rect.left,
-                  _rect.top + details.delta.dy,
-                  _rect.right + details.delta.dx,
+                  min(
+                      rightLimit,
+                      min(max(_rect.top + details.delta.dy, _imageTop),
+                          _rect.bottom - 40)),
+                  max(_rect.right + details.delta.dx, _rect.left + 40),
                   _rect.bottom,
                 );
               });
@@ -189,10 +197,11 @@ class _CropEditorState extends State<_CropEditor> {
             onPanUpdate: (details) {
               setState(() {
                 _rect = Rect.fromLTRB(
-                  _rect.left + details.delta.dx,
+                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40)),
                   _rect.top,
                   _rect.right,
-                  _rect.bottom + details.delta.dy,
+                  max(min(_rect.bottom + details.delta.dy, _imageBottom),
+                      _rect.top + 40),
                 );
               });
             },
@@ -208,8 +217,10 @@ class _CropEditorState extends State<_CropEditor> {
                 _rect = Rect.fromLTRB(
                   _rect.left,
                   _rect.top,
-                  _rect.right + details.delta.dx,
-                  _rect.bottom + details.delta.dy,
+                  min(rightLimit,
+                      max(_rect.right + details.delta.dx, _rect.left + 40)),
+                  max(min(_rect.bottom + details.delta.dy, _imageBottom),
+                      _rect.top + 40),
                 );
               });
             },
