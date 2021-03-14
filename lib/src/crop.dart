@@ -167,7 +167,7 @@ class _CropEditorState extends State<_CropEditor> {
                 );
               });
             },
-            child: DotControl(),
+            child: _DotControl(),
           ),
         ),
         Positioned(
@@ -187,7 +187,7 @@ class _CropEditorState extends State<_CropEditor> {
                 );
               });
             },
-            child: DotControl(),
+            child: _DotControl(),
           ),
         ),
         Positioned(
@@ -205,7 +205,7 @@ class _CropEditorState extends State<_CropEditor> {
                 );
               });
             },
-            child: DotControl(),
+            child: _DotControl(),
           ),
         ),
         Positioned(
@@ -224,7 +224,7 @@ class _CropEditorState extends State<_CropEditor> {
                 );
               });
             },
-            child: DotControl(),
+            child: _DotControl(),
           ),
         ),
         Visibility(
@@ -301,4 +301,29 @@ class _CropAreaClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+class _DotControl extends StatelessWidget {
+  const _DotControl({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.transparent,
+      width: dotTotalSize,
+      height: dotTotalSize,
+      child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(dotSize),
+          child: Container(
+            width: dotSize,
+            height: dotSize,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
 }
