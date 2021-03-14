@@ -1,3 +1,6 @@
+## [0.1.1] - 2021.03.14
+* Fix README.md
+
 ## [0.1.0] - 2021.03.14
 
 * prevent Dot controls from exceeding thier horizontal / vertical limits.
