@@ -20,6 +20,7 @@ Place `Crop` Widget wherever you want to place image cropping UI.
 Widget build(BuildContext context) {
   return Crop(
     image: _imageData,
+    aspectRatio: 4 / 3,
     onCropped: (image) {
       // do something with image data 
     }
@@ -27,6 +28,8 @@ Widget build(BuildContext context) {
 }
 ```
 `image` is Image data whose type is `UInt8List`, and the result of cropping can be obtained via `onCropped` callback.
+
+`aspectRatio` is the aspect ratio of cropping area. Set `null` or just omit if you want to crop images with any aspect ratio.
 
 If you want to controll from your own designed Widgets, create a `CropController` instance and pass it to `controller` property of `Crop`.
 ```

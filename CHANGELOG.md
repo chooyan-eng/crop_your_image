@@ -1,3 +1,6 @@
+## [0.1.2] - 2021.03.15
+* Enable to fix aspect ratio if `aspectRatio` property is given.
+
 ## [0.1.1] - 2021.03.14
 * Fix README.md
 
