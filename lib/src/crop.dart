@@ -12,6 +12,10 @@ class Crop extends StatelessWidget {
   /// callback when cropping completed
   final ValueChanged<Uint8List> onCropped;
 
+  /// fixed aspect ratio of cropping area.
+  /// null, by default, means no fixed aspect ratio.
+  final double? aspectRatio;
+
   /// conroller for control crop actions
   final CropController? controller;
 
@@ -22,6 +26,7 @@ class Crop extends StatelessWidget {
     Key? key,
     required this.image,
     required this.onCropped,
+    this.aspectRatio,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -38,6 +43,7 @@ class Crop extends StatelessWidget {
           child: _CropEditor(
             image: image,
             onCropped: onCropped,
+            aspectRatio: aspectRatio,
             controller: controller,
             showDebugSheet: showDebugSheet,
           ),
@@ -50,6 +56,7 @@ class Crop extends StatelessWidget {
 class _CropEditor extends StatefulWidget {
   final Uint8List image;
   final ValueChanged<Uint8List> onCropped;
+  final double? aspectRatio;
   final CropController? controller;
   final bool showDebugSheet;
 
@@ -57,6 +64,7 @@ class _CropEditor extends StatefulWidget {
     Key? key,
     required this.image,
     required this.onCropped,
+    this.aspectRatio,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -91,17 +99,24 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    final initialSize = 100.0;
     final screenSize = MediaQuery.of(context).size;
-    final centerX = screenSize.width / 2;
-    final centerY = screenSize.height / 2;
-    _rect = Rect.fromLTWH(centerX - initialSize / 2, centerY - initialSize / 2,
-        initialSize, initialSize);
 
     final imageRatio = _targetImage!.width / _targetImage!.height;
     final imageScreenHeight = screenSize.width / imageRatio;
     _imageTop = (screenSize.height - imageScreenHeight) / 2;
     _imageBottom = _imageTop + imageScreenHeight;
+
+    // TODO: (chooyan-eng) currently horizontal only
+    final initialSize = imageScreenHeight;
+
+    final centerX = screenSize.width / 2;
+    final centerY = screenSize.height / 2;
+    _rect = Rect.fromLTWH(
+      centerX - initialSize / 2,
+      centerY - initialSize / 2,
+      initialSize,
+      initialSize,
+    );
 
     super.didChangeDependencies();
   }
