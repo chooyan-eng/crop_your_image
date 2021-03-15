@@ -80,6 +80,8 @@ class _CropEditorState extends State<_CropEditor> {
   image.Image? _targetImage;
   late double _imageTop;
   late double _imageBottom;
+  late double _centerX;
+  late double _centerY;
 
   @override
   void initState() {
@@ -107,15 +109,18 @@ class _CropEditorState extends State<_CropEditor> {
     _imageBottom = _imageTop + imageScreenHeight;
 
     // TODO: (chooyan-eng) currently horizontal only
-    final initialSize = imageScreenHeight;
+    _centerX = screenSize.width / 2;
+    _centerY = screenSize.height / 2;
 
-    final centerX = screenSize.width / 2;
-    final centerY = screenSize.height / 2;
+    final initialAspectRatio = widget.aspectRatio ?? 1;
+    final initialSize = imageRatio > initialAspectRatio
+        ? Size(imageScreenHeight * initialAspectRatio, imageScreenHeight)
+        : Size(screenSize.width, screenSize.width / initialAspectRatio);
     _rect = Rect.fromLTWH(
-      centerX - initialSize / 2,
-      centerY - initialSize / 2,
-      initialSize,
-      initialSize,
+      _centerX - initialSize.width / 2,
+      _centerY - initialSize.height / 2,
+      initialSize.width,
+      initialSize.height,
     );
 
     super.didChangeDependencies();
@@ -167,38 +172,138 @@ class _CropEditorState extends State<_CropEditor> {
           ),
         ),
         Positioned(
+          left: _rect.left,
+          top: _rect.top,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              var deltaX = details.delta.dx;
+              var deltaY = details.delta.dy;
+
+              if (_rect.left + deltaX < 0 ||
+                  _rect.right + deltaX > rightLimit) {
+                deltaX = 0;
+              }
+              if (_rect.top + deltaY < _imageTop ||
+                  _rect.bottom + deltaY > _imageBottom) {
+                deltaY = 0;
+              }
+              setState(() {
+                _rect = Rect.fromLTWH(
+                  _rect.left + deltaX,
+                  _rect.top + deltaY,
+                  _rect.width,
+                  _rect.height,
+                );
+              });
+            },
+            child: Container(
+              width: _rect.width,
+              height: _rect.height,
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+        Positioned(
           left: _rect.left - (dotTotalSize / 2),
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              final newLeft =
+                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40));
+              final newTop = min(max(_rect.top + details.delta.dy, _imageTop),
+                  _rect.bottom - 40);
               setState(() {
-                _rect = Rect.fromLTRB(
-                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40)),
+                if (widget.aspectRatio == null) {
+                  _rect = Rect.fromLTRB(
+                    newLeft.toDouble(),
+                    newTop,
+                    _rect.right,
+                    _rect.bottom,
+                  );
+                } else {
+                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
+                    var newWidth = _rect.right - newLeft;
+                    var newHeight = newWidth / widget.aspectRatio!;
+                    if (_rect.bottom - newHeight < _imageTop) {
+                      newHeight = _rect.bottom - _imageTop;
+                      newWidth = newHeight * widget.aspectRatio!;
+                    }
+
+                    _rect = Rect.fromLTRB(
+                      _rect.right - newWidth,
+                      _rect.bottom - newHeight,
+                      _rect.right,
+                      _rect.bottom,
+                    );
+                  } else {
+                    var newHeight = _rect.bottom - newTop;
+                    var newWidth = newHeight * widget.aspectRatio!;
+                    if (_rect.right - newWidth < 0) {
+                      newWidth = _rect.right;
+                      newHeight = newWidth / widget.aspectRatio!;
+                    }
+                    _rect = Rect.fromLTRB(
+                      _rect.right - newWidth,
+                      _rect.bottom - newHeight,
+                      _rect.right,
+                      _rect.bottom,
+                    );
+                  }
+                }
+              });
+            },
+            child: _DotControl(),
+          ),
+        ),
+        Positioned(
+          left: _rect.right - (dotTotalSize / 2),
+          top: _rect.top - (dotTotalSize / 2),
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              final newTop = min(
+                  rightLimit,
                   min(max(_rect.top + details.delta.dy, _imageTop),
-                      _rect.bottom - 40),
-                  _rect.right,
-                  _rect.bottom,
-                );
-              });
-            },
-            child: _DotControl(),
-          ),
-        ),
-        Positioned(
-          left: _rect.right - (dotTotalSize / 2),
-          top: _rect.top - (dotTotalSize / 2),
-          child: GestureDetector(
-            onPanUpdate: (details) {
+                      _rect.bottom - 40));
+              final newRight =
+                  max(_rect.right + details.delta.dx, _rect.left + 40);
               setState(() {
-                _rect = Rect.fromLTRB(
-                  _rect.left,
-                  min(
-                      rightLimit,
-                      min(max(_rect.top + details.delta.dy, _imageTop),
-                          _rect.bottom - 40)),
-                  max(_rect.right + details.delta.dx, _rect.left + 40),
-                  _rect.bottom,
-                );
+                if (widget.aspectRatio == null) {
+                  _rect = Rect.fromLTRB(
+                    _rect.left,
+                    newRight,
+                    newTop,
+                    _rect.bottom,
+                  );
+                } else {
+                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
+                    var newWidth = newRight - _rect.left;
+                    var newHeight = newWidth / widget.aspectRatio!;
+                    if (_rect.bottom - newHeight < _imageTop) {
+                      newHeight = _rect.bottom - _imageTop;
+                      newWidth = newHeight * widget.aspectRatio!;
+                    }
+
+                    _rect = Rect.fromLTWH(
+                      _rect.left,
+                      _rect.bottom - newHeight,
+                      newWidth,
+                      newHeight,
+                    );
+                  } else {
+                    var newHeight = _rect.bottom - newTop;
+                    var newWidth = newHeight * widget.aspectRatio!;
+                    if (_rect.left + newWidth > rightLimit) {
+                      newWidth = rightLimit - _rect.left;
+                      newHeight = newWidth / widget.aspectRatio!;
+                    }
+                    _rect = Rect.fromLTRB(
+                      _rect.left,
+                      _rect.bottom - newHeight,
+                      _rect.left + newWidth,
+                      _rect.bottom,
+                    );
+                  }
+                }
               });
             },
             child: _DotControl(),
@@ -209,14 +314,50 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              final newLeft =
+                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40));
+              final newBottom = max(
+                  min(_rect.bottom + details.delta.dy, _imageBottom),
+                  _rect.top + 40);
+
               setState(() {
-                _rect = Rect.fromLTRB(
-                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40)),
-                  _rect.top,
-                  _rect.right,
-                  max(min(_rect.bottom + details.delta.dy, _imageBottom),
-                      _rect.top + 40),
-                );
+                if (widget.aspectRatio == null) {
+                  _rect = Rect.fromLTRB(
+                    newLeft.toDouble(),
+                    _rect.top,
+                    _rect.right,
+                    newBottom,
+                  );
+                } else {
+                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
+                    var newWidth = _rect.right - newLeft;
+                    var newHeight = newWidth / widget.aspectRatio!;
+                    if (_rect.top + newHeight > _imageBottom) {
+                      newHeight = _imageBottom - _rect.top;
+                      newWidth = newHeight * widget.aspectRatio!;
+                    }
+
+                    _rect = Rect.fromLTRB(
+                      _rect.right - newWidth,
+                      _rect.top,
+                      _rect.right,
+                      _rect.top + newHeight,
+                    );
+                  } else {
+                    var newHeight = newBottom - _rect.top;
+                    var newWidth = newHeight * widget.aspectRatio!;
+                    if (_rect.right - newWidth < 0) {
+                      newWidth = _rect.right;
+                      newHeight = newWidth / widget.aspectRatio!;
+                    }
+                    _rect = Rect.fromLTRB(
+                      _rect.right - newWidth,
+                      _rect.top,
+                      _rect.right,
+                      _rect.top + newHeight,
+                    );
+                  }
+                }
               });
             },
             child: _DotControl(),
@@ -227,15 +368,49 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              final newRight = min(rightLimit,
+                  max(_rect.right + details.delta.dx, _rect.left + 40));
+              final newBottom = max(
+                  min(_rect.bottom + details.delta.dy, _imageBottom),
+                  _rect.top + 40);
               setState(() {
-                _rect = Rect.fromLTRB(
-                  _rect.left,
-                  _rect.top,
-                  min(rightLimit,
-                      max(_rect.right + details.delta.dx, _rect.left + 40)),
-                  max(min(_rect.bottom + details.delta.dy, _imageBottom),
-                      _rect.top + 40),
-                );
+                if (widget.aspectRatio == null) {
+                  _rect = Rect.fromLTRB(
+                    _rect.left,
+                    _rect.top,
+                    newRight,
+                    newBottom,
+                  );
+                } else {
+                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
+                    var newWidth = newRight - _rect.left;
+                    var newHeight = newWidth / widget.aspectRatio!;
+                    if (_rect.top + newHeight > _imageBottom) {
+                      newHeight = _imageBottom - _rect.top;
+                      newWidth = newHeight * widget.aspectRatio!;
+                    }
+
+                    _rect = Rect.fromLTWH(
+                      _rect.left,
+                      _rect.top,
+                      newWidth,
+                      newHeight,
+                    );
+                  } else {
+                    var newHeight = newBottom - _rect.top;
+                    var newWidth = newHeight * widget.aspectRatio!;
+                    if (_rect.left + newWidth > rightLimit) {
+                      newWidth = rightLimit - _rect.left;
+                      newHeight = newWidth / widget.aspectRatio!;
+                    }
+                    _rect = Rect.fromLTWH(
+                      _rect.left,
+                      _rect.top,
+                      newWidth,
+                      newHeight,
+                    );
+                  }
+                }
               });
             },
             child: _DotControl(),
