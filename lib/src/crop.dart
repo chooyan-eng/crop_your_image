@@ -83,10 +83,14 @@ class _CropEditorState extends State<_CropEditor> {
   late double _centerX;
   late double _centerY;
 
+  double? _aspectRatio;
+
   @override
   void initState() {
     _cropController = widget.controller ?? CropController();
-    _cropController.delegate = CropControllerDelegate()..onCrop = _crop;
+    _cropController.delegate = CropControllerDelegate()
+      ..onCrop = _crop
+      ..onChangeAspectRatio = _resizeWith;
 
     final decodedImage = image.decodeImage(widget.image);
     setState(() {
@@ -112,18 +116,31 @@ class _CropEditorState extends State<_CropEditor> {
     _centerX = screenSize.width / 2;
     _centerY = screenSize.height / 2;
 
-    final initialAspectRatio = widget.aspectRatio ?? 1;
+    _resizeWith(widget.aspectRatio);
+
+    super.didChangeDependencies();
+  }
+
+  /// resize cropping area with given aspect ratio.
+  void _resizeWith(double? aspectRatio) {
+    _aspectRatio = aspectRatio;
+
+    final initialAspectRatio = _aspectRatio ?? 1;
+    final screenSize = MediaQuery.of(context).size;
+    final imageRatio = _targetImage!.width / _targetImage!.height;
+    final imageScreenHeight = screenSize.width / imageRatio;
+
     final initialSize = imageRatio > initialAspectRatio
         ? Size(imageScreenHeight * initialAspectRatio, imageScreenHeight)
         : Size(screenSize.width, screenSize.width / initialAspectRatio);
-    _rect = Rect.fromLTWH(
-      _centerX - initialSize.width / 2,
-      _centerY - initialSize.height / 2,
-      initialSize.width,
-      initialSize.height,
-    );
-
-    super.didChangeDependencies();
+    setState(() {
+      _rect = Rect.fromLTWH(
+        _centerX - initialSize.width / 2,
+        _centerY - initialSize.height / 2,
+        initialSize.width,
+        initialSize.height,
+      );
+    });
   }
 
   /// crop given image with given area.
@@ -219,7 +236,7 @@ class _CropEditorState extends State<_CropEditor> {
               final newTop = min(max(_rect.top + details.delta.dy, _imageTop),
                   _rect.bottom - 40);
               setState(() {
-                if (widget.aspectRatio == null) {
+                if (_aspectRatio == null) {
                   _rect = Rect.fromLTRB(
                     newLeft.toDouble(),
                     newTop,
@@ -229,10 +246,10 @@ class _CropEditorState extends State<_CropEditor> {
                 } else {
                   if (details.delta.dx.abs() > details.delta.dy.abs()) {
                     var newWidth = _rect.right - newLeft;
-                    var newHeight = newWidth / widget.aspectRatio!;
+                    var newHeight = newWidth / _aspectRatio!;
                     if (_rect.bottom - newHeight < _imageTop) {
                       newHeight = _rect.bottom - _imageTop;
-                      newWidth = newHeight * widget.aspectRatio!;
+                      newWidth = newHeight * _aspectRatio!;
                     }
 
                     _rect = Rect.fromLTRB(
@@ -243,10 +260,10 @@ class _CropEditorState extends State<_CropEditor> {
                     );
                   } else {
                     var newHeight = _rect.bottom - newTop;
-                    var newWidth = newHeight * widget.aspectRatio!;
+                    var newWidth = newHeight * _aspectRatio!;
                     if (_rect.right - newWidth < 0) {
                       newWidth = _rect.right;
-                      newHeight = newWidth / widget.aspectRatio!;
+                      newHeight = newWidth / _aspectRatio!;
                     }
                     _rect = Rect.fromLTRB(
                       _rect.right - newWidth,
@@ -273,7 +290,7 @@ class _CropEditorState extends State<_CropEditor> {
               final newRight =
                   max(_rect.right + details.delta.dx, _rect.left + 40);
               setState(() {
-                if (widget.aspectRatio == null) {
+                if (_aspectRatio == null) {
                   _rect = Rect.fromLTRB(
                     _rect.left,
                     newTop,
@@ -283,10 +300,10 @@ class _CropEditorState extends State<_CropEditor> {
                 } else {
                   if (details.delta.dx.abs() > details.delta.dy.abs()) {
                     var newWidth = newRight - _rect.left;
-                    var newHeight = newWidth / widget.aspectRatio!;
+                    var newHeight = newWidth / _aspectRatio!;
                     if (_rect.bottom - newHeight < _imageTop) {
                       newHeight = _rect.bottom - _imageTop;
-                      newWidth = newHeight * widget.aspectRatio!;
+                      newWidth = newHeight * _aspectRatio!;
                     }
 
                     _rect = Rect.fromLTWH(
@@ -297,10 +314,10 @@ class _CropEditorState extends State<_CropEditor> {
                     );
                   } else {
                     var newHeight = _rect.bottom - newTop;
-                    var newWidth = newHeight * widget.aspectRatio!;
+                    var newWidth = newHeight * _aspectRatio!;
                     if (_rect.left + newWidth > rightLimit) {
                       newWidth = rightLimit - _rect.left;
-                      newHeight = newWidth / widget.aspectRatio!;
+                      newHeight = newWidth / _aspectRatio!;
                     }
                     _rect = Rect.fromLTRB(
                       _rect.left,
@@ -327,7 +344,7 @@ class _CropEditorState extends State<_CropEditor> {
                   _rect.top + 40);
 
               setState(() {
-                if (widget.aspectRatio == null) {
+                if (_aspectRatio == null) {
                   _rect = Rect.fromLTRB(
                     newLeft.toDouble(),
                     _rect.top,
@@ -337,10 +354,10 @@ class _CropEditorState extends State<_CropEditor> {
                 } else {
                   if (details.delta.dx.abs() > details.delta.dy.abs()) {
                     var newWidth = _rect.right - newLeft;
-                    var newHeight = newWidth / widget.aspectRatio!;
+                    var newHeight = newWidth / _aspectRatio!;
                     if (_rect.top + newHeight > _imageBottom) {
                       newHeight = _imageBottom - _rect.top;
-                      newWidth = newHeight * widget.aspectRatio!;
+                      newWidth = newHeight * _aspectRatio!;
                     }
 
                     _rect = Rect.fromLTRB(
@@ -351,10 +368,10 @@ class _CropEditorState extends State<_CropEditor> {
                     );
                   } else {
                     var newHeight = newBottom - _rect.top;
-                    var newWidth = newHeight * widget.aspectRatio!;
+                    var newWidth = newHeight * _aspectRatio!;
                     if (_rect.right - newWidth < 0) {
                       newWidth = _rect.right;
-                      newHeight = newWidth / widget.aspectRatio!;
+                      newHeight = newWidth / _aspectRatio!;
                     }
                     _rect = Rect.fromLTRB(
                       _rect.right - newWidth,
@@ -380,7 +397,7 @@ class _CropEditorState extends State<_CropEditor> {
                   min(_rect.bottom + details.delta.dy, _imageBottom),
                   _rect.top + 40);
               setState(() {
-                if (widget.aspectRatio == null) {
+                if (_aspectRatio == null) {
                   _rect = Rect.fromLTRB(
                     _rect.left,
                     _rect.top,
@@ -390,10 +407,10 @@ class _CropEditorState extends State<_CropEditor> {
                 } else {
                   if (details.delta.dx.abs() > details.delta.dy.abs()) {
                     var newWidth = newRight - _rect.left;
-                    var newHeight = newWidth / widget.aspectRatio!;
+                    var newHeight = newWidth / _aspectRatio!;
                     if (_rect.top + newHeight > _imageBottom) {
                       newHeight = _imageBottom - _rect.top;
-                      newWidth = newHeight * widget.aspectRatio!;
+                      newWidth = newHeight * _aspectRatio!;
                     }
 
                     _rect = Rect.fromLTWH(
@@ -404,10 +421,10 @@ class _CropEditorState extends State<_CropEditor> {
                     );
                   } else {
                     var newHeight = newBottom - _rect.top;
-                    var newWidth = newHeight * widget.aspectRatio!;
+                    var newWidth = newHeight * _aspectRatio!;
                     if (_rect.left + newWidth > rightLimit) {
                       newWidth = rightLimit - _rect.left;
-                      newHeight = newWidth / widget.aspectRatio!;
+                      newHeight = newWidth / _aspectRatio!;
                     }
                     _rect = Rect.fromLTWH(
                       _rect.left,
