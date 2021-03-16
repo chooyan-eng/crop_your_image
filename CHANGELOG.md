@@ -1,3 +1,7 @@
+## [0.2.0] - 2021.03.16
+* Enable to change `aspectRatio` dynamically via `CropController`.
+* Enable to set `initialSize` via `Crop` constructor.
+
 ## [0.1.4] - 2021.03.16
 * Bug fixed. and improve performance.
 
