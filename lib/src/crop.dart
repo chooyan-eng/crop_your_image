@@ -16,6 +16,12 @@ class Crop extends StatelessWidget {
   /// null, by default, means no fixed aspect ratio.
   final double? aspectRatio;
 
+  /// initial size of cropping area.
+  /// Set double value less than 1.0.
+  /// if initialSize is 1.0 (or null),
+  /// cropping area would expand as much as possible.
+  final double? initialSize;
+
   /// conroller for control crop actions
   final CropController? controller;
 
@@ -27,6 +33,7 @@ class Crop extends StatelessWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
+    this.initialSize,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -44,6 +51,7 @@ class Crop extends StatelessWidget {
             image: image,
             onCropped: onCropped,
             aspectRatio: aspectRatio,
+            initialSize: initialSize,
             controller: controller,
             showDebugSheet: showDebugSheet,
           ),
@@ -57,6 +65,7 @@ class _CropEditor extends StatefulWidget {
   final Uint8List image;
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
+  final double? initialSize;
   final CropController? controller;
   final bool showDebugSheet;
 
@@ -65,6 +74,7 @@ class _CropEditor extends StatefulWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
+    this.initialSize,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -130,9 +140,12 @@ class _CropEditorState extends State<_CropEditor> {
     final imageRatio = _targetImage!.width / _targetImage!.height;
     final imageScreenHeight = screenSize.width / imageRatio;
 
+    final initialSizeRatio = widget.initialSize ?? 1;
     final initialSize = imageRatio > initialAspectRatio
-        ? Size(imageScreenHeight * initialAspectRatio, imageScreenHeight)
-        : Size(screenSize.width, screenSize.width / initialAspectRatio);
+        ? Size((imageScreenHeight * initialAspectRatio) * initialSizeRatio,
+            imageScreenHeight * initialSizeRatio)
+        : Size(screenSize.width * initialSizeRatio,
+            (screenSize.width / initialAspectRatio) * initialSizeRatio);
     setState(() {
       _rect = Rect.fromLTWH(
         _centerX - initialSize.width / 2,
