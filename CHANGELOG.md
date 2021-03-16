@@ -1,3 +1,6 @@
+## [0.1.3] - 2021.03.16
+* Fix not to block UI update when cropping image.
+
 ## [0.1.2] - 2021.03.15
 * Enable to fix aspect ratio if `aspectRatio` property is given.
 
