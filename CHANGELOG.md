@@ -1,3 +1,6 @@
+## [0.1.4] - 2021.03.16
+* Bug fixed. and improve performance.
+
 ## [0.1.3] - 2021.03.16
 * Fix not to block UI update when cropping image.
 
