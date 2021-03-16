@@ -104,13 +104,18 @@ class _CropEditorState extends State<_CropEditor> {
   late double _centerY;
 
   double? _aspectRatio;
+  bool _isCircle = false;
 
   @override
   void initState() {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
-      ..onChangeAspectRatio = _resizeWith;
+      ..onChangeAspectRatio = _resizeWith
+      ..onChangeIsCircle = (isCircle) {
+        _isCircle = isCircle;
+        _resizeWith(_aspectRatio);
+      };
 
     final decodedImage = image.decodeImage(widget.image);
     setState(() {
@@ -136,6 +141,7 @@ class _CropEditorState extends State<_CropEditor> {
     _centerX = screenSize.width / 2;
     _centerY = screenSize.height / 2;
 
+    _isCircle = widget.isCircle;
     _resizeWith(widget.aspectRatio);
 
     super.didChangeDependencies();
@@ -143,7 +149,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// resize cropping area with given aspect ratio.
   void _resizeWith(double? aspectRatio) {
-    _aspectRatio = widget.isCircle ? 1 : aspectRatio;
+    _aspectRatio = _isCircle ? 1 : aspectRatio;
 
     final initialAspectRatio = _aspectRatio ?? 1;
     final screenSize = MediaQuery.of(context).size;
@@ -174,7 +180,7 @@ class _CropEditorState extends State<_CropEditor> {
 
       // use compute() not to block UI update
       final cropResult = await compute(
-        widget.isCircle ? _doCropCircle : _doCrop,
+        _isCircle ? _doCropCircle : _doCrop,
         [
           _targetImage!,
           Rect.fromLTWH(
@@ -208,7 +214,7 @@ class _CropEditorState extends State<_CropEditor> {
         ),
         IgnorePointer(
           child: ClipPath(
-            clipper: widget.isCircle
+            clipper: _isCircle
                 ? _CircleCropAreaClipper(_rect)
                 : _CropAreaClipper(_rect),
             child: Container(

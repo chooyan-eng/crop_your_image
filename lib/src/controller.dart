@@ -13,6 +13,10 @@ class CropController {
   /// change fixed aspect ratio
   /// if [value] is null, cropping area can be moved without fixed aspect ratio.
   set aspectRatio(double? value) => _delegate.onChangeAspectRatio(value);
+
+  /// change if cropping with circle shape.
+  /// if [value] is true, [aspectRatio] automatically fixed with 1
+  set isCircle(bool value) => _delegate.onChangeIsCircle(value);
 }
 
 /// Delegate of actions from [CropController]
@@ -22,4 +26,7 @@ class CropControllerDelegate {
 
   /// callback that [CropController.aspectRatio] is set.
   late ValueChanged<double?> onChangeAspectRatio;
+
+  /// callback that [CropController.isCircle] is changed.
+  late ValueChanged<bool> onChangeIsCircle;
 }
