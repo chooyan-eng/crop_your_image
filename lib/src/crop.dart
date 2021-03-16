@@ -24,7 +24,7 @@ class Crop extends StatelessWidget {
 
   /// flag if cropping image with circle shape.
   /// if [true], [aspectRatio] is fixed to 1.
-  final bool isCircle;
+  final bool withCircleUi;
 
   /// conroller for control crop actions
   final CropController? controller;
@@ -38,7 +38,7 @@ class Crop extends StatelessWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
-    this.isCircle = false,
+    this.withCircleUi = false,
     this.controller,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
@@ -59,7 +59,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
-            isCircle: isCircle,
+            withCircleUi: withCircleUi,
             controller: controller,
             showDebugSheet: showDebugSheet,
           ),
@@ -74,7 +74,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
-  final bool isCircle;
+  final bool withCircleUi;
   final CropController? controller;
   final bool showDebugSheet;
 
@@ -84,7 +84,7 @@ class _CropEditor extends StatefulWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
-    this.isCircle = false,
+    this.withCircleUi = false,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -104,7 +104,7 @@ class _CropEditorState extends State<_CropEditor> {
   late double _centerY;
 
   double? _aspectRatio;
-  bool _isCircle = false;
+  bool _withCircleUi = false;
 
   @override
   void initState() {
@@ -112,8 +112,8 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = _resizeWith
-      ..onChangeIsCircle = (isCircle) {
-        _isCircle = isCircle;
+      ..onChangeWithCircleUi = (withCircleUi) {
+        _withCircleUi = withCircleUi;
         _resizeWith(_aspectRatio);
       };
 
@@ -141,7 +141,7 @@ class _CropEditorState extends State<_CropEditor> {
     _centerX = screenSize.width / 2;
     _centerY = screenSize.height / 2;
 
-    _isCircle = widget.isCircle;
+    _withCircleUi = widget.withCircleUi;
     _resizeWith(widget.aspectRatio);
 
     super.didChangeDependencies();
@@ -149,7 +149,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// resize cropping area with given aspect ratio.
   void _resizeWith(double? aspectRatio) {
-    _aspectRatio = _isCircle ? 1 : aspectRatio;
+    _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
     final initialAspectRatio = _aspectRatio ?? 1;
     final screenSize = MediaQuery.of(context).size;
@@ -173,14 +173,14 @@ class _CropEditorState extends State<_CropEditor> {
   }
 
   /// crop given image with given area.
-  Future<void> _crop() async {
+  Future<void> _crop(bool withCircleShape) async {
     if (_targetImage != null) {
       final screenSize = MediaQuery.of(context).size;
       final screenSizeRatio = _targetImage!.width / screenSize.width;
 
       // use compute() not to block UI update
       final cropResult = await compute(
-        _isCircle ? _doCropCircle : _doCrop,
+        withCircleShape ? _doCropCircle : _doCrop,
         [
           _targetImage!,
           Rect.fromLTWH(
@@ -214,7 +214,7 @@ class _CropEditorState extends State<_CropEditor> {
         ),
         IgnorePointer(
           child: ClipPath(
-            clipper: _isCircle
+            clipper: _withCircleUi
                 ? _CircleCropAreaClipper(_rect)
                 : _CropAreaClipper(_rect),
             child: Container(
@@ -620,7 +620,7 @@ Uint8List _doCropCircle(List<dynamic> cropData) {
         originalImage,
         center:
             image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
-        radius: rect.width ~/ 2,
+        radius: min(rect.width, rect.height) ~/ 2,
       ),
     ),
   );

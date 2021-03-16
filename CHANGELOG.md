@@ -1,3 +1,7 @@
+## [0.2.2] - 2021.03.16
+* Rename `isCircle` flag into `withCircleUi`. This flag no more affects the result of the shape of cropped images.
+* Add `CropController.cropCircle` method so that images are cropped with circle shape.
+
 ## [0.2.1] - 2021.03.16
 * Enable to pass `isCircle` property to crop with circle shape. This flag can also be changed via `CropController`.
 
