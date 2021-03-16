@@ -22,6 +22,10 @@ class Crop extends StatelessWidget {
   /// cropping area would expand as much as possible.
   final double? initialSize;
 
+  /// flag if cropping image with circle shape.
+  /// if [true], [aspectRatio] is fixed to 1.
+  final bool isCircle;
+
   /// conroller for control crop actions
   final CropController? controller;
 
@@ -34,6 +38,7 @@ class Crop extends StatelessWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.isCircle = false,
     this.controller,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
@@ -54,6 +59,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
+            isCircle: isCircle,
             controller: controller,
             showDebugSheet: showDebugSheet,
           ),
@@ -68,6 +74,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
+  final bool isCircle;
   final CropController? controller;
   final bool showDebugSheet;
 
@@ -77,6 +84,7 @@ class _CropEditor extends StatefulWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.isCircle = false,
     this.controller,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -135,7 +143,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// resize cropping area with given aspect ratio.
   void _resizeWith(double? aspectRatio) {
-    _aspectRatio = aspectRatio;
+    _aspectRatio = widget.isCircle ? 1 : aspectRatio;
 
     final initialAspectRatio = _aspectRatio ?? 1;
     final screenSize = MediaQuery.of(context).size;
@@ -165,15 +173,18 @@ class _CropEditorState extends State<_CropEditor> {
       final screenSizeRatio = _targetImage!.width / screenSize.width;
 
       // use compute() not to block UI update
-      final cropResult = await compute(_doCrop, [
-        _targetImage!,
-        Rect.fromLTWH(
-          _rect.left * screenSizeRatio,
-          (_rect.top - _imageTop) * screenSizeRatio,
-          _rect.width * screenSizeRatio,
-          _rect.height * screenSizeRatio,
-        ),
-      ]);
+      final cropResult = await compute(
+        widget.isCircle ? _doCropCircle : _doCrop,
+        [
+          _targetImage!,
+          Rect.fromLTWH(
+            _rect.left * screenSizeRatio,
+            (_rect.top - _imageTop) * screenSizeRatio,
+            _rect.width * screenSizeRatio,
+            _rect.height * screenSizeRatio,
+          ),
+        ],
+      );
       widget.onCropped(cropResult);
     } else {
       print('data is null');
@@ -197,7 +208,9 @@ class _CropEditorState extends State<_CropEditor> {
         ),
         IgnorePointer(
           child: ClipPath(
-            clipper: _CropAreaClipper(_rect),
+            clipper: widget.isCircle
+                ? _CircleCropAreaClipper(_rect)
+                : _CropAreaClipper(_rect),
             child: Container(
               width: double.infinity,
               height: double.infinity,
@@ -530,6 +543,23 @@ class _CropAreaClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
+class _CircleCropAreaClipper extends CustomClipper<Path> {
+  final Rect rect;
+
+  _CircleCropAreaClipper(this.rect);
+
+  @override
+  Path getClip(Size size) {
+    return Path()
+      ..addOval(Rect.fromCircle(center: rect.center, radius: rect.width / 2))
+      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
+      ..fillType = PathFillType.evenOdd;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
 class _DotControl extends StatelessWidget {
   const _DotControl({
     Key? key,
@@ -568,6 +598,23 @@ Uint8List _doCrop(List<dynamic> cropData) {
         rect.top.toInt(),
         rect.width.toInt(),
         rect.height.toInt(),
+      ),
+    ),
+  );
+}
+
+/// process cropping image with circle shape.
+/// this method is supposed to be called only via compute()
+Uint8List _doCropCircle(List<dynamic> cropData) {
+  final originalImage = cropData[0] as image.Image;
+  final rect = cropData[1] as Rect;
+  return Uint8List.fromList(
+    image.encodePng(
+      image.copyCropCircle(
+        originalImage,
+        center:
+            image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
+        radius: rect.width ~/ 2,
       ),
     ),
   );
