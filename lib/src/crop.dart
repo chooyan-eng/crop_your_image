@@ -181,13 +181,17 @@ class _CropEditorState extends State<_CropEditor> {
               var deltaX = details.delta.dx;
               var deltaY = details.delta.dy;
 
-              if (_rect.left + deltaX < 0 ||
-                  _rect.right + deltaX > rightLimit) {
-                deltaX = 0;
+              if (_rect.left + deltaX < 0) {
+                deltaX = _rect.left * -1;
               }
-              if (_rect.top + deltaY < _imageTop ||
-                  _rect.bottom + deltaY > _imageBottom) {
-                deltaY = 0;
+              if (_rect.right + deltaX > rightLimit) {
+                deltaX = rightLimit - _rect.right;
+              }
+              if (_rect.top + deltaY < _imageTop) {
+                deltaY = (_rect.top - _imageTop) * -1;
+              }
+              if (_rect.bottom + deltaY > _imageBottom) {
+                deltaY = _imageBottom - _rect.bottom;
               }
               setState(() {
                 _rect = Rect.fromLTWH(
