@@ -276,8 +276,8 @@ class _CropEditorState extends State<_CropEditor> {
                 if (widget.aspectRatio == null) {
                   _rect = Rect.fromLTRB(
                     _rect.left,
-                    newRight,
                     newTop,
+                    newRight,
                     _rect.bottom,
                   );
                 } else {
