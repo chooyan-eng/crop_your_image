@@ -1,8 +1,10 @@
 # crop_your_image
 
-A flutter plugin which provides a Widget for cropping images.
+A flutter plugin which provides `Crop` Widget for cropping images.
 
-crop_your_image is controllable via `CropController` from whatever your Widgets designed with your brand.
+crop_your_image provides only minimum UI for deciding cropping area inside images. Other UI parts, such as "Crop" button or "Change Aspect Ratio" button, need to be prepared by each app developers.
+
+This policy helps app developers to build "Cropping page" with the design of their own brand.In order to control the actions for cropping images, you can use `CropController` from whatever your Widgets.
 
 ![Image Cropping Preview](https://github.com/chooyan-eng/crop_your_image/raw/main/assets/cropyourimage.gif)
 
