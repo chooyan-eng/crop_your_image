@@ -127,20 +127,22 @@ class _CropEditorState extends State<_CropEditor> {
   }
 
   /// crop given image with given area.
-  void _crop() async {
+  Future<void> _crop() async {
     if (_targetImage != null) {
       final screenSize = MediaQuery.of(context).size;
       final screenSizeRatio = _targetImage!.width / screenSize.width;
 
-      final cropResult = image.encodePng(image.copyCrop(
+      // use compute() not to block UI update
+      final cropResult = await compute(_doCrop, [
         _targetImage!,
-        (_rect.left.toInt() * screenSizeRatio).toInt(),
-        ((_rect.top.toInt() - _imageTop) * screenSizeRatio).toInt(),
-        (_rect.width * screenSizeRatio).toInt(),
-        (_rect.height * screenSizeRatio).toInt(),
-      ));
-
-      widget.onCropped(Uint8List.fromList(cropResult));
+        Rect.fromLTWH(
+          _rect.left * screenSizeRatio,
+          (_rect.top - _imageTop) * screenSizeRatio,
+          _rect.width * screenSizeRatio,
+          _rect.height * screenSizeRatio,
+        ),
+      ]);
+      widget.onCropped(cropResult);
     } else {
       print('data is null');
     }
@@ -515,4 +517,22 @@ class _DotControl extends StatelessWidget {
       ),
     );
   }
+}
+
+/// process cropping image.
+/// this method is supposed to be called only via compute()
+Uint8List _doCrop(List<dynamic> cropData) {
+  final originalImage = cropData[0] as image.Image;
+  final rect = cropData[1] as Rect;
+  return Uint8List.fromList(
+    image.encodePng(
+      image.copyCrop(
+        originalImage,
+        rect.left.toInt(),
+        rect.top.toInt(),
+        rect.width.toInt(),
+        rect.height.toInt(),
+      ),
+    ),
+  );
 }
