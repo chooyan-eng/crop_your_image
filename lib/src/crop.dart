@@ -36,7 +36,9 @@ class Crop extends StatelessWidget {
     this.initialSize,
     this.controller,
     this.showDebugSheet = false,
-  }) : super(key: key);
+  })  : assert((initialSize ?? 1.0) <= 1.0,
+            'initialSize must be less than 1.0, or null meaning not specified.'),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
