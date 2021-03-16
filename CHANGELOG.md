@@ -1,3 +1,6 @@
+## [0.2.1] - 2021.03.16
+* Enable to pass `isCircle` property to crop with circle shape. This flag can also be changed via `CropController`.
+
 ## [0.2.0] - 2021.03.16
 * Enable to change `aspectRatio` dynamically via `CropController`.
 * Enable to set `initialSize` via `Crop` constructor.

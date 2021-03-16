@@ -22,19 +22,22 @@ Widget build(BuildContext context) {
     image: _imageData,
     aspectRatio: 4 / 3,
     initialSize: 0.5,
+    isCircle: false,
     onCropped: (image) {
       // do something with image data 
     }
   );
 }
 ```
-`image` is Image data whose type is `UInt8List`, and the result of cropping can be obtained via `onCropped` callback.
+Usage of each properties are listed below.
 
-`aspectRatio` is the aspect ratio of cropping area. Set `null` or just omit if you want to crop images with any aspect ratio.
+- `image` is Image data whose type is `UInt8List`, and the result of cropping can be obtained via `onCropped` callback.
+- `aspectRatio` is the aspect ratio of cropping area. Set `null` or just omit if you want to crop images with any aspect ratio.
+- `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)
+- `initialSize` is the initial size of cropping area. `1.0` (or `null`, by default) fits the size of image, which means cropping area extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.
+- `isCircle` flag is to decide the shape of cropping. If `true`, `aspectRatio` is automatically set `1.0` and the shape of cropped image would be circle.
 
-`aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)
-
-`initialSize` is the initial size of cropping area. `1.0` (or `null`, by default) fits the size of image, which means cropping area extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.
+``
 
 If you want to controll from your own designed Widgets, create a `CropController` instance and pass it to `controller` property of `Crop`.
 ```
