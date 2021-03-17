@@ -1,3 +1,6 @@
+## [0.3.0] - 2021.03.17
+* Add example project in `example` directory.
+
 ## [0.2.3] - 2021.03.17
 * Fix a bug of wrong cropping rect when vertically longer image is set.
 * Make the size of dots smaller.

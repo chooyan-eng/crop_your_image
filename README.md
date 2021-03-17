@@ -10,15 +10,15 @@ This policy helps app developers to build "Cropping page" with the design of the
 
 ## Note
 
-Please note that this package is developping (not achieved even alpha). It doesn't have enough functionality, is quite buggy, isn't available confortably.
+Please note that this package is at the very starting point of developping. Some functionality may lack, APIs have to be more enhanced, and several bugs have to be fixed.
 
-The basic idea is written above. I will appreciate your idea or suggestions to achieve it.
+I will appreciate your idea or suggestions to achieve the basic idea written above.
 
 ## Usage
 
 Place `Crop` Widget wherever you want to place image cropping UI.
 
-```
+```dart
 Widget build(BuildContext context) {
   return Crop(
     image: _imageData,
@@ -40,7 +40,8 @@ Usage of each properties are listed below.
 - `withCircleUi` flag is to decide the shape of cropping UI. If `true`, `aspectRatio` is automatically set `1.0` and the shape of cropping UI would be circle. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.
 
 If you want to controll from your own designed Widgets, create a `CropController` instance and pass it to `controller` property of `Crop`.
-```
+
+```dart
 final _controller = CropController();
 
 Widget build(BuildContext context) {
@@ -56,7 +57,7 @@ Widget build(BuildContext context) {
 
 You can call `_controller.crop()` to crop a image.
 
-```
+```dart
 ElevatedButton(
   child: Text('Crop it!')
   onPressed: _cropController.crop,
@@ -65,6 +66,8 @@ ElevatedButton(
 
 Because `_controller.crop()` only kicks the cropping process, this method returns immediately without any cropped image data. You can always obtain the result of cropping images via `onCropped` callback of `Crop` Widget.
 
+In addition, `aspectRatio` and `withCircleUi` can also be changed via `CropController`.
+
 # Contact
 
-If you have anything you want to inform me (@chooyan-eng), such as suggestions to enhance this package or functionalities you want etc, feel free to make [issues on GitHub](https://github.com/chooyan-eng/crop_your_image/issues) or send messages on Twitter [@chooyan_i18n](https://twitter.com/chooyan_i18n).
+If you have anything you want to inform me ([@chooyan-eng](https://github.com/chooyan-eng)), such as suggestions to enhance this package or functionalities you want etc, feel free to make [issues on GitHub](https://github.com/chooyan-eng/crop_your_image/issues) or send messages on Twitter [@chooyan_i18n](https://twitter.com/chooyan_i18n).
