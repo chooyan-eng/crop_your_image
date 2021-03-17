@@ -1,3 +1,7 @@
+## [0.2.3] - 2021.03.17
+* Fix a bug of wrong cropping rect when vertically longer image is set.
+* Make the size of dots smaller.
+
 ## [0.2.2] - 2021.03.16
 * Rename `isCircle` flag into `withCircleUi`. This flag no more affects the result of the shape of cropped images.
 * Add `CropController.cropCircle` method so that images are cropped with circle shape.
