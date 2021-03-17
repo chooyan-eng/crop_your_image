@@ -1,13 +1,20 @@
 part of crop_your_image;
 
+/// Calculation logics for various [Rect] data.
 abstract class _Calculator {
   const _Calculator();
 
+  /// calculates [Rect] of image to fit the screenSize.
   Rect imageRect(Size screenSize, double imageRatio);
+
+  /// calculates [Rect] of initial cropping area.
   Rect initialCropRect(
       Size screenSize, Rect imageRect, double aspectRatio, double sizeRatio);
+
+  /// calculates ratio of [targetImage] and [screenSize]
   double screenSizeRatio(image.Image targetImage, Size screenSize);
 
+  /// calculates [Rect] of the result of user moving the cropping area.
   Rect moveRect(Rect original, double deltaX, double deltaY, Rect imageRect) {
     if (original.left + deltaX < imageRect.left) {
       deltaX = (original.left - imageRect.left) * -1;
@@ -29,6 +36,7 @@ abstract class _Calculator {
     );
   }
 
+  /// calculates [Rect] of the result of user moving the top-left dot.
   Rect moveTopLeft(Rect original, double deltaX, double deltaY, Rect imageRect,
       double? aspectRatio) {
     final newLeft =
@@ -74,6 +82,7 @@ abstract class _Calculator {
     }
   }
 
+  /// calculates [Rect] of the result of user moving the top-right dot.
   Rect moveTopRight(Rect original, double deltaX, double deltaY, Rect imageRect,
       double? aspectRatio) {
     final newTop =
@@ -119,6 +128,7 @@ abstract class _Calculator {
     }
   }
 
+  /// calculates [Rect] of the result of user moving the bottom-left dot.
   Rect moveBottomLeft(Rect original, double deltaX, double deltaY,
       Rect imageRect, double? aspectRatio) {
     final newLeft =
@@ -165,6 +175,7 @@ abstract class _Calculator {
     }
   }
 
+  /// calculates [Rect] of the result of user moving the bottom-right dot.
   Rect moveBottomRight(Rect original, double deltaX, double deltaY,
       Rect imageRect, double? aspectRatio) {
     final newRight =
