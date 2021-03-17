@@ -192,9 +192,12 @@ class _CropEditorState extends State<_CropEditor> {
           transformationController: _controller,
           child: Container(
             color: Colors.blue.shade50,
-            width: double.infinity,
-            height: double.infinity,
-            child: Image.memory(widget.image),
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: Image.memory(
+              widget.image,
+              fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+            ),
           ),
         ),
         IgnorePointer(
