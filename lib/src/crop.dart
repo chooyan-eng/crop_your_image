@@ -1,7 +1,7 @@
 part of crop_your_image;
 
-const dotSize = 16.0; // visible dot size
-const dotPadding = 32.0; // padding for touchable area
+const dotSize = 8.0; // visible dot size
+const dotPadding = 16.0; // padding for touchable area
 const dotTotalSize = dotSize + (dotPadding * 2);
 
 /// Widget for the entry point of crop_your_image.
