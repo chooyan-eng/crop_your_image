@@ -29,6 +29,9 @@ class Crop extends StatelessWidget {
   /// conroller for control crop actions
   final CropController? controller;
 
+  /// Callback that is called when cropping area moved.
+  final ValueChanged<Rect>? onMoved;
+
   /// flag to show debug sheet
   final bool showDebugSheet;
 
@@ -40,6 +43,7 @@ class Crop extends StatelessWidget {
     this.initialSize,
     this.withCircleUi = false,
     this.controller,
+    this.onMoved,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -61,6 +65,7 @@ class Crop extends StatelessWidget {
             initialSize: initialSize,
             withCircleUi: withCircleUi,
             controller: controller,
+            onMoved: onMoved,
             showDebugSheet: showDebugSheet,
           ),
         );
@@ -76,6 +81,7 @@ class _CropEditor extends StatefulWidget {
   final double? initialSize;
   final bool withCircleUi;
   final CropController? controller;
+  final ValueChanged<Rect>? onMoved;
   final bool showDebugSheet;
 
   const _CropEditor({
@@ -86,6 +92,7 @@ class _CropEditor extends StatefulWidget {
     this.initialSize,
     this.withCircleUi = false,
     this.controller,
+    this.onMoved,
     this.showDebugSheet = false,
   }) : super(key: key);
 
@@ -107,6 +114,13 @@ class _CropEditorState extends State<_CropEditor> {
   _Calculator get calculator => _isFitVertically
       ? const _VerticalCalculator()
       : const _HorizontalCalculator();
+
+  set rect(Rect newRect) {
+    setState(() {
+      _rect = newRect;
+    });
+    widget.onMoved?.call(_rect);
+  }
 
   @override
   void initState() {
@@ -148,14 +162,12 @@ class _CropEditorState extends State<_CropEditor> {
   void _resizeWith(double? aspectRatio) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
-    setState(() {
-      _rect = calculator.initialCropRect(
-        MediaQuery.of(context).size,
-        _imageRect,
-        _aspectRatio ?? 1,
-        widget.initialSize ?? 1,
-      );
-    });
+    rect = calculator.initialCropRect(
+      MediaQuery.of(context).size,
+      _imageRect,
+      _aspectRatio ?? 1,
+      widget.initialSize ?? 1,
+    );
   }
 
   /// crop given image with given area.
@@ -217,14 +229,12 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top,
           child: GestureDetector(
             onPanUpdate: (details) {
-              setState(() {
-                _rect = calculator.moveRect(
-                  _rect,
-                  details.delta.dx,
-                  details.delta.dy,
-                  _imageRect,
-                );
-              });
+              rect = calculator.moveRect(
+                _rect,
+                details.delta.dx,
+                details.delta.dy,
+                _imageRect,
+              );
             },
             child: Container(
               width: _rect.width,
@@ -238,15 +248,13 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              setState(() {
-                _rect = calculator.moveTopLeft(
-                  _rect,
-                  details.delta.dx,
-                  details.delta.dy,
-                  _imageRect,
-                  _aspectRatio,
-                );
-              });
+              rect = calculator.moveTopLeft(
+                _rect,
+                details.delta.dx,
+                details.delta.dy,
+                _imageRect,
+                _aspectRatio,
+              );
             },
             child: _DotControl(),
           ),
@@ -256,15 +264,13 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              setState(() {
-                _rect = calculator.moveTopRight(
-                  _rect,
-                  details.delta.dx,
-                  details.delta.dy,
-                  _imageRect,
-                  _aspectRatio,
-                );
-              });
+              rect = calculator.moveTopRight(
+                _rect,
+                details.delta.dx,
+                details.delta.dy,
+                _imageRect,
+                _aspectRatio,
+              );
             },
             child: _DotControl(),
           ),
@@ -274,15 +280,13 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              setState(() {
-                _rect = calculator.moveBottomLeft(
-                  _rect,
-                  details.delta.dx,
-                  details.delta.dy,
-                  _imageRect,
-                  _aspectRatio,
-                );
-              });
+              rect = calculator.moveBottomLeft(
+                _rect,
+                details.delta.dx,
+                details.delta.dy,
+                _imageRect,
+                _aspectRatio,
+              );
             },
             child: _DotControl(),
           ),
@@ -292,15 +296,13 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              setState(() {
-                _rect = calculator.moveBottomRight(
-                  _rect,
-                  details.delta.dx,
-                  details.delta.dy,
-                  _imageRect,
-                  _aspectRatio,
-                );
-              });
+              rect = calculator.moveBottomRight(
+                _rect,
+                details.delta.dx,
+                details.delta.dy,
+                _imageRect,
+                _aspectRatio,
+              );
             },
             child: _DotControl(),
           ),
