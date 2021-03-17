@@ -131,12 +131,8 @@ class _CropEditorState extends State<_CropEditor> {
       ..onChangeWithCircleUi = (withCircleUi) {
         _withCircleUi = withCircleUi;
         _resizeWith(_aspectRatio);
-      };
-
-    final decodedImage = image.decodeImage(widget.image);
-    setState(() {
-      _targetImage = decodedImage;
-    });
+      }
+      ..onImageChanged = _resetImage;
 
     _controller = TransformationController()
       ..addListener(() => setState(() {}));
@@ -146,16 +142,29 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
+    _targetImage = image.decodeImage(widget.image);
+    _withCircleUi = widget.withCircleUi;
+    _resetCroppingArea();
+    super.didChangeDependencies();
+  }
+
+  /// reset image to be cropped
+  void _resetImage(Uint8List targetImage) {
+    setState(() {
+      _targetImage = image.decodeImage(targetImage);
+    });
+    _resetCroppingArea();
+  }
+
+  /// reset [Rect] of cropping area with current state
+  void _resetCroppingArea() {
     final screenSize = MediaQuery.of(context).size;
     final imageRatio = _targetImage!.width / _targetImage!.height;
     _isFitVertically = imageRatio < (screenSize.width / screenSize.height);
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
-    _withCircleUi = widget.withCircleUi;
     _resizeWith(widget.aspectRatio);
-
-    super.didChangeDependencies();
   }
 
   /// resize cropping area with given aspect ratio.
