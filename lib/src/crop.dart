@@ -99,8 +99,6 @@ class _CropEditorState extends State<_CropEditor> {
   late Rect _rect;
   image.Image? _targetImage;
   late Rect _imageRect;
-  late double _centerX;
-  late double _centerY;
 
   double? _aspectRatio;
   bool _withCircleUi = false;
@@ -139,9 +137,6 @@ class _CropEditorState extends State<_CropEditor> {
     _isFitVertically = imageRatio < (screenSize.width / screenSize.height);
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
-
-    _centerX = screenSize.width / 2;
-    _centerY = screenSize.height / 2;
 
     _withCircleUi = widget.withCircleUi;
     _resizeWith(widget.aspectRatio);
