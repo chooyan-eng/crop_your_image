@@ -13,6 +13,10 @@ class CropController {
   /// crop given image with current configuration and circle shape.
   void cropCircle() => _delegate.onCrop(true);
 
+  /// Change image to be cropped.
+  /// When image is changed, [Rect] of cropping area will be reset.
+  set image(Uint8List value) => _delegate.onImageChanged(value);
+
   /// change fixed aspect ratio
   /// if [value] is null, cropping area can be moved without fixed aspect ratio.
   set aspectRatio(double? value) => _delegate.onChangeAspectRatio(value);
@@ -27,6 +31,9 @@ class CropControllerDelegate {
   /// callback that [CropController.crop] is called.
   /// the meaning of the value is if cropping a image with circle shape.
   late ValueChanged<bool> onCrop;
+
+  /// callback that [CropController.image] is set.
+  late ValueChanged<Uint8List> onImageChanged;
 
   /// callback that [CropController.aspectRatio] is set.
   late ValueChanged<double?> onChangeAspectRatio;
