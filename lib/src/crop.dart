@@ -98,13 +98,17 @@ class _CropEditorState extends State<_CropEditor> {
   late TransformationController _controller;
   late Rect _rect;
   image.Image? _targetImage;
-  late double _imageTop;
-  late double _imageBottom;
+  late Rect _imageRect;
   late double _centerX;
   late double _centerY;
 
   double? _aspectRatio;
   bool _withCircleUi = false;
+  bool _isFitVertically = false;
+
+  _Calculator get calculator => _isFitVertically
+      ? const _VerticalCalculator()
+      : const _HorizontalCalculator();
 
   @override
   void initState() {
@@ -131,13 +135,11 @@ class _CropEditorState extends State<_CropEditor> {
   @override
   void didChangeDependencies() {
     final screenSize = MediaQuery.of(context).size;
-
     final imageRatio = _targetImage!.width / _targetImage!.height;
-    final imageScreenHeight = screenSize.width / imageRatio;
-    _imageTop = (screenSize.height - imageScreenHeight) / 2;
-    _imageBottom = _imageTop + imageScreenHeight;
+    _isFitVertically = imageRatio < (screenSize.width / screenSize.height);
 
-    // TODO: (chooyan-eng) currently horizontal only
+    _imageRect = calculator.imageRect(screenSize, imageRatio);
+
     _centerX = screenSize.width / 2;
     _centerY = screenSize.height / 2;
 
@@ -151,55 +153,43 @@ class _CropEditorState extends State<_CropEditor> {
   void _resizeWith(double? aspectRatio) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
-    final initialAspectRatio = _aspectRatio ?? 1;
-    final screenSize = MediaQuery.of(context).size;
-    final imageRatio = _targetImage!.width / _targetImage!.height;
-    final imageScreenHeight = screenSize.width / imageRatio;
-
-    final initialSizeRatio = widget.initialSize ?? 1;
-    final initialSize = imageRatio > initialAspectRatio
-        ? Size((imageScreenHeight * initialAspectRatio) * initialSizeRatio,
-            imageScreenHeight * initialSizeRatio)
-        : Size(screenSize.width * initialSizeRatio,
-            (screenSize.width / initialAspectRatio) * initialSizeRatio);
     setState(() {
-      _rect = Rect.fromLTWH(
-        _centerX - initialSize.width / 2,
-        _centerY - initialSize.height / 2,
-        initialSize.width,
-        initialSize.height,
+      _rect = calculator.initialCropRect(
+        MediaQuery.of(context).size,
+        _imageRect,
+        _aspectRatio ?? 1,
+        widget.initialSize ?? 1,
       );
     });
   }
 
   /// crop given image with given area.
   Future<void> _crop(bool withCircleShape) async {
-    if (_targetImage != null) {
-      final screenSize = MediaQuery.of(context).size;
-      final screenSizeRatio = _targetImage!.width / screenSize.width;
+    assert(_targetImage != null);
 
-      // use compute() not to block UI update
-      final cropResult = await compute(
-        withCircleShape ? _doCropCircle : _doCrop,
-        [
-          _targetImage!,
-          Rect.fromLTWH(
-            _rect.left * screenSizeRatio,
-            (_rect.top - _imageTop) * screenSizeRatio,
-            _rect.width * screenSizeRatio,
-            _rect.height * screenSizeRatio,
-          ),
-        ],
-      );
-      widget.onCropped(cropResult);
-    } else {
-      print('data is null');
-    }
+    final screenSizeRatio = calculator.screenSizeRatio(
+      _targetImage!,
+      MediaQuery.of(context).size,
+    );
+
+    // use compute() not to block UI update
+    final cropResult = await compute(
+      withCircleShape ? _doCropCircle : _doCrop,
+      [
+        _targetImage!,
+        Rect.fromLTWH(
+          (_rect.left - _imageRect.left) * screenSizeRatio,
+          (_rect.top - _imageRect.top) * screenSizeRatio,
+          _rect.width * screenSizeRatio,
+          _rect.height * screenSizeRatio,
+        ),
+      ],
+    );
+    widget.onCropped(cropResult);
   }
 
   @override
   Widget build(BuildContext context) {
-    final rightLimit = MediaQuery.of(context).size.width;
     return Stack(
       children: [
         InteractiveViewer(
@@ -229,27 +219,12 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top,
           child: GestureDetector(
             onPanUpdate: (details) {
-              var deltaX = details.delta.dx;
-              var deltaY = details.delta.dy;
-
-              if (_rect.left + deltaX < 0) {
-                deltaX = _rect.left * -1;
-              }
-              if (_rect.right + deltaX > rightLimit) {
-                deltaX = rightLimit - _rect.right;
-              }
-              if (_rect.top + deltaY < _imageTop) {
-                deltaY = (_rect.top - _imageTop) * -1;
-              }
-              if (_rect.bottom + deltaY > _imageBottom) {
-                deltaY = _imageBottom - _rect.bottom;
-              }
               setState(() {
-                _rect = Rect.fromLTWH(
-                  _rect.left + deltaX,
-                  _rect.top + deltaY,
-                  _rect.width,
-                  _rect.height,
+                _rect = calculator.moveRect(
+                  _rect,
+                  details.delta.dx,
+                  details.delta.dy,
+                  _imageRect,
                 );
               });
             },
@@ -265,48 +240,14 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              final newLeft =
-                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40));
-              final newTop = min(max(_rect.top + details.delta.dy, _imageTop),
-                  _rect.bottom - 40);
               setState(() {
-                if (_aspectRatio == null) {
-                  _rect = Rect.fromLTRB(
-                    newLeft.toDouble(),
-                    newTop,
-                    _rect.right,
-                    _rect.bottom,
-                  );
-                } else {
-                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
-                    var newWidth = _rect.right - newLeft;
-                    var newHeight = newWidth / _aspectRatio!;
-                    if (_rect.bottom - newHeight < _imageTop) {
-                      newHeight = _rect.bottom - _imageTop;
-                      newWidth = newHeight * _aspectRatio!;
-                    }
-
-                    _rect = Rect.fromLTRB(
-                      _rect.right - newWidth,
-                      _rect.bottom - newHeight,
-                      _rect.right,
-                      _rect.bottom,
-                    );
-                  } else {
-                    var newHeight = _rect.bottom - newTop;
-                    var newWidth = newHeight * _aspectRatio!;
-                    if (_rect.right - newWidth < 0) {
-                      newWidth = _rect.right;
-                      newHeight = newWidth / _aspectRatio!;
-                    }
-                    _rect = Rect.fromLTRB(
-                      _rect.right - newWidth,
-                      _rect.bottom - newHeight,
-                      _rect.right,
-                      _rect.bottom,
-                    );
-                  }
-                }
+                _rect = calculator.moveTopLeft(
+                  _rect,
+                  details.delta.dx,
+                  details.delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
               });
             },
             child: _DotControl(),
@@ -317,50 +258,14 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              final newTop = min(
-                  rightLimit,
-                  min(max(_rect.top + details.delta.dy, _imageTop),
-                      _rect.bottom - 40));
-              final newRight =
-                  max(_rect.right + details.delta.dx, _rect.left + 40);
               setState(() {
-                if (_aspectRatio == null) {
-                  _rect = Rect.fromLTRB(
-                    _rect.left,
-                    newTop,
-                    newRight,
-                    _rect.bottom,
-                  );
-                } else {
-                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
-                    var newWidth = newRight - _rect.left;
-                    var newHeight = newWidth / _aspectRatio!;
-                    if (_rect.bottom - newHeight < _imageTop) {
-                      newHeight = _rect.bottom - _imageTop;
-                      newWidth = newHeight * _aspectRatio!;
-                    }
-
-                    _rect = Rect.fromLTWH(
-                      _rect.left,
-                      _rect.bottom - newHeight,
-                      newWidth,
-                      newHeight,
-                    );
-                  } else {
-                    var newHeight = _rect.bottom - newTop;
-                    var newWidth = newHeight * _aspectRatio!;
-                    if (_rect.left + newWidth > rightLimit) {
-                      newWidth = rightLimit - _rect.left;
-                      newHeight = newWidth / _aspectRatio!;
-                    }
-                    _rect = Rect.fromLTRB(
-                      _rect.left,
-                      _rect.bottom - newHeight,
-                      _rect.left + newWidth,
-                      _rect.bottom,
-                    );
-                  }
-                }
+                _rect = calculator.moveTopRight(
+                  _rect,
+                  details.delta.dx,
+                  details.delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
               });
             },
             child: _DotControl(),
@@ -371,50 +276,14 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              final newLeft =
-                  max(0, min(_rect.left + details.delta.dx, _rect.right - 40));
-              final newBottom = max(
-                  min(_rect.bottom + details.delta.dy, _imageBottom),
-                  _rect.top + 40);
-
               setState(() {
-                if (_aspectRatio == null) {
-                  _rect = Rect.fromLTRB(
-                    newLeft.toDouble(),
-                    _rect.top,
-                    _rect.right,
-                    newBottom,
-                  );
-                } else {
-                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
-                    var newWidth = _rect.right - newLeft;
-                    var newHeight = newWidth / _aspectRatio!;
-                    if (_rect.top + newHeight > _imageBottom) {
-                      newHeight = _imageBottom - _rect.top;
-                      newWidth = newHeight * _aspectRatio!;
-                    }
-
-                    _rect = Rect.fromLTRB(
-                      _rect.right - newWidth,
-                      _rect.top,
-                      _rect.right,
-                      _rect.top + newHeight,
-                    );
-                  } else {
-                    var newHeight = newBottom - _rect.top;
-                    var newWidth = newHeight * _aspectRatio!;
-                    if (_rect.right - newWidth < 0) {
-                      newWidth = _rect.right;
-                      newHeight = newWidth / _aspectRatio!;
-                    }
-                    _rect = Rect.fromLTRB(
-                      _rect.right - newWidth,
-                      _rect.top,
-                      _rect.right,
-                      _rect.top + newHeight,
-                    );
-                  }
-                }
+                _rect = calculator.moveBottomLeft(
+                  _rect,
+                  details.delta.dx,
+                  details.delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
               });
             },
             child: _DotControl(),
@@ -425,49 +294,14 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
-              final newRight = min(rightLimit,
-                  max(_rect.right + details.delta.dx, _rect.left + 40));
-              final newBottom = max(
-                  min(_rect.bottom + details.delta.dy, _imageBottom),
-                  _rect.top + 40);
               setState(() {
-                if (_aspectRatio == null) {
-                  _rect = Rect.fromLTRB(
-                    _rect.left,
-                    _rect.top,
-                    newRight,
-                    newBottom,
-                  );
-                } else {
-                  if (details.delta.dx.abs() > details.delta.dy.abs()) {
-                    var newWidth = newRight - _rect.left;
-                    var newHeight = newWidth / _aspectRatio!;
-                    if (_rect.top + newHeight > _imageBottom) {
-                      newHeight = _imageBottom - _rect.top;
-                      newWidth = newHeight * _aspectRatio!;
-                    }
-
-                    _rect = Rect.fromLTWH(
-                      _rect.left,
-                      _rect.top,
-                      newWidth,
-                      newHeight,
-                    );
-                  } else {
-                    var newHeight = newBottom - _rect.top;
-                    var newWidth = newHeight * _aspectRatio!;
-                    if (_rect.left + newWidth > rightLimit) {
-                      newWidth = rightLimit - _rect.left;
-                      newHeight = newWidth / _aspectRatio!;
-                    }
-                    _rect = Rect.fromLTWH(
-                      _rect.left,
-                      _rect.top,
-                      newWidth,
-                      newHeight,
-                    );
-                  }
-                }
+                _rect = calculator.moveBottomRight(
+                  _rect,
+                  details.delta.dx,
+                  details.delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
               });
             },
             child: _DotControl(),
