@@ -32,6 +32,9 @@ class Crop extends StatelessWidget {
   /// Callback that is called when cropping area moved.
   final ValueChanged<Rect>? onMoved;
 
+  /// [Color] of the mask widget which is placed over the cropping editor.
+  final Color? maskColor;
+
   /// builder for corner dot widget.
   /// [CornerDotBuilder] passes [size] which indicates the size of each dots
   /// and [cornerIndex] which indicates the position of each dots like below:
@@ -51,6 +54,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.maskColor,
     this.cornerDotBuilder,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
@@ -74,6 +78,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            maskColor: maskColor,
             cornerDotBuilder: cornerDotBuilder,
             showDebugSheet: showDebugSheet,
           ),
@@ -91,6 +96,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
+  final Color? maskColor;
   final CornerDotBuilder? cornerDotBuilder;
   final bool showDebugSheet;
 
@@ -103,6 +109,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.maskColor,
     this.cornerDotBuilder,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -242,7 +249,7 @@ class _CropEditorState extends State<_CropEditor> {
             child: Container(
               width: double.infinity,
               height: double.infinity,
-              color: Colors.black.withAlpha(100),
+              color: widget.maskColor ?? Colors.black.withAlpha(100),
             ),
           ),
         ),
