@@ -1,3 +1,7 @@
+## [0.5.0] - 2021.03.18
+* Enable to configure corner Dots with whatever Widget.
+* Enable to configure cropping mask colors and base colors.
+
 ## [0.4.0] - 2021.03.18
 * Enable to change original image via `CropController`
 * Add callback when cropping area moves.
