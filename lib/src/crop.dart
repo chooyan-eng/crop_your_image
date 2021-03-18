@@ -35,6 +35,9 @@ class Crop extends StatelessWidget {
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
 
+  /// [Color] of the base color of the cropping editor.
+  final Color baseColor;
+
   /// builder for corner dot widget.
   /// [CornerDotBuilder] passes [size] which indicates the size of each dots
   /// and [cornerIndex] which indicates the position of each dots like below:
@@ -55,6 +58,7 @@ class Crop extends StatelessWidget {
     this.controller,
     this.onMoved,
     this.maskColor,
+    this.baseColor = Colors.white,
     this.cornerDotBuilder,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
@@ -79,6 +83,7 @@ class Crop extends StatelessWidget {
             controller: controller,
             onMoved: onMoved,
             maskColor: maskColor,
+            baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
             showDebugSheet: showDebugSheet,
           ),
@@ -97,6 +102,7 @@ class _CropEditor extends StatefulWidget {
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
   final Color? maskColor;
+  final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
   final bool showDebugSheet;
 
@@ -110,6 +116,7 @@ class _CropEditor extends StatefulWidget {
     this.controller,
     this.onMoved,
     this.maskColor,
+    required this.baseColor,
     this.cornerDotBuilder,
     this.showDebugSheet = false,
   }) : super(key: key);
@@ -232,7 +239,7 @@ class _CropEditorState extends State<_CropEditor> {
           scaleEnabled: false,
           transformationController: _controller,
           child: Container(
-            color: Colors.blue.shade50,
+            color: widget.baseColor,
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             child: Image.memory(
