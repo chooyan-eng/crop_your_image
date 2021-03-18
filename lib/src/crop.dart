@@ -1,8 +1,8 @@
 part of crop_your_image;
 
-const dotSize = 8.0; // visible dot size
-const dotPadding = 16.0; // padding for touchable area
-const dotTotalSize = dotSize + (dotPadding * 2);
+const dotTotalSize = 32.0; // fixed corner dot size.
+
+typedef CornerDotBuilder = Widget Function(double size, int cornerIndex);
 
 /// Widget for the entry point of crop_your_image.
 class Crop extends StatelessWidget {
@@ -32,6 +32,13 @@ class Crop extends StatelessWidget {
   /// Callback that is called when cropping area moved.
   final ValueChanged<Rect>? onMoved;
 
+  /// builder for corner dot widget.
+  /// [CornerDotBuilder] passes [size] which indicates the size of each dots
+  /// and [cornerIndex] which indicates the position of each dots like below:
+  /// 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom.
+  /// If default dot Widget with different color is needed, [DotControl] is available.
+  final CornerDotBuilder? cornerDotBuilder;
+
   /// flag to show debug sheet
   final bool showDebugSheet;
 
@@ -44,6 +51,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.cornerDotBuilder,
     this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -66,6 +74,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            cornerDotBuilder: cornerDotBuilder,
             showDebugSheet: showDebugSheet,
           ),
         );
@@ -82,6 +91,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
+  final CornerDotBuilder? cornerDotBuilder;
   final bool showDebugSheet;
 
   const _CropEditor({
@@ -93,6 +103,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.cornerDotBuilder,
     this.showDebugSheet = false,
   }) : super(key: key);
 
@@ -267,7 +278,8 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: _DotControl(),
+            child: widget.cornerDotBuilder?.call(dotTotalSize, 0) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -283,7 +295,8 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: _DotControl(),
+            child: widget.cornerDotBuilder?.call(dotTotalSize, 1) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -299,7 +312,8 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: _DotControl(),
+            child: widget.cornerDotBuilder?.call(dotTotalSize, 2) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -315,7 +329,8 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: _DotControl(),
+            child: widget.cornerDotBuilder?.call(dotTotalSize, 3) ??
+                const DotControl(),
           ),
         ),
         Visibility(
@@ -411,10 +426,22 @@ class _CircleCropAreaClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-class _DotControl extends StatelessWidget {
-  const _DotControl({
+/// Defalt dot widget placed on corners to control cropping area.
+/// This Widget automaticall fits the appropriate size.
+class DotControl extends StatelessWidget {
+  const DotControl({
     Key? key,
+    this.color = Colors.white,
+    this.padding = 8,
   }) : super(key: key);
+
+  /// [Color] of this widget. [Colors.white] by default.
+  final Color color;
+
+  /// The size of transparent padding which exists to make dot easier to touch.
+  /// Though total size of this widget cannot be changed,
+  /// but visible size can be changed by setting this value.
+  final double padding;
 
   @override
   Widget build(BuildContext context) {
@@ -424,11 +451,11 @@ class _DotControl extends StatelessWidget {
       height: dotTotalSize,
       child: Center(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(dotSize),
+          borderRadius: BorderRadius.circular(dotTotalSize),
           child: Container(
-            width: dotSize,
-            height: dotSize,
-            color: Colors.white,
+            width: dotTotalSize - (padding * 2),
+            height: dotTotalSize - (padding * 2),
+            color: color,
           ),
         ),
       ),
