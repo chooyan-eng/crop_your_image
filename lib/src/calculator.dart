@@ -220,6 +220,16 @@ abstract class _Calculator {
       }
     }
   }
+
+  /// correct [Rect] not to exceed [Rect] of image.
+  Rect correct(Rect rect, Rect imageRect) {
+    return Rect.fromLTRB(
+      max(rect.left, imageRect.left),
+      max(rect.top, imageRect.top),
+      min(rect.right, imageRect.right),
+      min(rect.bottom, imageRect.bottom),
+    );
+  }
 }
 
 class _HorizontalCalculator extends _Calculator {
