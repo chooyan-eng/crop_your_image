@@ -35,7 +35,8 @@ class Crop extends StatelessWidget {
   /// builder for corner dot widget.
   /// [CornerDotBuilder] passes [size] which indicates the size of each dots
   /// and [cornerIndex] which indicates the position of each dots like below:
-  /// 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom
+  /// 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom.
+  /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
   /// flag to show debug sheet
