@@ -1,3 +1,9 @@
+## [0.4.0] - 2021.03.18
+* Enable to change original image via `CropController`
+* Add callback when cropping area moves.
+* Enable to control cropping area programmatically via `CropController`
+* Fix bug that wrong cropping area is calculated when image is smaller than display.
+
 ## [0.3.0] - 2021.03.17
 * Add example project in `example` directory.
 
