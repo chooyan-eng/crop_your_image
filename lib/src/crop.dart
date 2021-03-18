@@ -132,7 +132,9 @@ class _CropEditorState extends State<_CropEditor> {
         _withCircleUi = withCircleUi;
         _resizeWith(_aspectRatio);
       }
-      ..onImageChanged = _resetImage;
+      ..onImageChanged = _resetImage
+      ..onChangeRect =
+          (newRect) => rect = calculator.correct(newRect, _imageRect);
 
     _controller = TransformationController()
       ..addListener(() => setState(() {}));

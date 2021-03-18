@@ -24,6 +24,10 @@ class CropController {
   /// change if cropping with circle shaped UI.
   /// if [value] is true, [aspectRatio] automatically fixed with 1
   set withCircleUi(bool value) => _delegate.onChangeWithCircleUi(value);
+
+  /// change [Rect] of cropping area.
+  /// the value is corrected if it indicates outside of the image.
+  set rect(Rect value) => _delegate.onChangeRect(value);
 }
 
 /// Delegate of actions from [CropController]
@@ -40,4 +44,7 @@ class CropControllerDelegate {
 
   /// callback that [CropController.withCircleUi] is changed.
   late ValueChanged<bool> onChangeWithCircleUi;
+
+  /// callback that [CropController.rect] is changed.
+  late ValueChanged<Rect> onChangeRect;
 }
