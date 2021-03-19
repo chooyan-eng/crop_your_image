@@ -56,7 +56,7 @@ packages:
       name: crop_your_image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.0"
+    version: "0.5.0"
   crypto:
     dependency: transitive
     description:
