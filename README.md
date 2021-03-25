@@ -6,7 +6,7 @@ crop_your_image provides only minimum UI for deciding cropping area inside image
 
 This policy helps app developers to build "Cropping page" with the design of their own brand.In order to control the actions for cropping images, you can use `CropController` from whatever your Widgets.
 
-![Image Cropping Preview](https://github.com/chooyan-eng/crop_your_image_gallery/raw/main/screenshots/cyig_3.gif)
+![Image Cropping Preview](https://github.com/chooyan-eng/crop_your_image/raw/main/assets/cropyourimage.gif)
 
 ## Note
 
