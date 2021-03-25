@@ -26,14 +26,14 @@ class Crop extends StatelessWidget {
   /// This [Rect] must be based on the rect of [image] data, not screen.
   ///
   /// e.g. If the original image size is 1280x1024,
-  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [initialRect] would
+  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [initialArea] would
   /// result in covering exact center of the image with 800x600 image size.
   ///
-  /// If [initialRect] is given, [initialSize] is ignored.
+  /// If [initialArea] is given, [initialSize] is ignored.
   /// In other hand, [aspectRatio] is still enabled although initial shape of
-  /// cropping area depends on [initialRect]. Once user moves cropping area
+  /// cropping area depends on [initialArea]. Once user moves cropping area
   /// with their hand, the shape of cropping area is calculated depending on [aspectRatio].
-  final Rect? initialRect;
+  final Rect? initialArea;
 
   /// flag if cropping image with circle shape.
   /// if [true], [aspectRatio] is fixed to 1.
@@ -67,7 +67,7 @@ class Crop extends StatelessWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
-    this.initialRect,
+    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -93,7 +93,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
-            initialArea: initialRect,
+            initialArea: initialArea,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
