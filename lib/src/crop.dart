@@ -93,7 +93,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
-            initialRect: initialRect,
+            initialArea: initialRect,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
@@ -113,7 +113,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
-  final Rect? initialRect;
+  final Rect? initialArea;
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
@@ -128,7 +128,7 @@ class _CropEditor extends StatefulWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
-    this.initialRect,
+    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -215,7 +215,7 @@ class _CropEditorState extends State<_CropEditor> {
   void _resizeWith(double? aspectRatio) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
-    if (widget.initialRect == null) {
+    if (widget.initialArea == null) {
       rect = calculator.initialCropRect(
         MediaQuery.of(context).size,
         _imageRect,
@@ -228,10 +228,10 @@ class _CropEditorState extends State<_CropEditor> {
         MediaQuery.of(context).size,
       );
       rect = Rect.fromLTWH(
-        _imageRect.left + widget.initialRect!.left / screenSizeRatio,
-        _imageRect.top + widget.initialRect!.top / screenSizeRatio,
-        widget.initialRect!.width / screenSizeRatio,
-        widget.initialRect!.height / screenSizeRatio,
+        _imageRect.left + widget.initialArea!.left / screenSizeRatio,
+        _imageRect.top + widget.initialArea!.top / screenSizeRatio,
+        widget.initialArea!.width / screenSizeRatio,
+        widget.initialArea!.height / screenSizeRatio,
       );
     }
   }
