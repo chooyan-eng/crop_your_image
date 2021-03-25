@@ -169,14 +169,20 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
-      ..onChangeAspectRatio = _resizeWith
+      ..onChangeAspectRatio = (aspectRatio) {
+        _resizeWith(aspectRatio, null);
+      }
       ..onChangeWithCircleUi = (withCircleUi) {
         _withCircleUi = withCircleUi;
-        _resizeWith(_aspectRatio);
+        _resizeWith(null, null);
       }
       ..onImageChanged = _resetImage
-      ..onChangeRect =
-          (newRect) => rect = calculator.correct(newRect, _imageRect);
+      ..onChangeRect = (newRect) {
+        rect = calculator.correct(newRect, _imageRect);
+      }
+      ..onChangeArea = (newArea) {
+        _resizeWith(_aspectRatio, newArea);
+      };
 
     _controller = TransformationController()
       ..addListener(() => setState(() {}));
@@ -208,14 +214,14 @@ class _CropEditorState extends State<_CropEditor> {
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
-    _resizeWith(widget.aspectRatio);
+    _resizeWith(widget.aspectRatio, widget.initialArea);
   }
 
   /// resize cropping area with given aspect ratio.
-  void _resizeWith(double? aspectRatio) {
+  void _resizeWith(double? aspectRatio, Rect? initialArea) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
-    if (widget.initialArea == null) {
+    if (initialArea == null) {
       rect = calculator.initialCropRect(
         MediaQuery.of(context).size,
         _imageRect,
@@ -228,10 +234,10 @@ class _CropEditorState extends State<_CropEditor> {
         MediaQuery.of(context).size,
       );
       rect = Rect.fromLTWH(
-        _imageRect.left + widget.initialArea!.left / screenSizeRatio,
-        _imageRect.top + widget.initialArea!.top / screenSizeRatio,
-        widget.initialArea!.width / screenSizeRatio,
-        widget.initialArea!.height / screenSizeRatio,
+        _imageRect.left + initialArea.left / screenSizeRatio,
+        _imageRect.top + initialArea.top / screenSizeRatio,
+        initialArea.width / screenSizeRatio,
+        initialArea.height / screenSizeRatio,
       );
     }
   }

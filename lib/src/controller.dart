@@ -28,6 +28,9 @@ class CropController {
   /// change [Rect] of cropping area.
   /// the value is corrected if it indicates outside of the image.
   set rect(Rect value) => _delegate.onChangeRect(value);
+
+  /// change [Rect] of cropping area based on [Rect] of original imgage.
+  set area(Rect value) => _delegate.onChangeArea(value);
 }
 
 /// Delegate of actions from [CropController]
@@ -47,4 +50,7 @@ class CropControllerDelegate {
 
   /// callback that [CropController.rect] is changed.
   late ValueChanged<Rect> onChangeRect;
+
+  /// callback that [CropController.area] is changed.
+  late ValueChanged<Rect> onChangeArea;
 }
