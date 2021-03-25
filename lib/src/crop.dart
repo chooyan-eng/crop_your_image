@@ -22,6 +22,19 @@ class Crop extends StatelessWidget {
   /// cropping area would expand as much as possible.
   final double? initialSize;
 
+  /// Initial [Rect] of cropping area.
+  /// This [Rect] must be based on the rect of [image] data, not screen.
+  ///
+  /// e.g. If the original image size is 1280x1024,
+  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [initialArea] would
+  /// result in covering exact center of the image with 800x600 image size.
+  ///
+  /// If [initialArea] is given, [initialSize] is ignored.
+  /// In other hand, [aspectRatio] is still enabled although initial shape of
+  /// cropping area depends on [initialArea]. Once user moves cropping area
+  /// with their hand, the shape of cropping area is calculated depending on [aspectRatio].
+  final Rect? initialArea;
+
   /// flag if cropping image with circle shape.
   /// if [true], [aspectRatio] is fixed to 1.
   final bool withCircleUi;
@@ -54,6 +67,7 @@ class Crop extends StatelessWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -79,6 +93,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
+            initialArea: initialArea,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
@@ -98,6 +113,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
+  final Rect? initialArea;
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
@@ -112,6 +128,7 @@ class _CropEditor extends StatefulWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -152,14 +169,20 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
-      ..onChangeAspectRatio = _resizeWith
+      ..onChangeAspectRatio = (aspectRatio) {
+        _resizeWith(aspectRatio, null);
+      }
       ..onChangeWithCircleUi = (withCircleUi) {
         _withCircleUi = withCircleUi;
-        _resizeWith(_aspectRatio);
+        _resizeWith(null, null);
       }
       ..onImageChanged = _resetImage
-      ..onChangeRect =
-          (newRect) => rect = calculator.correct(newRect, _imageRect);
+      ..onChangeRect = (newRect) {
+        rect = calculator.correct(newRect, _imageRect);
+      }
+      ..onChangeArea = (newArea) {
+        _resizeWith(_aspectRatio, newArea);
+      };
 
     _controller = TransformationController()
       ..addListener(() => setState(() {}));
@@ -187,23 +210,36 @@ class _CropEditorState extends State<_CropEditor> {
   void _resetCroppingArea() {
     final screenSize = MediaQuery.of(context).size;
     final imageRatio = _targetImage!.width / _targetImage!.height;
-    _isFitVertically = imageRatio < (screenSize.width / screenSize.height);
+    _isFitVertically = imageRatio < screenSize.aspectRatio;
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
-    _resizeWith(widget.aspectRatio);
+    _resizeWith(widget.aspectRatio, widget.initialArea);
   }
 
   /// resize cropping area with given aspect ratio.
-  void _resizeWith(double? aspectRatio) {
+  void _resizeWith(double? aspectRatio, Rect? initialArea) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
-    rect = calculator.initialCropRect(
-      MediaQuery.of(context).size,
-      _imageRect,
-      _aspectRatio ?? 1,
-      widget.initialSize ?? 1,
-    );
+    if (initialArea == null) {
+      rect = calculator.initialCropRect(
+        MediaQuery.of(context).size,
+        _imageRect,
+        _aspectRatio ?? 1,
+        widget.initialSize ?? 1,
+      );
+    } else {
+      final screenSizeRatio = calculator.screenSizeRatio(
+        _targetImage!,
+        MediaQuery.of(context).size,
+      );
+      rect = Rect.fromLTWH(
+        _imageRect.left + initialArea.left / screenSizeRatio,
+        _imageRect.top + initialArea.top / screenSizeRatio,
+        initialArea.width / screenSizeRatio,
+        initialArea.height / screenSizeRatio,
+      );
+    }
   }
 
   /// crop given image with given area.
