@@ -77,13 +77,14 @@ Widget build(BuildContext context) {
 - `aspectRatio` is the aspect ratio of cropping area. Set `null` or just omit if you want to crop images with any aspect ratio.
 - `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)
 - `initialSize` is the initial size of cropping area. `1.0` (or `null`, by default) fits the size of image, which means cropping area extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.
+- `initialArea` is the initial `Rect` of cropping area based on actual image data.
 - `withCircleUi` flag is to decide the shape of cropping UI. If `true`, `aspectRatio` is automatically set `1.0` and the shape of cropping UI would be circle. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.
 - `baseColor` is the color of the mask widget which is placed over the cropping editor.
 - `maskColor` is the color of the base color of the cropping editor.
 - `onMoved` callback is called when cropping area is moved regardless of its reasons. `newRect` of argument is current `Rect` of cropping area.
 - `cornerDotBuilder` is the builder to build Widget placed at corners. The builder passes `size` which widget must follow and `cornerIndex` which indicates the position: 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom.
 
-In addition, `image`, `aspectRatio`, `withCircleUi` and `rect` can also be changed via `CropController`, and other properties, such as `baseColor`, `maskColor` and `cornerDotBuilder`, can be changed by `setState`.
+In addition, `image`, `aspectRatio`, `withCircleUi`, `rect` and `area` can also be changed via `CropController`, and other properties, such as `baseColor`, `maskColor` and `cornerDotBuilder`, can be changed by `setState`.
 
 # Contact
 

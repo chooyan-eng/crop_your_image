@@ -1,3 +1,6 @@
+## [0.5.0] - 2021.03.25
+* Enable to set initial cropping area with `initialArea` property.
+
 ## [0.5.0] - 2021.03.18
 * Enable to configure corner Dots with whatever Widget.
 * Enable to configure cropping mask colors and base colors.
