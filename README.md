@@ -86,6 +86,14 @@ Widget build(BuildContext context) {
 
 In addition, `image`, `aspectRatio`, `withCircleUi`, `rect` and `area` can also be changed via `CropController`, and other properties, such as `baseColor`, `maskColor` and `cornerDotBuilder`, can be changed by `setState`.
 
+# Gallery App
+
+The repository below is for a sample app of using crop_your_image.
+
+[chooyan-eng/crop_your_image_gallery](https://github.com/chooyan-eng/crop_your_image_gallery)
+
+You can find several examples with executable source codes here.
+
 # Contact
 
 If you have anything you want to inform me ([@chooyan-eng](https://github.com/chooyan-eng)), such as suggestions to enhance this package or functionalities you want etc, feel free to make [issues on GitHub](https://github.com/chooyan-eng/crop_your_image/issues) or send messages on Twitter [@chooyan_i18n](https://twitter.com/chooyan_i18n).
