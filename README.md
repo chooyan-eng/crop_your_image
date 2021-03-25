@@ -10,9 +10,7 @@ This policy helps app developers to build "Cropping page" with the design of the
 
 ## Note
 
-Please note that this package is at the very starting point of developping. Some functionality may lack, APIs have to be more enhanced, and several bugs have to be fixed.
-
-I will appreciate your idea or suggestions to achieve the basic idea written above.
+Please note that this package is at the very starting point of developping. I'm always waiting for your feedbacks and Pull Requests for making crop_your_image more handy and useful with less bugs.
 
 ## Usage
 

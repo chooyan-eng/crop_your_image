@@ -1,4 +1,7 @@
-## [0.5.0] - 2021.03.25
+## [0.5.2] - 2021.03.25
+* Fix typo on metadata files and update README.md.
+
+## [0.5.1] - 2021.03.25
 * Enable to set initial cropping area with `initialArea` property.
 
 ## [0.5.0] - 2021.03.18
