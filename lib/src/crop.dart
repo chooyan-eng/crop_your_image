@@ -58,9 +58,6 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
-  /// flag to show debug sheet
-  final bool showDebugSheet;
-
   const Crop({
     Key? key,
     required this.image,
@@ -74,7 +71,6 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
-    this.showDebugSheet = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -100,7 +96,6 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
-            showDebugSheet: showDebugSheet,
           ),
         );
       },
@@ -120,7 +115,6 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
-  final bool showDebugSheet;
 
   const _CropEditor({
     Key? key,
@@ -135,7 +129,6 @@ class _CropEditor extends StatefulWidget {
     this.maskColor,
     required this.baseColor,
     this.cornerDotBuilder,
-    this.showDebugSheet = false,
   }) : super(key: key);
 
   @override
@@ -271,17 +264,13 @@ class _CropEditorState extends State<_CropEditor> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        InteractiveViewer(
-          scaleEnabled: false,
-          transformationController: _controller,
-          child: Container(
-            color: widget.baseColor,
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: Image.memory(
-              widget.image,
-              fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
-            ),
+        Container(
+          color: widget.baseColor,
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          child: Image.memory(
+            widget.image,
+            fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
           ),
         ),
         IgnorePointer(
@@ -383,53 +372,7 @@ class _CropEditorState extends State<_CropEditor> {
                 const DotControl(),
           ),
         ),
-        Visibility(
-          visible: widget.showDebugSheet,
-          child: _buildDebugSheet(context),
-        ),
       ],
-    );
-  }
-
-  /// build debug sheet containing current scale, position, image size, etc.
-  Widget _buildDebugSheet(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    return Container(
-      color: Colors.green.withAlpha(200),
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.all(16),
-      child: Positioned(
-        bottom: 0,
-        left: 0,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'SCREEN: height ${screenSize.height} / width ${screenSize.width}',
-              style: TextStyle(color: Colors.white),
-            ),
-            if (_targetImage != null)
-              Text(
-                'IMAGE: height ${_targetImage!.height} / width ${_targetImage!.width}',
-                style: TextStyle(color: Colors.white),
-              ),
-            Text(
-              '$_rect',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'CONTROLLER: ${_controller.value.getMaxScaleOnAxis()}\n${_controller.value}',
-              style: TextStyle(color: Colors.white),
-            ),
-            if (_targetImage != null)
-              Text(
-                '${_targetImage!.width * _controller.value.getMaxScaleOnAxis()}\n${_controller.value.entry(0, 3).abs() + screenSize.width}',
-                style: TextStyle(color: Colors.white),
-              ),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
     );
   }
 }
