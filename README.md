@@ -8,6 +8,16 @@ This policy helps app developers to build "Cropping page" with the design of the
 
 ![Image Cropping Preview](https://github.com/chooyan-eng/crop_your_image/raw/main/assets/cropyourimage.gif)
 
+## Features
+
+- __Minimum UI restrictions__.
+- Flexible `Crop` widget which __can be placed anywhere__ on your widget tree.
+- `CropController` to control crop actions.
+- Crop with both __rect__ and __circle__
+- Fix __aspectRatio__.
+- Set the rect of cropping area programmatically.
+- Change the UI of `Crop` widget as much as possible.
+
 ## Note
 
 Please note that this package is at the very starting point of developping. I'm always waiting for your feedbacks and Pull Requests for making crop_your_image more handy and useful with less bugs.
