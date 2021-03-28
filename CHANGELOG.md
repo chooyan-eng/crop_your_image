@@ -1,3 +1,7 @@
+## [0.5.2] - 2021.03.28
+* Update Readme
+* Remove unused code
+
 ## [0.5.1+1] - 2021.03.25
 * Enable to set initial cropping area with `initialArea` property.
 
