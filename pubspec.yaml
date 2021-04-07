@@ -1,6 +1,6 @@
 name: crop_your_image
 description: crop_your_image helps your app to embed Widgets for cropping images.
-version: 0.5.2+2
+version: 0.5.3
 homepage: https://github.com/chooyan-eng/crop_your_image
 
 environment:

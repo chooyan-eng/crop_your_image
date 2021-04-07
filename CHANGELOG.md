@@ -1,3 +1,6 @@
+## [0.5.3] - 2021.03.28
+* Fix a bug that calcuration of cropping area is wrong when Exif has orientation data.
+
 ## [0.5.2+2] - 2021.03.28
 * Update Readme
 
