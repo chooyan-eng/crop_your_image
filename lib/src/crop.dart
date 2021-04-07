@@ -181,16 +181,33 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    _targetImage = image.decodeImage(widget.image);
+    _targetImage = _fromByteData(widget.image);
     _withCircleUi = widget.withCircleUi;
     _resetCroppingArea();
     super.didChangeDependencies();
   }
 
+  // decode orientation awared Image.
+  image.Image? _fromByteData(Uint8List data) {
+    final tempImage = image.decodeImage(data);
+    assert(tempImage != null);
+
+    // check orientation
+    switch (tempImage?.exif.data[0x0112] ?? -1) {
+      case 3:
+        return image.copyRotate(tempImage!, 180);
+      case 6:
+        return image.copyRotate(tempImage!, 90);
+      case 8:
+        return image.copyRotate(tempImage!, -90);
+    }
+    return tempImage;
+  }
+
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
     setState(() {
-      _targetImage = image.decodeImage(targetImage);
+      _targetImage = _fromByteData(targetImage);
     });
     _resetCroppingArea();
   }
@@ -198,6 +215,7 @@ class _CropEditorState extends State<_CropEditor> {
   /// reset [Rect] of cropping area with current state
   void _resetCroppingArea() {
     final screenSize = MediaQuery.of(context).size;
+
     final imageRatio = _targetImage!.width / _targetImage!.height;
     _isFitVertically = imageRatio < screenSize.aspectRatio;
 
