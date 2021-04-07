@@ -192,8 +192,6 @@ class _CropEditorState extends State<_CropEditor> {
     final tempImage = image.decodeImage(data);
     assert(tempImage != null);
 
-    print('orientation => ${tempImage?.exif.data[0x0112] ?? -1}');
-
     // check orientation
     switch (tempImage?.exif.data[0x0112] ?? -1) {
       case 3:
