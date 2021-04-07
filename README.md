@@ -14,9 +14,14 @@ This policy helps app developers to build "Cropping page" with the design of the
 - Flexible `Crop` widget which __can be placed anywhere__ on your widget tree.
 - `CropController` to control crop actions.
 - Crop with both __rect__ and __circle__
-- Fix __aspectRatio__.
+- Fix __aspect ratio__.
 - Set the rect of cropping area programmatically.
-- Change the UI of `Crop` widget as much as possible.
+
+Note that this package _DON'T_
+
+- read / download image data from any storages, such as gallery, internet, etc.
+- resize, tilt, or other conversions which can be done with [image](https://pub.dev/packages/image) package directly.
+- provide UI parts other than cropping editor, such as "Crop" button, "Preview" button or "Change Aspect Ratio" menu. Building UI is completely UP TO YOU!
 
 ## Note
 
@@ -70,7 +75,8 @@ Widget build(BuildContext context) {
     },
     aspectRatio: 4 / 3,
     initialSize: 0.5,
-    withCircleUi: false,
+    // initialArea: Rect.fromLTWH(240, 212, 800, 600),
+    // withCircleUi: true,
     baseColor: Colors.blue.shade900,
     maskColor: Colors.white.withAlpha(100),
     onMoved: (newRect) {

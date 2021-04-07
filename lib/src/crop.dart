@@ -137,7 +137,6 @@ class _CropEditor extends StatefulWidget {
 
 class _CropEditorState extends State<_CropEditor> {
   late CropController _cropController;
-  late TransformationController _controller;
   late Rect _rect;
   image.Image? _targetImage;
   late Rect _imageRect;
@@ -176,9 +175,6 @@ class _CropEditorState extends State<_CropEditor> {
       ..onChangeArea = (newArea) {
         _resizeWith(_aspectRatio, newArea);
       };
-
-    _controller = TransformationController()
-      ..addListener(() => setState(() {}));
 
     super.initState();
   }

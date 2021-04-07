@@ -1,3 +1,10 @@
+## [0.5.2+2] - 2021.03.28
+* Update Readme
+
+## [0.5.2+1] - 2021.03.28
+* Fix problems of static analysis.
+* Update Readme
+
 ## [0.5.2] - 2021.03.28
 * Update Readme
 * Remove unused code
