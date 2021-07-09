@@ -116,6 +116,7 @@ class _CropEditor extends StatefulWidget {
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
 
+
   const _CropEditor({
     Key? key,
     required this.image,
@@ -170,7 +171,7 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
-      // ..onUndo = _resetImage
+      ..onCropFuture = _cropFuture
       ..onChangeAspectRatio = (aspectRatio) {
         _resizeWith(aspectRatio, null);
       }
@@ -216,10 +217,11 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
-    setState(() {
-      _targetImage = _fromByteData(targetImage);
-    });
-    _resetCroppingArea();
+    if (this.mounted) {
+      setState(() {
+        _targetImage = _fromByteData(targetImage);
+      });
+    _resetCroppingArea();}
   }
 
   /// reset [Rect] of cropping area with current state
@@ -284,6 +286,29 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onCropped(cropResult);
   }
 
+  Future<Uint8List> _cropFuture() {
+    assert(_targetImage != null);
+
+    final screenSizeRatio = calculator.screenSizeRatio(
+      _targetImage!,
+      MediaQuery.of(context).size,
+    );
+
+    // use compute() not to block UI update
+    return compute(
+      _withCircleUi ? _doCropCircle : _doCrop,
+      [
+        _targetImage!,
+        Rect.fromLTWH(
+          (_rect.left - _imageRect.left) * screenSizeRatio,
+          (_rect.top - _imageRect.top) * screenSizeRatio,
+          _rect.width * screenSizeRatio,
+          _rect.height * screenSizeRatio,
+        ),
+      ],
+    );
+
+  }
   @override
   Widget build(BuildContext context) {
     return Stack(

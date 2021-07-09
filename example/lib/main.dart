@@ -207,13 +207,29 @@ class _CropSampleState extends State<CropSample> {
                       Container(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
+                          // crop without Future
+                          // onPressed: () {
+                          //   setState(() {
+                          //     _isCropping = true;
+                          //   });
+                          //   _isCircleUi
+                          //       ? _cropController.cropCircle()
+                          //       : _cropController.crop();
+                          // },
+
+                          //with Future, wait and async
+                          onPressed: () async {
+
                             setState(() {
                               _isCropping = true;
                             });
-                            _isCircleUi
-                                ? _cropController.cropCircle()
-                                : _cropController.crop();
+                            Uint8List croppedData = _isCircleUi
+                                ? await _cropController.cropCircleFuture()
+                                : await _cropController.cropFuture();
+                            setState(() {
+                              _croppedData = croppedData;
+                              _isCropping = false;
+                            });
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -232,6 +248,8 @@ class _CropSampleState extends State<CropSample> {
       ),
     );
   }
+
+
 
   Expanded _buildSumbnail(Uint8List data) {
     final index = _imageDataList.indexOf(data);
