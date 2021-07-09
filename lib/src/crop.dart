@@ -144,6 +144,15 @@ class _CropEditorState extends State<_CropEditor> {
   double? _aspectRatio;
   bool _withCircleUi = false;
   bool _isFitVertically = false;
+  
+  //Undo variables
+  List<double> deltax = [];
+  List<double> deltay = [];
+  List<int> whichPos = [];
+  double curDeltaX = 0;
+  double curDeltaY = 0;
+  final stepsAllowed = 10;
+  MaterialColor c = Colors.grey;
 
   _Calculator get calculator => _isFitVertically
       ? const _VerticalCalculator()
@@ -161,6 +170,7 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
+      // ..onUndo = _resetImage
       ..onChangeAspectRatio = (aspectRatio) {
         _resizeWith(aspectRatio, null);
       }
@@ -299,11 +309,76 @@ class _CropEditorState extends State<_CropEditor> {
             ),
           ),
         ),
+
+        FloatingActionButton(
+          onPressed: () {
+            if(deltax.length > 0){
+              double x = deltax.removeLast();
+              double y = deltay.removeLast();
+              int state = whichPos.removeLast();
+              if (deltax.length == 0){
+                c = Colors.grey;
+              }
+              switch(state){
+                case 0:
+                  rect = calculator.moveRect(
+                    _rect,
+                    x,
+                    y,
+                    _imageRect,
+                  );
+                  break;
+                case 1:
+                  rect = calculator.moveTopLeft(
+                    _rect,
+                    x,
+                    y,
+                    _imageRect,
+                    _aspectRatio,
+                  );
+                  break;
+                case 2:
+                  rect = calculator.moveTopRight(
+                    _rect,
+                    x,
+                    y,
+                    _imageRect,
+                    _aspectRatio,
+                  );
+                  break;
+                case 3:
+                  rect = calculator.moveBottomLeft(
+                    _rect,
+                    x,
+                    y,
+                    _imageRect,
+                    _aspectRatio,
+                  );
+                  break;
+                case 4:
+                  rect = calculator.moveBottomRight(
+                    _rect,
+                    x,
+                    y,
+                    _imageRect,
+                    _aspectRatio,
+                  );
+                  break;
+              }
+            }else{
+              c = Colors.grey;
+            }
+          },
+          child: const Icon(Icons.undo),
+          backgroundColor: c,
+        ),
+
         Positioned(
           left: _rect.left,
           top: _rect.top,
           child: GestureDetector(
             onPanUpdate: (details) {
+              accumulateDeltas(details);
               rect = calculator.moveRect(
                 _rect,
                 details.delta.dx,
@@ -311,6 +386,10 @@ class _CropEditorState extends State<_CropEditor> {
                 _imageRect,
               );
             },
+            onPanEnd: (details){
+            addMoveToUndo(0);
+            },
+
             child: Container(
               width: _rect.width,
               height: _rect.height,
@@ -323,6 +402,7 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              accumulateDeltas(details);
               rect = calculator.moveTopLeft(
                 _rect,
                 details.delta.dx,
@@ -330,6 +410,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _imageRect,
                 _aspectRatio,
               );
+            },
+            onPanEnd: (details){
+              addMoveToUndo(1);
             },
             child: widget.cornerDotBuilder?.call(dotTotalSize, 0) ??
                 const DotControl(),
@@ -340,6 +423,7 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.top - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              accumulateDeltas(details);
               rect = calculator.moveTopRight(
                 _rect,
                 details.delta.dx,
@@ -347,6 +431,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _imageRect,
                 _aspectRatio,
               );
+            },
+            onPanEnd: (details){
+            addMoveToUndo(2);
             },
             child: widget.cornerDotBuilder?.call(dotTotalSize, 1) ??
                 const DotControl(),
@@ -357,6 +444,7 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              accumulateDeltas(details);
               rect = calculator.moveBottomLeft(
                 _rect,
                 details.delta.dx,
@@ -364,6 +452,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _imageRect,
                 _aspectRatio,
               );
+            },
+            onPanEnd: (details){
+            addMoveToUndo(3);
             },
             child: widget.cornerDotBuilder?.call(dotTotalSize, 2) ??
                 const DotControl(),
@@ -374,6 +465,7 @@ class _CropEditorState extends State<_CropEditor> {
           top: _rect.bottom - (dotTotalSize / 2),
           child: GestureDetector(
             onPanUpdate: (details) {
+              accumulateDeltas(details);
               rect = calculator.moveBottomRight(
                 _rect,
                 details.delta.dx,
@@ -382,12 +474,38 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
+            onPanEnd: (details){
+            addMoveToUndo(4);
+            },
             child: widget.cornerDotBuilder?.call(dotTotalSize, 3) ??
                 const DotControl(),
           ),
         ),
       ],
     );
+  }
+
+  void accumulateDeltas(DragUpdateDetails details) {
+    curDeltaX += -details.delta.dx;
+    curDeltaY += -details.delta.dy;
+  }
+
+  void addMoveToUndo(which) {
+    if (deltax.length >= stepsAllowed) {
+      deltax.removeAt(0);
+      deltay.removeAt(0);
+      whichPos.removeAt(0);
+    }
+    deltax.add(curDeltaX);
+    deltay.add(curDeltaY);
+    curDeltaX = 0;
+    curDeltaY = 0;
+    whichPos.add(which);
+    if (deltax.length == 1) {
+      setState(() {
+        c = Colors.purple;
+      });
+    }
   }
 }
 

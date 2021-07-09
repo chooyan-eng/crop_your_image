@@ -5,10 +5,13 @@ class CropController {
   late CropControllerDelegate _delegate;
 
   /// setter for [CropControllerDelegate]
+
   set delegate(CropControllerDelegate value) => _delegate = value;
 
   /// crop given image with current configuration
   void crop() => _delegate.onCrop(false);
+
+  // set undo(Uint8List value) => _delegate.onUndo(value);
 
   /// crop given image with current configuration and circle shape.
   void cropCircle() => _delegate.onCrop(true);
@@ -38,6 +41,8 @@ class CropControllerDelegate {
   /// callback that [CropController.crop] is called.
   /// the meaning of the value is if cropping a image with circle shape.
   late ValueChanged<bool> onCrop;
+
+  // late ValueChanged<Uint8List> onUndo;
 
   /// callback that [CropController.image] is set.
   late ValueChanged<Uint8List> onImageChanged;
