@@ -127,7 +127,7 @@ class _CropSampleState extends State<CropSample> {
                           withCircleUi: _isCircleUi,
                           initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
-                          cornerDotBuilder: (size, index) => _isSumbnail
+                          cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
                               ? const SizedBox.shrink()
                               : const DotControl(),
                         ),
