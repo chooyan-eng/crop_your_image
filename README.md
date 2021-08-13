@@ -82,7 +82,7 @@ Widget build(BuildContext context) {
     onMoved: (newRect) {
       // do something with current cropping area.
     }
-    cornerDotBuilder: (size, cornerIndex) => const DotControl(color: Colors.blue),
+    cornerDotBuilder: (size, edgeAlignment) => const DotControl(color: Colors.blue),
   );
 }
 ```
@@ -96,7 +96,7 @@ Widget build(BuildContext context) {
 - `baseColor` is the color of the mask widget which is placed over the cropping editor.
 - `maskColor` is the color of the base color of the cropping editor.
 - `onMoved` callback is called when cropping area is moved regardless of its reasons. `newRect` of argument is current `Rect` of cropping area.
-- `cornerDotBuilder` is the builder to build Widget placed at corners. The builder passes `size` which widget must follow and `cornerIndex` which indicates the position: 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom.
+- `cornerDotBuilder` is the builder to build Widget placed at corners. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.
 
 In addition, `image`, `aspectRatio`, `withCircleUi`, `rect` and `area` can also be changed via `CropController`, and other properties, such as `baseColor`, `maskColor` and `cornerDotBuilder`, can be changed by `setState`.
 

@@ -2,7 +2,8 @@ part of crop_your_image;
 
 const dotTotalSize = 32.0; // fixed corner dot size.
 
-typedef CornerDotBuilder = Widget Function(double size, EdgeAlignment edgeAlignment);
+typedef CornerDotBuilder = Widget Function(
+    double size, EdgeAlignment edgeAlignment);
 
 /// Widget for the entry point of crop_your_image.
 class Crop extends StatelessWidget {
@@ -53,8 +54,7 @@ class Crop extends StatelessWidget {
 
   /// builder for corner dot widget.
   /// [CornerDotBuilder] passes [size] which indicates the size of each dots
-  /// and [cornerIndex] which indicates the position of each dots like below:
-  /// 0: left-top, 1: right-top, 2: left-bottom, 3: right-bottom.
+  /// and [EdgeAlignment] which indicates the position of each dots.
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
@@ -71,7 +71,8 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
-  })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
+  })  : assert((initialSize ?? 1.0) <= 1.0,
+            'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
 
   @override
@@ -288,7 +289,9 @@ class _CropEditorState extends State<_CropEditor> {
         ),
         IgnorePointer(
           child: ClipPath(
-            clipper: _withCircleUi ? _CircleCropAreaClipper(_rect) : _CropAreaClipper(_rect),
+            clipper: _withCircleUi
+                ? _CircleCropAreaClipper(_rect)
+                : _CropAreaClipper(_rect),
             child: Container(
               width: double.infinity,
               height: double.infinity,
@@ -328,7 +331,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.topLeft) ?? const DotControl(),
+            child: widget.cornerDotBuilder
+                    ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -344,7 +349,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.topRight) ?? const DotControl(),
+            child: widget.cornerDotBuilder
+                    ?.call(dotTotalSize, EdgeAlignment.topRight) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -360,7 +367,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.bottomLeft) ?? const DotControl(),
+            child: widget.cornerDotBuilder
+                    ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
+                const DotControl(),
           ),
         ),
         Positioned(
@@ -376,7 +385,9 @@ class _CropEditorState extends State<_CropEditor> {
                 _aspectRatio,
               );
             },
-            child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.bottomRight) ?? const DotControl(),
+            child: widget.cornerDotBuilder
+                    ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
+                const DotControl(),
           ),
         ),
       ],
@@ -490,7 +501,8 @@ Uint8List _doCropCircle(List<dynamic> cropData) {
     image.encodePng(
       image.copyCropCircle(
         originalImage,
-        center: image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
+        center:
+            image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
         radius: min(rect.width, rect.height) ~/ 2,
       ),
     ),
