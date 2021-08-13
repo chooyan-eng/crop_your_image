@@ -1,3 +1,8 @@
+## [0.6.0] - 2021.08.14
+* _Braking Change:_ The second argument of `cornerDotBuilder` is now enum of `EdgeAlignment`, not meaningful index.
+* Add callback for `CropStatus`.
+* Enhancement of not to block UI when loading image data.
+
 ## [0.5.3] - 2021.03.28
 * Fix a bug that calcuration of cropping area is wrong when Exif has orientation data.
 
