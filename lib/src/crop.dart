@@ -144,7 +144,7 @@ class _CropEditorState extends State<_CropEditor> {
   bool _withCircleUi = false;
   bool _isFitVertically = false;
 
-  _Calculator get calculator => _isFitVertically //
+  _Calculator get calculator => _isFitVertically
       ? const _VerticalCalculator()
       : const _HorizontalCalculator();
 
