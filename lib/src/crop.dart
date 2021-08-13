@@ -144,6 +144,9 @@ class _CropEditorState extends State<_CropEditor> {
   double? _aspectRatio;
   bool _withCircleUi = false;
   bool _isFitVertically = false;
+  Future<image.Image?>? _lastComputed;
+
+  bool get _isImageLoading => _lastComputed != null;
 
   _Calculator get calculator => _isFitVertically
       ? const _VerticalCalculator()
@@ -181,35 +184,35 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    _targetImage = _fromByteData(widget.image);
-    _withCircleUi = widget.withCircleUi;
-    _resetCroppingArea();
+    final future = compute(_fromByteData, widget.image);
+    _lastComputed = future;
+    future.then((converted) {
+      if (_lastComputed == future) {
+        _targetImage = converted;
+        _withCircleUi = widget.withCircleUi;
+        _resetCroppingArea();
+
+        setState(() {
+          _lastComputed = null;
+        });
+      }
+    });
     super.didChangeDependencies();
-  }
-
-  // decode orientation awared Image.
-  image.Image? _fromByteData(Uint8List data) {
-    final tempImage = image.decodeImage(data);
-    assert(tempImage != null);
-
-    // check orientation
-    switch (tempImage?.exif.data[0x0112] ?? -1) {
-      case 3:
-        return image.copyRotate(tempImage!, 180);
-      case 6:
-        return image.copyRotate(tempImage!, 90);
-      case 8:
-        return image.copyRotate(tempImage!, -90);
-    }
-    return tempImage;
   }
 
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
-    setState(() {
-      _targetImage = _fromByteData(targetImage);
+    final future = compute(_fromByteData, targetImage);
+    _lastComputed = future;
+    future.then((converted) {
+      if (_lastComputed == future) {
+        setState(() {
+          _targetImage = converted;
+          _lastComputed = null;
+        });
+        _resetCroppingArea();
+      }
     });
-    _resetCroppingArea();
   }
 
   /// reset [Rect] of cropping area with current state
@@ -276,122 +279,124 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          color: widget.baseColor,
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          child: Image.memory(
-            widget.image,
-            fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
-          ),
-        ),
-        IgnorePointer(
-          child: ClipPath(
-            clipper: _withCircleUi
-                ? _CircleCropAreaClipper(_rect)
-                : _CropAreaClipper(_rect),
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              color: widget.maskColor ?? Colors.black.withAlpha(100),
-            ),
-          ),
-        ),
-        Positioned(
-          left: _rect.left,
-          top: _rect.top,
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              rect = calculator.moveRect(
-                _rect,
-                details.delta.dx,
-                details.delta.dy,
-                _imageRect,
-              );
-            },
-            child: Container(
-              width: _rect.width,
-              height: _rect.height,
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-        Positioned(
-          left: _rect.left - (dotTotalSize / 2),
-          top: _rect.top - (dotTotalSize / 2),
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              rect = calculator.moveTopLeft(
-                _rect,
-                details.delta.dx,
-                details.delta.dy,
-                _imageRect,
-                _aspectRatio,
-              );
-            },
-            child: widget.cornerDotBuilder
-                    ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
-                const DotControl(),
-          ),
-        ),
-        Positioned(
-          left: _rect.right - (dotTotalSize / 2),
-          top: _rect.top - (dotTotalSize / 2),
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              rect = calculator.moveTopRight(
-                _rect,
-                details.delta.dx,
-                details.delta.dy,
-                _imageRect,
-                _aspectRatio,
-              );
-            },
-            child: widget.cornerDotBuilder
-                    ?.call(dotTotalSize, EdgeAlignment.topRight) ??
-                const DotControl(),
-          ),
-        ),
-        Positioned(
-          left: _rect.left - (dotTotalSize / 2),
-          top: _rect.bottom - (dotTotalSize / 2),
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              rect = calculator.moveBottomLeft(
-                _rect,
-                details.delta.dx,
-                details.delta.dy,
-                _imageRect,
-                _aspectRatio,
-              );
-            },
-            child: widget.cornerDotBuilder
-                    ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
-                const DotControl(),
-          ),
-        ),
-        Positioned(
-          left: _rect.right - (dotTotalSize / 2),
-          top: _rect.bottom - (dotTotalSize / 2),
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              rect = calculator.moveBottomRight(
-                _rect,
-                details.delta.dx,
-                details.delta.dy,
-                _imageRect,
-                _aspectRatio,
-              );
-            },
-            child: widget.cornerDotBuilder
-                    ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
-                const DotControl(),
-          ),
-        ),
-      ],
-    );
+    return _isImageLoading
+        ? Center(child: const CircularProgressIndicator())
+        : Stack(
+            children: [
+              Container(
+                color: widget.baseColor,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child: Image.memory(
+                  widget.image,
+                  fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+                ),
+              ),
+              IgnorePointer(
+                child: ClipPath(
+                  clipper: _withCircleUi
+                      ? _CircleCropAreaClipper(_rect)
+                      : _CropAreaClipper(_rect),
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    color: widget.maskColor ?? Colors.black.withAlpha(100),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: _rect.left,
+                top: _rect.top,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveRect(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                    );
+                  },
+                  child: Container(
+                    width: _rect.width,
+                    height: _rect.height,
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: _rect.left - (dotTotalSize / 2),
+                top: _rect.top - (dotTotalSize / 2),
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveTopLeft(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                      _aspectRatio,
+                    );
+                  },
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
+                      const DotControl(),
+                ),
+              ),
+              Positioned(
+                left: _rect.right - (dotTotalSize / 2),
+                top: _rect.top - (dotTotalSize / 2),
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveTopRight(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                      _aspectRatio,
+                    );
+                  },
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.topRight) ??
+                      const DotControl(),
+                ),
+              ),
+              Positioned(
+                left: _rect.left - (dotTotalSize / 2),
+                top: _rect.bottom - (dotTotalSize / 2),
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveBottomLeft(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                      _aspectRatio,
+                    );
+                  },
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
+                      const DotControl(),
+                ),
+              ),
+              Positioned(
+                left: _rect.right - (dotTotalSize / 2),
+                top: _rect.bottom - (dotTotalSize / 2),
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveBottomRight(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                      _aspectRatio,
+                    );
+                  },
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
+                      const DotControl(),
+                ),
+              ),
+            ],
+          );
   }
 }
 
@@ -507,4 +512,21 @@ Uint8List _doCropCircle(List<dynamic> cropData) {
       ),
     ),
   );
+}
+
+// decode orientation awared Image.
+image.Image _fromByteData(Uint8List data) {
+  final tempImage = image.decodeImage(data);
+  assert(tempImage != null);
+
+  // check orientation
+  switch (tempImage?.exif.data[0x0112] ?? -1) {
+    case 3:
+      return image.copyRotate(tempImage!, 180);
+    case 6:
+      return image.copyRotate(tempImage!, 90);
+    case 8:
+      return image.copyRotate(tempImage!, -90);
+  }
+  return tempImage!;
 }
