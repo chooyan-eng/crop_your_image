@@ -60,6 +60,7 @@ class _CropSampleState extends State<CropSample> {
   var _isCropping = false;
   var _isCircleUi = false;
   Uint8List? _croppedData;
+  var _statusText = '';
 
   @override
   void initState() {
@@ -125,6 +126,17 @@ class _CropSampleState extends State<CropSample> {
                             });
                           },
                           withCircleUi: _isCircleUi,
+                          onStatusChanged: (status) => setState(() {
+                            _statusText = <CropStatus, String>{
+                                  CropStatus.nothing: 'Crop has no image data',
+                                  CropStatus.loading:
+                                      'Crop is now loading given image',
+                                  CropStatus.ready: 'Crop is now ready!',
+                                  CropStatus.cropping:
+                                      'Crop is now cropping image',
+                                }[status] ??
+                                '';
+                          }),
                           initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
                           cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
@@ -223,6 +235,9 @@ class _CropSampleState extends State<CropSample> {
                     ],
                   ),
                 ),
+              const SizedBox(height: 16),
+              Text(_statusText),
+              const SizedBox(height: 16),
             ],
           ),
           replacement: const CircularProgressIndicator(),
