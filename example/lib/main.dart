@@ -94,7 +94,7 @@ class _CropSampleState extends State<CropSample> {
           visible: !_loadingImage && !_isCropping,
           child: Column(
             children: [
-              if (_imageDataList.isNotEmpty)
+              if (_imageDataList.length >= 4)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
