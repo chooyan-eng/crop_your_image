@@ -5,6 +5,8 @@ const dotTotalSize = 32.0; // fixed corner dot size.
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
+enum CropStatus { nothing, loading, ready, cropping }
+
 /// Widget for the entry point of crop_your_image.
 class Crop extends StatelessWidget {
   /// original image data
@@ -43,8 +45,14 @@ class Crop extends StatelessWidget {
   /// conroller for control crop actions
   final CropController? controller;
 
-  /// Callback that is called when cropping area moved.
+  /// Callback called when cropping area moved.
   final ValueChanged<Rect>? onMoved;
+
+  /// Callback called when status of Crop widget is changed.
+  ///
+  /// note: Currently, the very first callback is [CropStatus.ready]
+  /// which is called after loading [image] data for the first time.
+  final ValueChanged<CropStatus>? onStatusChanged;
 
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
@@ -68,6 +76,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onStatusChanged,
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
@@ -93,6 +102,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
@@ -112,6 +122,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
+  final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
@@ -126,6 +137,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onStatusChanged,
     this.maskColor,
     required this.baseColor,
     this.cornerDotBuilder,
@@ -195,6 +207,7 @@ class _CropEditorState extends State<_CropEditor> {
         setState(() {
           _lastComputed = null;
         });
+        widget.onStatusChanged?.call(CropStatus.ready);
       }
     });
     super.didChangeDependencies();
@@ -202,6 +215,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
+    widget.onStatusChanged?.call(CropStatus.loading);
     final future = compute(_fromByteData, targetImage);
     _lastComputed = future;
     future.then((converted) {
@@ -211,6 +225,7 @@ class _CropEditorState extends State<_CropEditor> {
           _lastComputed = null;
         });
         _resetCroppingArea();
+        widget.onStatusChanged?.call(CropStatus.ready);
       }
     });
   }
@@ -261,6 +276,8 @@ class _CropEditorState extends State<_CropEditor> {
       MediaQuery.of(context).size,
     );
 
+    widget.onStatusChanged?.call(CropStatus.cropping);
+
     // use compute() not to block UI update
     final cropResult = await compute(
       withCircleShape ? _doCropCircle : _doCrop,
@@ -275,6 +292,8 @@ class _CropEditorState extends State<_CropEditor> {
       ],
     );
     widget.onCropped(cropResult);
+
+    widget.onStatusChanged?.call(CropStatus.ready);
   }
 
   @override
