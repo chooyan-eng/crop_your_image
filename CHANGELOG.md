@@ -1,3 +1,6 @@
+## [0.6.0+1] - 2021.08.14
+* Fix static analysis issues.
+
 ## [0.6.0] - 2021.08.14
 * _Braking Change:_ The second argument of `cornerDotBuilder` is now enum of `EdgeAlignment`, not meaningful index.
 * Add callback for `CropStatus`.
