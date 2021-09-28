@@ -66,6 +66,11 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
+  /// Provide your own widget while an image is loading.
+  /// If no widget is provided, the default [CircularProgressIndicator] will
+  /// be used.
+  final Widget? loadingWidget;
+
   const Crop({
     Key? key,
     required this.image,
@@ -80,6 +85,7 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
+    this.loadingWidget,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -106,6 +112,7 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
+            loadingWidget: loadingWidget,
           ),
         );
       },
@@ -126,6 +133,7 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
+  final Widget? loadingWidget;
 
   const _CropEditor({
     Key? key,
@@ -141,6 +149,7 @@ class _CropEditor extends StatefulWidget {
     this.maskColor,
     required this.baseColor,
     this.cornerDotBuilder,
+    this.loadingWidget,
   }) : super(key: key);
 
   @override
@@ -298,124 +307,127 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return _isImageLoading
-        ? Center(child: const CircularProgressIndicator())
-        : Stack(
-            children: [
-              Container(
-                color: widget.baseColor,
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                child: Image.memory(
-                  widget.image,
-                  fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
-                ),
+    if (_isImageLoading) {
+      return widget.loadingWidget ??
+          Center(child: const CircularProgressIndicator());
+    } else {
+      return Stack(
+        children: [
+          Container(
+            color: widget.baseColor,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: Image.memory(
+              widget.image,
+              fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+            ),
+          ),
+          IgnorePointer(
+            child: ClipPath(
+              clipper: _withCircleUi
+                  ? _CircleCropAreaClipper(_rect)
+                  : _CropAreaClipper(_rect),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: widget.maskColor ?? Colors.black.withAlpha(100),
               ),
-              IgnorePointer(
-                child: ClipPath(
-                  clipper: _withCircleUi
-                      ? _CircleCropAreaClipper(_rect)
-                      : _CropAreaClipper(_rect),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: widget.maskColor ?? Colors.black.withAlpha(100),
-                  ),
-                ),
+            ),
+          ),
+          Positioned(
+            left: _rect.left,
+            top: _rect.top,
+            child: CustomPanDetector(
+              onPanUpdate: (Offset delta) {
+                rect = calculator.moveRect(
+                  _rect,
+                  delta.dx,
+                  delta.dy,
+                  _imageRect,
+                );
+              },
+              child: Container(
+                width: _rect.width,
+                height: _rect.height,
+                color: Colors.transparent,
               ),
-              Positioned(
-                left: _rect.left,
-                top: _rect.top,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveRect(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                    );
-                  },
-                  child: Container(
-                    width: _rect.width,
-                    height: _rect.height,
-                    color: Colors.transparent,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: _rect.left - (dotTotalSize / 2),
-                top: _rect.top - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.right - (dotTotalSize / 2),
-                top: _rect.top - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.topRight) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.left - (dotTotalSize / 2),
-                top: _rect.bottom - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.right - (dotTotalSize / 2),
-                top: _rect.bottom - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
-                      const DotControl(),
-                ),
-              ),
-            ],
-          );
+            ),
+          ),
+          Positioned(
+            left: _rect.left - (dotTotalSize / 2),
+            top: _rect.top - (dotTotalSize / 2),
+            child: CustomPanDetector(
+              onPanUpdate: (Offset delta) {
+                rect = calculator.moveTopLeft(
+                  _rect,
+                  delta.dx,
+                  delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
+              },
+              child: widget.cornerDotBuilder
+                      ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
+                  const DotControl(),
+            ),
+          ),
+          Positioned(
+            left: _rect.right - (dotTotalSize / 2),
+            top: _rect.top - (dotTotalSize / 2),
+            child: CustomPanDetector(
+              onPanUpdate: (Offset delta) {
+                rect = calculator.moveTopRight(
+                  _rect,
+                  delta.dx,
+                  delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
+              },
+              child: widget.cornerDotBuilder
+                      ?.call(dotTotalSize, EdgeAlignment.topRight) ??
+                  const DotControl(),
+            ),
+          ),
+          Positioned(
+            left: _rect.left - (dotTotalSize / 2),
+            top: _rect.bottom - (dotTotalSize / 2),
+            child: CustomPanDetector(
+              onPanUpdate: (Offset delta) {
+                rect = calculator.moveBottomLeft(
+                  _rect,
+                  delta.dx,
+                  delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
+              },
+              child: widget.cornerDotBuilder
+                      ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
+                  const DotControl(),
+            ),
+          ),
+          Positioned(
+            left: _rect.right - (dotTotalSize / 2),
+            top: _rect.bottom - (dotTotalSize / 2),
+            child: CustomPanDetector(
+              onPanUpdate: (Offset delta) {
+                rect = calculator.moveBottomRight(
+                  _rect,
+                  delta.dx,
+                  delta.dy,
+                  _imageRect,
+                  _aspectRatio,
+                );
+              },
+              child: widget.cornerDotBuilder
+                      ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
+                  const DotControl(),
+            ),
+          ),
+        ],
+      );
+    }
   }
 }
 
