@@ -19,6 +19,10 @@ class Crop extends StatelessWidget {
   /// null, by default, means no fixed aspect ratio.
   final double? aspectRatio;
 
+  /// initial aspect ration of cropping area.
+  /// you can change this ratio. it is not fixed!
+  final double? initialAspectRatio;
+
   /// initial size of cropping area.
   /// Set double value less than 1.0.
   /// if initialSize is 1.0 (or null),
@@ -71,6 +75,7 @@ class Crop extends StatelessWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
+    this.initialAspectRatio,
     this.initialSize,
     this.initialArea,
     this.withCircleUi = false,
@@ -97,6 +102,7 @@ class Crop extends StatelessWidget {
             image: image,
             onCropped: onCropped,
             aspectRatio: aspectRatio,
+            initialAspectRatio: initialAspectRatio,
             initialSize: initialSize,
             initialArea: initialArea,
             withCircleUi: withCircleUi,
@@ -117,6 +123,7 @@ class _CropEditor extends StatefulWidget {
   final Uint8List image;
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
+  final double? initialAspectRatio;
   final double? initialSize;
   final Rect? initialArea;
   final bool withCircleUi;
@@ -132,6 +139,7 @@ class _CropEditor extends StatefulWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
+    this.initialAspectRatio,
     this.initialSize,
     this.initialArea,
     this.withCircleUi = false,
@@ -154,6 +162,7 @@ class _CropEditorState extends State<_CropEditor> {
   late Rect _imageRect;
 
   double? _aspectRatio;
+  double? _initialAspectRatio;
   bool _withCircleUi = false;
   bool _isFitVertically = false;
   Future<image.Image?>? _lastComputed;
@@ -239,18 +248,23 @@ class _CropEditorState extends State<_CropEditor> {
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
-    _resizeWith(widget.aspectRatio, widget.initialArea);
+    _resizeWith(
+      widget.aspectRatio,
+      widget.initialArea,
+      initialAspectRatio: widget.initialAspectRatio,
+    );
   }
 
   /// resize cropping area with given aspect ratio.
-  void _resizeWith(double? aspectRatio, Rect? initialArea) {
+  void _resizeWith(double? aspectRatio, Rect? initialArea,
+      {double? initialAspectRatio}) {
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
 
     if (initialArea == null) {
       rect = calculator.initialCropRect(
         MediaQuery.of(context).size,
         _imageRect,
-        _aspectRatio ?? 1,
+        _aspectRatio ?? initialAspectRatio ?? 1,
         widget.initialSize ?? 1,
       );
     } else {
