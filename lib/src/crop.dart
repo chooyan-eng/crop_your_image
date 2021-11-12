@@ -330,7 +330,7 @@ class _CropEditorState extends State<_CropEditor> {
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: widget.maskColor ?? Colors.black.withAlpha(100),
+                    color: Colors.transparent,
                   ),
                 ),
               ),
