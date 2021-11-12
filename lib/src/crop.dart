@@ -309,19 +309,14 @@ class _CropEditorState extends State<_CropEditor> {
               ),
               ColorFiltered(
                 colorFilter: ColorFilter.mode(
-                  widget.maskColor ?? Colors.black.withAlpha(100),
+                  Colors.transparent,
                   BlendMode.srcOut,
                 ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        backgroundBlendMode: BlendMode.dstOut,
-                      ), // This one will handle background + difference out
-                    ),
-                  ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    backgroundBlendMode: BlendMode.dstOut,
+                  ), // This one will handle background + difference out
                 ),
               ),
               IgnorePointer(
@@ -330,7 +325,7 @@ class _CropEditorState extends State<_CropEditor> {
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: Colors.transparent,
+                    color: widget.maskColor ?? Colors.black.withAlpha(100),
                   ),
                 ),
               ),
