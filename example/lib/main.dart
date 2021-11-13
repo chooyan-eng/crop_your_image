@@ -118,6 +118,8 @@ class _CropSampleState extends State<CropSample> {
                       if (_imageDataList.isNotEmpty)
                         Crop(
                           controller: _cropController,
+                          borderColor: Colors.red,
+                          borderThickness: 5,
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {
                             setState(() {

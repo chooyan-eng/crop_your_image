@@ -56,7 +56,7 @@ class Crop extends StatelessWidget {
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
 
-  /// [Color] of the border of the cropping area, default value is [Colors.grey].
+  /// [Color] of the border of the cropping area, default value is null which means no border.
   ///
   /// This is useful in the HTML renderer where sometimes the mask color doesn't appear.
   final Color? borderColor;
@@ -113,6 +113,8 @@ class Crop extends StatelessWidget {
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
+            borderColor: borderColor,
+            borderThickness: borderThickness,
             cornerDotBuilder: cornerDotBuilder,
           ),
         );
@@ -342,11 +344,6 @@ class _CropEditorState extends State<_CropEditor> {
                           width: _rect.width,
                           height: _rect.height,
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: widget.borderColor ?? Colors.grey,
-                              style: BorderStyle.solid,
-                              width: widget.borderThickness ?? 3.0,
-                            ),
                             shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
                             color: Colors.black,
                           ),
@@ -356,6 +353,26 @@ class _CropEditorState extends State<_CropEditor> {
                   ],
                 ),
               ),
+              if (widget.borderColor != null)
+                Positioned(
+                  left: _rect.left,
+                  top: _rect.top,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: _rect.width,
+                      height: _rect.height,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: widget.borderColor ?? Colors.grey,
+                          style: BorderStyle.solid,
+                          width: widget.borderThickness ?? 3.0,
+                        ),
+                        shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                        color: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 left: _rect.left - (dotTotalSize / 2),
                 top: _rect.top - (dotTotalSize / 2),
