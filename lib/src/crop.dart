@@ -328,32 +328,6 @@ class _CropEditorState extends State<_CropEditor> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Container(
-                    //   decoration: BoxDecoration(
-                    //       color: Colors.black, backgroundBlendMode: BlendMode.dstOut), // This one will handle background + difference out
-                    // ),
-                    // Positioned(
-                    //   left: _rect.left,
-                    //   top: _rect.top,
-                    //   child: GestureDetector(
-                    //     onPanUpdate: (details) {
-                    //       rect = calculator.moveRect(
-                    //         _rect,
-                    //         details.delta.dx,
-                    //         details.delta.dy,
-                    //         _imageRect,
-                    //       );
-                    //     },
-                    //     child: Container(
-                    //       width: _rect.width,
-                    //       height: _rect.height,
-                    //       decoration: BoxDecoration(
-                    //         shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                    //         color: Colors.black,
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.transparent,
