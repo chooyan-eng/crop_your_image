@@ -62,7 +62,7 @@ class Crop extends StatelessWidget {
   final Color? borderColor;
 
   /// Thickness of the border of the cropping area, default value is 3.0.
-  final double? borderThickness;
+  final double borderThickness;
 
   /// [Color] of the base color of the cropping editor.
   final Color baseColor;
@@ -86,7 +86,7 @@ class Crop extends StatelessWidget {
     this.onStatusChanged,
     this.maskColor,
     this.borderColor,
-    this.borderThickness,
+    this.borderThickness = 3.0,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
   })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -135,7 +135,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color? borderColor;
-  final double? borderThickness;
+  final double borderThickness;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
 
@@ -152,7 +152,7 @@ class _CropEditor extends StatefulWidget {
     this.onStatusChanged,
     this.maskColor,
     this.borderColor,
-    this.borderThickness,
+    this.borderThickness = 3.0,
     required this.baseColor,
     this.cornerDotBuilder,
   }) : super(key: key);
@@ -328,26 +328,62 @@ class _CropEditorState extends State<_CropEditor> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Positioned(
-                      left: _rect.left,
-                      top: _rect.top,
-                      child: GestureDetector(
-                        onPanUpdate: (details) {
-                          rect = calculator.moveRect(
-                            _rect,
-                            details.delta.dx,
-                            details.delta.dy,
-                            _imageRect,
-                          );
-                        },
-                        child: Container(
-                          width: _rect.width,
-                          height: _rect.height,
-                          decoration: BoxDecoration(
-                            shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                            color: Colors.black,
+                    // Container(
+                    //   decoration: BoxDecoration(
+                    //       color: Colors.black, backgroundBlendMode: BlendMode.dstOut), // This one will handle background + difference out
+                    // ),
+                    // Positioned(
+                    //   left: _rect.left,
+                    //   top: _rect.top,
+                    //   child: GestureDetector(
+                    //     onPanUpdate: (details) {
+                    //       rect = calculator.moveRect(
+                    //         _rect,
+                    //         details.delta.dx,
+                    //         details.delta.dy,
+                    //         _imageRect,
+                    //       );
+                    //     },
+                    //     child: Container(
+                    //       width: _rect.width,
+                    //       height: _rect.height,
+                    //       decoration: BoxDecoration(
+                    //         shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                    //         color: Colors.black,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Positioned(
+                            left: _rect.left,
+                            top: _rect.top,
+                            child: GestureDetector(
+                              onPanUpdate: (details) {
+                                rect = calculator.moveRect(
+                                  _rect,
+                                  details.delta.dx,
+                                  details.delta.dy,
+                                  _imageRect,
+                                );
+                              },
+                              child: Container(
+                                width: _rect.width,
+                                height: _rect.height,
+                                decoration: BoxDecoration(
+                                  shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -355,17 +391,17 @@ class _CropEditorState extends State<_CropEditor> {
               ),
               if (widget.borderColor != null)
                 Positioned(
-                  left: _rect.left,
-                  top: _rect.top,
+                  left: _rect.left - widget.borderThickness,
+                  top: _rect.top - widget.borderThickness,
                   child: IgnorePointer(
                     child: Container(
-                      width: _rect.width,
-                      height: _rect.height,
+                      width: _rect.width + widget.borderThickness * 2,
+                      height: _rect.height + widget.borderThickness * 2,
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: widget.borderColor ?? Colors.grey,
                           style: BorderStyle.solid,
-                          width: widget.borderThickness ?? 3.0,
+                          width: widget.borderThickness,
                         ),
                         shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
                         color: Colors.transparent,
