@@ -56,6 +56,14 @@ class Crop extends StatelessWidget {
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
 
+  /// [Color] of the border of the cropping area, default value is [Colors.grey].
+  ///
+  /// This is useful in the HTML renderer where sometimes the mask color doesn't appear.
+  final Color? borderColor;
+
+  /// Thickness of the border of the cropping area, default value is 3.0.
+  final double? borderThickness;
+
   /// [Color] of the base color of the cropping editor.
   final Color baseColor;
 
@@ -77,6 +85,8 @@ class Crop extends StatelessWidget {
     this.onMoved,
     this.onStatusChanged,
     this.maskColor,
+    this.borderColor,
+    this.borderThickness,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
   })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -122,6 +132,8 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Rect>? onMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
+  final Color? borderColor;
+  final double? borderThickness;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
 
@@ -137,6 +149,8 @@ class _CropEditor extends StatefulWidget {
     this.onMoved,
     this.onStatusChanged,
     this.maskColor,
+    this.borderColor,
+    this.borderThickness,
     required this.baseColor,
     this.cornerDotBuilder,
   }) : super(key: key);
@@ -308,44 +322,38 @@ class _CropEditorState extends State<_CropEditor> {
                 ),
               ),
               ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.transparent,
-                  BlendMode.srcOut,
-                ),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                    backgroundBlendMode: BlendMode.dstOut,
-                  ), // This one will handle background + difference out
-                ),
-              ),
-              IgnorePointer(
-                child: ClipPath(
-                  clipper: _withCircleUi ? _CircleCropAreaClipper(_rect) : _CropAreaClipper(_rect),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: widget.maskColor ?? Colors.black.withAlpha(100),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: _rect.left,
-                top: _rect.top,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveRect(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                    );
-                  },
-                  child: Container(
-                    width: _rect.width,
-                    height: _rect.height,
-                    color: Colors.transparent,
-                  ),
+                colorFilter: ColorFilter.mode(widget.maskColor ?? Colors.black54, BlendMode.srcOut),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned(
+                      left: _rect.left,
+                      top: _rect.top,
+                      child: GestureDetector(
+                        onPanUpdate: (details) {
+                          rect = calculator.moveRect(
+                            _rect,
+                            details.delta.dx,
+                            details.delta.dy,
+                            _imageRect,
+                          );
+                        },
+                        child: Container(
+                          width: _rect.width,
+                          height: _rect.height,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: widget.borderColor ?? Colors.grey,
+                              style: BorderStyle.solid,
+                              width: widget.borderThickness ?? 3.0,
+                            ),
+                            shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Positioned(
@@ -415,48 +423,6 @@ class _CropEditorState extends State<_CropEditor> {
             ],
           );
   }
-}
-
-class _CropAreaClipper extends CustomClipper<Path> {
-  final Rect rect;
-
-  _CropAreaClipper(this.rect);
-
-  @override
-  Path getClip(Size size) {
-    return Path()
-      ..addPath(
-        Path()
-          ..moveTo(rect.left, rect.top)
-          ..lineTo(rect.right, rect.top)
-          ..lineTo(rect.right, rect.bottom)
-          ..lineTo(rect.left, rect.bottom)
-          ..close(),
-        Offset.zero,
-      )
-      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
-      ..fillType = PathFillType.evenOdd;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
-}
-
-class _CircleCropAreaClipper extends CustomClipper<Path> {
-  final Rect rect;
-
-  _CircleCropAreaClipper(this.rect);
-
-  @override
-  Path getClip(Size size) {
-    return Path()
-      ..addOval(Rect.fromCircle(center: rect.center, radius: rect.width / 2))
-      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
-      ..fillType = PathFillType.evenOdd;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
 /// Defalt dot widget placed on corners to control cropping area.
