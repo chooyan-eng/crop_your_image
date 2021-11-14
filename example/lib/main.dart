@@ -131,16 +131,19 @@ class _CropSampleState extends State<CropSample> {
                           onStatusChanged: (status) => setState(() {
                             _statusText = <CropStatus, String>{
                                   CropStatus.nothing: 'Crop has no image data',
-                                  CropStatus.loading: 'Crop is now loading given image',
+                                  CropStatus.loading:
+                                      'Crop is now loading given image',
                                   CropStatus.ready: 'Crop is now ready!',
-                                  CropStatus.cropping: 'Crop is now cropping image',
+                                  CropStatus.cropping:
+                                      'Crop is now cropping image',
                                 }[status] ??
                                 '';
                           }),
                           initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
-                          cornerDotBuilder: (size, edgeAlignment) =>
-                              _isSumbnail ? const SizedBox.shrink() : const DotControl(),
+                          cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
+                              ? const SizedBox.shrink()
+                              : const DotControl(),
                         ),
                       Positioned(
                         right: 16,
@@ -149,7 +152,8 @@ class _CropSampleState extends State<CropSample> {
                           onTapDown: (_) => setState(() => _isSumbnail = true),
                           onTapUp: (_) => setState(() => _isSumbnail = false),
                           child: CircleAvatar(
-                            backgroundColor: _isSumbnail ? Colors.blue.shade50 : Colors.blue,
+                            backgroundColor:
+                                _isSumbnail ? Colors.blue.shade50 : Colors.blue,
                             child: Center(
                               child: Icon(Icons.crop_free_rounded),
                             ),
@@ -159,7 +163,9 @@ class _CropSampleState extends State<CropSample> {
                     ],
                   ),
                   replacement: Center(
-                    child: _croppedData == null ? SizedBox.shrink() : Image.memory(_croppedData!),
+                    child: _croppedData == null
+                        ? SizedBox.shrink()
+                        : Image.memory(_croppedData!),
                   ),
                 ),
               ),
@@ -217,7 +223,9 @@ class _CropSampleState extends State<CropSample> {
                             setState(() {
                               _isCropping = true;
                             });
-                            _isCircleUi ? _cropController.cropCircle() : _cropController.crop();
+                            _isCircleUi
+                                ? _cropController.cropCircle()
+                                : _cropController.crop();
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),

@@ -2,7 +2,8 @@ part of crop_your_image;
 
 const dotTotalSize = 32.0; // fixed corner dot size.
 
-typedef CornerDotBuilder = Widget Function(double size, EdgeAlignment edgeAlignment);
+typedef CornerDotBuilder = Widget Function(
+    double size, EdgeAlignment edgeAlignment);
 
 enum CropStatus { nothing, loading, ready, cropping }
 
@@ -85,7 +86,8 @@ class Crop extends StatelessWidget {
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
     this.useClipNone = false,
-  })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
+  })  : assert((initialSize ?? 1.0) <= 1.0,
+            'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
 
   @override
@@ -170,11 +172,14 @@ class _CropEditorState extends State<_CropEditor> {
 
   bool get _isImageLoading => _lastComputed != null;
 
-  _Calculator get calculator => _isFitVertically ? const _VerticalCalculator() : const _HorizontalCalculator();
+  _Calculator get calculator => _isFitVertically
+      ? const _VerticalCalculator()
+      : const _HorizontalCalculator();
 
   set rect(Rect newRect) {
     final screenSize = MediaQuery.of(context).size;
-    _borderThickness = sqrt(screenSize.width * screenSize.width + screenSize.height * screenSize.height);
+    _borderThickness = sqrt(screenSize.width * screenSize.width +
+        screenSize.height * screenSize.height);
     final borderRect = _caculateEdge(newRect, _borderThickness, screenSize);
     setState(() {
       _borderRect = borderRect;
@@ -209,7 +214,8 @@ class _CropEditorState extends State<_CropEditor> {
   @override
   void didChangeDependencies() {
     final screenSize = MediaQuery.of(context).size;
-    _borderThickness = sqrt(screenSize.width * screenSize.width + screenSize.height * screenSize.height);
+    _borderThickness = sqrt(screenSize.width * screenSize.width +
+        screenSize.height * screenSize.height);
 
     final future = compute(_fromByteData, widget.image);
     _lastComputed = future;
@@ -317,12 +323,15 @@ class _CropEditorState extends State<_CropEditor> {
   Rect _caculateEdge(Rect rect, double maxThickness, Size screenSize) {
     // Just a workaround
     if (!widget.useClipNone && _isHtml) {
-      return Rect.fromLTWH(rect.left - maxThickness - maxThickness / 2, rect.top - maxThickness - maxThickness / 2,
-          rect.width + maxThickness * 2, rect.height + maxThickness * 2);
+      return Rect.fromLTWH(
+          rect.left - maxThickness - maxThickness / 2,
+          rect.top - maxThickness - maxThickness / 2,
+          rect.width + maxThickness * 2,
+          rect.height + maxThickness * 2);
     }
 
-    return Rect.fromLTWH(rect.left - maxThickness, rect.top - maxThickness, rect.width + maxThickness * 2,
-        rect.height + maxThickness * 2);
+    return Rect.fromLTWH(rect.left - maxThickness, rect.top - maxThickness,
+        rect.width + maxThickness * 2, rect.height + maxThickness * 2);
   }
 
   @override
@@ -358,7 +367,8 @@ class _CropEditorState extends State<_CropEditor> {
                     width: _rect.width,
                     height: _rect.height,
                     decoration: BoxDecoration(
-                      shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                      shape:
+                          _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
                       color: Colors.transparent,
                     ),
                   ),
@@ -377,7 +387,8 @@ class _CropEditorState extends State<_CropEditor> {
                         style: BorderStyle.solid,
                         width: _borderThickness,
                       ),
-                      shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                      shape:
+                          _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
                       color: Colors.transparent,
                     ),
                   ),
@@ -396,7 +407,9 @@ class _CropEditorState extends State<_CropEditor> {
                       _aspectRatio,
                     );
                   },
-                  child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.topLeft) ?? const DotControl(),
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
+                      const DotControl(),
                 ),
               ),
               Positioned(
@@ -412,7 +425,9 @@ class _CropEditorState extends State<_CropEditor> {
                       _aspectRatio,
                     );
                   },
-                  child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.topRight) ?? const DotControl(),
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.topRight) ??
+                      const DotControl(),
                 ),
               ),
               Positioned(
@@ -428,7 +443,9 @@ class _CropEditorState extends State<_CropEditor> {
                       _aspectRatio,
                     );
                   },
-                  child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.bottomLeft) ?? const DotControl(),
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
+                      const DotControl(),
                 ),
               ),
               Positioned(
@@ -444,7 +461,9 @@ class _CropEditorState extends State<_CropEditor> {
                       _aspectRatio,
                     );
                   },
-                  child: widget.cornerDotBuilder?.call(dotTotalSize, EdgeAlignment.bottomRight) ?? const DotControl(),
+                  child: widget.cornerDotBuilder
+                          ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
+                      const DotControl(),
                 ),
               ),
             ],
@@ -516,7 +535,8 @@ Uint8List _doCropCircle(List<dynamic> cropData) {
     image.encodePng(
       image.copyCropCircle(
         originalImage,
-        center: image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
+        center:
+            image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2),
         radius: min(rect.width, rect.height) ~/ 2,
       ),
     ),
