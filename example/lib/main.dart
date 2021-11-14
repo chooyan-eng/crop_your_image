@@ -118,8 +118,6 @@ class _CropSampleState extends State<CropSample> {
                       if (_imageDataList.isNotEmpty)
                         Crop(
                           controller: _cropController,
-                          borderColor: Colors.red,
-                          borderThickness: 5,
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {
                             setState(() {
@@ -139,7 +137,8 @@ class _CropSampleState extends State<CropSample> {
                           }),
                           initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
-                          cornerDotBuilder: (size, edgeAlignment) => _isSumbnail ? const SizedBox.shrink() : const DotControl(),
+                          cornerDotBuilder: (size, edgeAlignment) =>
+                              _isSumbnail ? const SizedBox.shrink() : const DotControl(),
                         ),
                       Positioned(
                         right: 16,

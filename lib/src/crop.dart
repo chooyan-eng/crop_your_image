@@ -56,14 +56,6 @@ class Crop extends StatelessWidget {
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
 
-  /// [Color] of the border of the cropping area, default value is null which means no border.
-  ///
-  /// This is useful in the HTML renderer where sometimes the mask color doesn't appear.
-  final Color? borderColor;
-
-  /// Thickness of the border of the cropping area, default value is 3.0.
-  final double borderThickness;
-
   /// [Color] of the base color of the cropping editor.
   final Color baseColor;
 
@@ -85,8 +77,6 @@ class Crop extends StatelessWidget {
     this.onMoved,
     this.onStatusChanged,
     this.maskColor,
-    this.borderColor,
-    this.borderThickness = 3.0,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
   })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -113,8 +103,6 @@ class Crop extends StatelessWidget {
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
-            borderColor: borderColor,
-            borderThickness: borderThickness,
             cornerDotBuilder: cornerDotBuilder,
           ),
         );
@@ -134,8 +122,6 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Rect>? onMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
-  final Color? borderColor;
-  final double borderThickness;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
 
@@ -151,8 +137,6 @@ class _CropEditor extends StatefulWidget {
     this.onMoved,
     this.onStatusChanged,
     this.maskColor,
-    this.borderColor,
-    this.borderThickness = 3.0,
     required this.baseColor,
     this.cornerDotBuilder,
   }) : super(key: key);
@@ -171,6 +155,7 @@ class _CropEditorState extends State<_CropEditor> {
   bool _withCircleUi = false;
   bool _isFitVertically = false;
   Future<image.Image?>? _lastComputed;
+  double _borderMaxThickness = 0;
 
   bool get _isImageLoading => _lastComputed != null;
 
@@ -208,6 +193,9 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
+    final screenSize = MediaQuery.of(context).size;
+    _borderMaxThickness = max(screenSize.width, screenSize.height);
+
     final future = compute(_fromByteData, widget.image);
     _lastComputed = future;
     future.then((converted) {
@@ -222,6 +210,7 @@ class _CropEditorState extends State<_CropEditor> {
         widget.onStatusChanged?.call(CropStatus.ready);
       }
     });
+
     super.didChangeDependencies();
   }
 
@@ -313,6 +302,8 @@ class _CropEditorState extends State<_CropEditor> {
     return _isImageLoading
         ? Center(child: const CircularProgressIndicator())
         : Stack(
+            fit: StackFit.expand,
+            clipBehavior: Clip.none,
             children: [
               Container(
                 color: widget.baseColor,
@@ -323,66 +314,47 @@ class _CropEditorState extends State<_CropEditor> {
                   fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
                 ),
               ),
-              ColorFiltered(
-                colorFilter: ColorFilter.mode(widget.maskColor ?? Colors.black54, BlendMode.srcOut),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                      ),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Positioned(
-                            left: _rect.left,
-                            top: _rect.top,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                rect = calculator.moveRect(
-                                  _rect,
-                                  details.delta.dx,
-                                  details.delta.dy,
-                                  _imageRect,
-                                );
-                              },
-                              child: Container(
-                                width: _rect.width,
-                                height: _rect.height,
-                                decoration: BoxDecoration(
-                                  shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.borderColor != null)
-                Positioned(
-                  left: _rect.left - widget.borderThickness,
-                  top: _rect.top - widget.borderThickness,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: _rect.width + widget.borderThickness * 2,
-                      height: _rect.height + widget.borderThickness * 2,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: widget.borderColor ?? Colors.grey,
-                          style: BorderStyle.solid,
-                          width: widget.borderThickness,
-                        ),
-                        shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                        color: Colors.transparent,
-                      ),
+              Positioned(
+                left: _rect.left,
+                top: _rect.top,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    rect = calculator.moveRect(
+                      _rect,
+                      details.delta.dx,
+                      details.delta.dy,
+                      _imageRect,
+                    );
+                  },
+                  child: Container(
+                    width: _rect.width,
+                    height: _rect.height,
+                    decoration: BoxDecoration(
+                      shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                      color: Colors.transparent,
                     ),
                   ),
                 ),
+              ),
+              Positioned(
+                left: _rect.left - _borderMaxThickness,
+                top: _rect.top - _borderMaxThickness,
+                child: IgnorePointer(
+                  child: Container(
+                    width: _rect.width + _borderMaxThickness * 2,
+                    height: _rect.height + _borderMaxThickness * 2,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: widget.maskColor ?? Colors.black54,
+                        style: BorderStyle.solid,
+                        width: _borderMaxThickness,
+                      ),
+                      shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
                 left: _rect.left - (dotTotalSize / 2),
                 top: _rect.top - (dotTotalSize / 2),
