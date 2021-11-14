@@ -118,6 +118,7 @@ class _CropSampleState extends State<CropSample> {
                     children: [
                       if (_imageDataList.isNotEmpty)
                         Crop(
+                          useClipNone: false,
                           controller: _cropController,
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {

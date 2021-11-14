@@ -65,6 +65,11 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
+  /// Use [Clip.none] in Stack, this is more reliable then using [Clip.hardEdge] but
+  /// it will overlaps all other widgets by [maskColor].
+  /// Default is set to false.
+  final bool useClipNone;
+
   const Crop({
     Key? key,
     required this.image,
@@ -79,6 +84,7 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
+    this.useClipNone = false,
   })  : assert((initialSize ?? 1.0) <= 1.0, 'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
 
@@ -104,6 +110,7 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
+            useClipNone: useClipNone,
           ),
         );
       },
@@ -124,22 +131,24 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
+  final bool useClipNone;
 
-  const _CropEditor({
-    Key? key,
-    required this.image,
-    required this.onCropped,
-    this.aspectRatio,
-    this.initialSize,
-    this.initialArea,
-    this.withCircleUi = false,
-    this.controller,
-    this.onMoved,
-    this.onStatusChanged,
-    this.maskColor,
-    required this.baseColor,
-    this.cornerDotBuilder,
-  }) : super(key: key);
+  const _CropEditor(
+      {Key? key,
+      required this.image,
+      required this.onCropped,
+      this.aspectRatio,
+      this.initialSize,
+      this.initialArea,
+      this.withCircleUi = false,
+      this.controller,
+      this.onMoved,
+      this.onStatusChanged,
+      this.maskColor,
+      required this.baseColor,
+      this.cornerDotBuilder,
+      required this.useClipNone})
+      : super(key: key);
 
   @override
   _CropEditorState createState() => _CropEditorState();
@@ -155,17 +164,20 @@ class _CropEditorState extends State<_CropEditor> {
   bool _withCircleUi = false;
   bool _isFitVertically = false;
   Future<image.Image?>? _lastComputed;
-  double _borderMaxThickness = 0;
-  Offset _edgeOffset = Offset(0, 0);
+  Rect _borderRect = Rect.zero;
+  double _borderThickness = 0;
+  bool _isHtml = isHtmlRenderer;
 
   bool get _isImageLoading => _lastComputed != null;
 
   _Calculator get calculator => _isFitVertically ? const _VerticalCalculator() : const _HorizontalCalculator();
 
   set rect(Rect newRect) {
-    final edgeOffset = caculateEdge(newRect, _borderMaxThickness, MediaQuery.of(context).size);
+    final screenSize = MediaQuery.of(context).size;
+    _borderThickness = sqrt(screenSize.width * screenSize.width + screenSize.height * screenSize.height);
+    final borderRect = _caculateEdge(newRect, _borderThickness, screenSize);
     setState(() {
-      _edgeOffset = edgeOffset;
+      _borderRect = borderRect;
       _rect = newRect;
     });
     widget.onMoved?.call(_rect);
@@ -197,7 +209,7 @@ class _CropEditorState extends State<_CropEditor> {
   @override
   void didChangeDependencies() {
     final screenSize = MediaQuery.of(context).size;
-    _borderMaxThickness = max(screenSize.width, screenSize.height);
+    _borderThickness = sqrt(screenSize.width * screenSize.width + screenSize.height * screenSize.height);
 
     final future = compute(_fromByteData, widget.image);
     _lastComputed = future;
@@ -300,13 +312,26 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onStatusChanged?.call(CropStatus.ready);
   }
 
+  // calculate the left and top coordinates of the contour widget because it won't be correct if the position is a negative number
+  // Clip.none cannot be used in Stack because the mask will stack on top of all other widgets
+  Rect _caculateEdge(Rect rect, double maxThickness, Size screenSize) {
+    // Just a workaround
+    if (!widget.useClipNone && _isHtml) {
+      return Rect.fromLTWH(rect.left - maxThickness - maxThickness / 2, rect.top - maxThickness - maxThickness / 2,
+          rect.width + maxThickness * 2, rect.height + maxThickness * 2);
+    }
+
+    return Rect.fromLTWH(rect.left - maxThickness, rect.top - maxThickness, rect.width + maxThickness * 2,
+        rect.height + maxThickness * 2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isImageLoading
         ? Center(child: const CircularProgressIndicator())
         : Stack(
             fit: StackFit.expand,
-            clipBehavior: Clip.hardEdge,
+            clipBehavior: widget.useClipNone ? Clip.none : Clip.hardEdge,
             children: [
               Container(
                 color: widget.baseColor,
@@ -340,19 +365,17 @@ class _CropEditorState extends State<_CropEditor> {
                 ),
               ),
               Positioned(
-                left: _edgeOffset.dx,
-                top: _edgeOffset.dy,
-                width: _rect.width + _borderMaxThickness * 2,
-                height: _rect.height + _borderMaxThickness * 2,
+                left: _borderRect.left,
+                top: _borderRect.top,
                 child: IgnorePointer(
                   child: Container(
-                    width: _rect.width + _borderMaxThickness * 2,
-                    height: _rect.height + _borderMaxThickness * 2,
+                    width: _borderRect.width,
+                    height: _borderRect.height,
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: widget.maskColor ?? Colors.black54,
                         style: BorderStyle.solid,
-                        width: _borderMaxThickness,
+                        width: _borderThickness,
                       ),
                       shape: _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
                       color: Colors.transparent,
@@ -515,14 +538,4 @@ image.Image _fromByteData(Uint8List data) {
       return image.copyRotate(tempImage!, -90);
   }
   return tempImage!;
-}
-
-// calculate the left and top coordinates of the contour widget because it won't be correct if the position is a negative number
-// Clip.none cannot be used in Stack because the mask will stack on top of all other widgets
-Offset caculateEdge(Rect rect, double maxThickness, Size screenSize) {
-  if (rect.left - maxThickness < 0 || rect.top - maxThickness < 0) {
-    return Offset(rect.left - maxThickness - maxThickness / 2, rect.top - maxThickness - maxThickness / 2);
-  }
-
-  return Offset(rect.left - maxThickness, rect.top - maxThickness);
 }
