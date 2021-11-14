@@ -156,13 +156,16 @@ class _CropEditorState extends State<_CropEditor> {
   bool _isFitVertically = false;
   Future<image.Image?>? _lastComputed;
   double _borderMaxThickness = 0;
+  Offset _edgeOffset = Offset(0, 0);
 
   bool get _isImageLoading => _lastComputed != null;
 
   _Calculator get calculator => _isFitVertically ? const _VerticalCalculator() : const _HorizontalCalculator();
 
   set rect(Rect newRect) {
+    final edgeOffset = caculateEdge(newRect, _borderMaxThickness, MediaQuery.of(context).size);
     setState(() {
+      _edgeOffset = edgeOffset;
       _rect = newRect;
     });
     widget.onMoved?.call(_rect);
@@ -303,7 +306,7 @@ class _CropEditorState extends State<_CropEditor> {
         ? Center(child: const CircularProgressIndicator())
         : Stack(
             fit: StackFit.expand,
-            clipBehavior: Clip.none,
+            clipBehavior: Clip.hardEdge,
             children: [
               Container(
                 color: widget.baseColor,
@@ -337,8 +340,10 @@ class _CropEditorState extends State<_CropEditor> {
                 ),
               ),
               Positioned(
-                left: _rect.left - _borderMaxThickness,
-                top: _rect.top - _borderMaxThickness,
+                left: _edgeOffset.dx,
+                top: _edgeOffset.dy,
+                width: _rect.width + _borderMaxThickness * 2,
+                height: _rect.height + _borderMaxThickness * 2,
                 child: IgnorePointer(
                   child: Container(
                     width: _rect.width + _borderMaxThickness * 2,
@@ -510,4 +515,14 @@ image.Image _fromByteData(Uint8List data) {
       return image.copyRotate(tempImage!, -90);
   }
   return tempImage!;
+}
+
+// calculate the left and top coordinates of the contour widget because it won't be correct if the position is a negative number
+// Clip.none cannot be used in Stack because the mask will stack on top of all other widgets
+Offset caculateEdge(Rect rect, double maxThickness, Size screenSize) {
+  if (rect.left - maxThickness < 0 || rect.top - maxThickness < 0) {
+    return Offset(rect.left - maxThickness - maxThickness / 2, rect.top - maxThickness - maxThickness / 2);
+  }
+
+  return Offset(rect.left - maxThickness, rect.top - maxThickness);
 }

@@ -114,6 +114,7 @@ class _CropSampleState extends State<CropSample> {
                 child: Visibility(
                   visible: _croppedData == null,
                   child: Stack(
+                    clipBehavior: Clip.hardEdge,
                     children: [
                       if (_imageDataList.isNotEmpty)
                         Crop(
