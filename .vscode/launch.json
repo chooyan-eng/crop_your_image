@@ -30,7 +30,7 @@
             "flutterMode": "profile"
         },
         {
-            "name": "Diaries Web Html (debug)",
+            "name": "crop_your_image Html (debug)",
             "type": "dart",
             "request": "launch",
             "flutterMode": "debug",
@@ -42,7 +42,7 @@
             "program": "example/lib/main.dart"
         },
         {
-            "name": "Diaries Web (debug)",
+            "name": "crop_your_image canvasKit (debug)",
             "type": "dart",
             "request": "launch",
             "flutterMode": "debug",
