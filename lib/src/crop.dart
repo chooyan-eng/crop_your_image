@@ -484,7 +484,7 @@ class _CropEditorState extends State<_CropEditor> {
                       child: widget.cornerDotBuilder
                               ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
                           const EdgeControl(
-                              edgeAlignment: EdgeAlignment.bottomLeft),
+                              edgeAlignment: EdgeAlignment.bottomRight),
                     ),
                   ),
 
