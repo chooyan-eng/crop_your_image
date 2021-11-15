@@ -180,7 +180,7 @@ class _CropEditorState extends State<_CropEditor> {
     final screenSize = MediaQuery.of(context).size;
     _borderThickness = sqrt(screenSize.width * screenSize.width +
         screenSize.height * screenSize.height);
-    final borderRect = _caculateEdge(newRect, _borderThickness, screenSize);
+    final borderRect = _calculateEdge(newRect, _borderThickness, screenSize);
     setState(() {
       _borderRect = borderRect;
       _rect = newRect;
@@ -320,7 +320,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   // calculate the left and top coordinates of the contour widget because it won't be correct if the position is a negative number
   // Clip.none cannot be used in Stack because the mask will stack on top of all other widgets
-  Rect _caculateEdge(Rect rect, double maxThickness, Size screenSize) {
+  Rect _calculateEdge(Rect rect, double maxThickness, Size screenSize) {
     // Just a workaround
     if (!widget.useClipNone && _isHtml) {
       return Rect.fromLTWH(
