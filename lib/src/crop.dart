@@ -1,11 +1,14 @@
 part of crop_your_image;
 
 const dotTotalSize = 32.0; // fixed corner dot size.
+const edgeLineSize = dotTotalSize / 2 + 4; // fixed edge line size
 
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
 enum CropStatus { nothing, loading, ready, cropping }
+
+enum GridViewMode { none, onTap, always }
 
 /// Widget for the entry point of crop_your_image.
 class Crop extends StatelessWidget {
@@ -66,10 +69,8 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
-  /// Use [Clip.none] in Stack, this is more reliable then using [Clip.hardEdge] but
-  /// it will overlaps all other widgets by [maskColor].
-  /// Default is set to false.
-  final bool useClipNone;
+  /// Options for grid line in cropping area
+  final GridViewMode gridViewMode;
 
   const Crop({
     Key? key,
@@ -85,7 +86,7 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
-    this.useClipNone = false,
+    this.gridViewMode = GridViewMode.onTap,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -112,7 +113,7 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
-            useClipNone: useClipNone,
+            gridViewMode: gridViewMode,
           ),
         );
       },
@@ -133,24 +134,24 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
-  final bool useClipNone;
+  final GridViewMode gridViewMode;
 
-  const _CropEditor(
-      {Key? key,
-      required this.image,
-      required this.onCropped,
-      this.aspectRatio,
-      this.initialSize,
-      this.initialArea,
-      this.withCircleUi = false,
-      this.controller,
-      this.onMoved,
-      this.onStatusChanged,
-      this.maskColor,
-      required this.baseColor,
-      this.cornerDotBuilder,
-      required this.useClipNone})
-      : super(key: key);
+  const _CropEditor({
+    Key? key,
+    required this.image,
+    required this.onCropped,
+    this.aspectRatio,
+    this.initialSize,
+    this.initialArea,
+    this.withCircleUi = false,
+    this.controller,
+    this.onMoved,
+    this.onStatusChanged,
+    this.maskColor,
+    required this.baseColor,
+    this.cornerDotBuilder,
+    required this.gridViewMode,
+  }) : super(key: key);
 
   @override
   _CropEditorState createState() => _CropEditorState();
@@ -166,9 +167,14 @@ class _CropEditorState extends State<_CropEditor> {
   bool _withCircleUi = false;
   bool _isFitVertically = false;
   Future<image.Image?>? _lastComputed;
+
   Rect _borderRect = Rect.zero;
-  double _borderThickness = 0;
-  bool _isHtml = isHtmlRenderer;
+  double _borderThickness = 100;
+
+  Rect _gridRect = Rect.zero;
+  double _gridThickness = .5;
+
+  bool _isOnTap = false;
 
   bool get _isImageLoading => _lastComputed != null;
 
@@ -177,12 +183,8 @@ class _CropEditorState extends State<_CropEditor> {
       : const _HorizontalCalculator();
 
   set rect(Rect newRect) {
-    final screenSize = MediaQuery.of(context).size;
-    _borderThickness = sqrt(screenSize.width * screenSize.width +
-        screenSize.height * screenSize.height);
-    final borderRect = _calculateEdge(newRect, _borderThickness, screenSize);
+    _reCalculateRect(newRect);
     setState(() {
-      _borderRect = borderRect;
       _rect = newRect;
     });
     widget.onMoved?.call(_rect);
@@ -213,10 +215,6 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    final screenSize = MediaQuery.of(context).size;
-    _borderThickness = sqrt(screenSize.width * screenSize.width +
-        screenSize.height * screenSize.height);
-
     final future = compute(_fromByteData, widget.image);
     _lastComputed = future;
     future.then((converted) {
@@ -318,160 +316,247 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onStatusChanged?.call(CropStatus.ready);
   }
 
-  // calculate the left and top coordinates of the contour widget because it won't be correct if the position is a negative number
-  // Clip.none cannot be used in Stack because the mask will stack on top of all other widgets
-  Rect _calculateEdge(Rect rect, double maxThickness, Size screenSize) {
-    // Just a workaround
-    if (!widget.useClipNone && _isHtml) {
-      return Rect.fromLTWH(
-          rect.left - maxThickness - maxThickness / 2,
-          rect.top - maxThickness - maxThickness / 2,
-          rect.width + maxThickness * 2,
-          rect.height + maxThickness * 2);
-    }
+  // re-calculate border (mask) rect and grid rect
+  void _reCalculateRect(Rect rect) {
+    final screenSize = MediaQuery.of(context).size;
+    _borderThickness = sqrt(screenSize.width * screenSize.width +
+        screenSize.height * screenSize.height);
 
-    return Rect.fromLTWH(rect.left - maxThickness, rect.top - maxThickness,
-        rect.width + maxThickness * 2, rect.height + maxThickness * 2);
+    _borderRect = _calculateTopLeft(rect, _borderThickness);
+    _gridRect = _calculateTopLeft(rect, _gridThickness);
+  }
+
+  // control grid line
+  void onTap(bool tap) {
+    setState(() => _isOnTap = tap);
   }
 
   @override
   Widget build(BuildContext context) {
     return _isImageLoading
         ? Center(child: const CircularProgressIndicator())
-        : Stack(
-            fit: StackFit.expand,
-            clipBehavior: widget.useClipNone ? Clip.none : Clip.hardEdge,
-            children: [
-              Container(
-                color: widget.baseColor,
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                child: Image.memory(
-                  widget.image,
-                  fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
-                ),
-              ),
-              Positioned(
-                left: _rect.left,
-                top: _rect.top,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveRect(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                    );
-                  },
-                  child: Container(
-                    width: _rect.width,
-                    height: _rect.height,
-                    decoration: BoxDecoration(
-                      shape:
-                          _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                      color: Colors.transparent,
+        : ClipRect(
+            child: Material(
+              child: Stack(
+                fit: StackFit.expand,
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    color: widget.baseColor,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    child: Image.memory(
+                      widget.image,
+                      fit:
+                          _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
                     ),
                   ),
-                ),
-              ),
-              Positioned(
-                left: _borderRect.left,
-                top: _borderRect.top,
-                child: IgnorePointer(
-                  child: Container(
-                    width: _borderRect.width,
-                    height: _borderRect.height,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: widget.maskColor ?? Colors.black54,
-                        style: BorderStyle.solid,
-                        width: _borderThickness,
+                  Positioned(
+                    left: _rect.left,
+                    top: _rect.top,
+                    child: GestureDetector(
+                      onPanDown: (tap) => onTap(true),
+                      onPanEnd: (tap) => onTap(false),
+                      onPanCancel: () => onTap(false),
+                      onPanUpdate: (details) {
+                        rect = calculator.moveRect(
+                          _rect,
+                          details.delta.dx,
+                          details.delta.dy,
+                          _imageRect,
+                        );
+                      },
+                      child: Container(
+                        width: _rect.width,
+                        height: _rect.height,
+                        decoration: BoxDecoration(
+                          shape: _withCircleUi
+                              ? BoxShape.circle
+                              : BoxShape.rectangle,
+                          color: Colors.transparent,
+                        ),
                       ),
-                      shape:
-                          _withCircleUi ? BoxShape.circle : BoxShape.rectangle,
-                      color: Colors.transparent,
                     ),
                   ),
-                ),
+                  Positioned(
+                    left: _borderRect.left,
+                    top: _borderRect.top,
+                    child: IgnorePointer(
+                      child: Container(
+                        width: _borderRect.width,
+                        height: _borderRect.height,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: widget.maskColor ?? Colors.black54,
+                            style: BorderStyle.solid,
+                            width: _borderThickness,
+                          ),
+                          shape: _withCircleUi
+                              ? BoxShape.circle
+                              : BoxShape.rectangle,
+                          color: Colors.transparent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: _rect.left - (dotTotalSize / 2),
+                    top: _rect.top - (dotTotalSize / 2),
+                    child: GestureDetector(
+                      onPanDown: (tap) => onTap(true),
+                      onPanEnd: (tap) => onTap(false),
+                      onPanCancel: () => onTap(false),
+                      onPanUpdate: (details) {
+                        rect = calculator.moveTopLeft(
+                          _rect,
+                          details.delta.dx,
+                          details.delta.dy,
+                          _imageRect,
+                          _aspectRatio,
+                        );
+                      },
+                      child: widget.cornerDotBuilder
+                              ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
+                          const EdgeControl(
+                              edgeAlignment: EdgeAlignment.topLeft),
+                    ),
+                  ),
+                  Positioned(
+                    left: _rect.right - (dotTotalSize / 2),
+                    top: _rect.top - (dotTotalSize / 2),
+                    child: GestureDetector(
+                      onPanDown: (tap) => onTap(true),
+                      onPanEnd: (tap) => onTap(false),
+                      onPanCancel: () => onTap(false),
+                      onPanUpdate: (details) {
+                        rect = calculator.moveTopRight(
+                          _rect,
+                          details.delta.dx,
+                          details.delta.dy,
+                          _imageRect,
+                          _aspectRatio,
+                        );
+                      },
+                      child: widget.cornerDotBuilder
+                              ?.call(dotTotalSize, EdgeAlignment.topRight) ??
+                          const EdgeControl(
+                              edgeAlignment: EdgeAlignment.topRight),
+                    ),
+                  ),
+                  Positioned(
+                    left: _rect.left - (dotTotalSize / 2),
+                    top: _rect.bottom - (dotTotalSize / 2),
+                    child: GestureDetector(
+                      onPanDown: (tap) => onTap(true),
+                      onPanEnd: (tap) => onTap(false),
+                      onPanCancel: () => onTap(false),
+                      onPanUpdate: (details) {
+                        rect = calculator.moveBottomLeft(
+                          _rect,
+                          details.delta.dx,
+                          details.delta.dy,
+                          _imageRect,
+                          _aspectRatio,
+                        );
+                      },
+                      child: widget.cornerDotBuilder
+                              ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
+                          const EdgeControl(
+                              edgeAlignment: EdgeAlignment.bottomLeft),
+                    ),
+                  ),
+                  Positioned(
+                    left: _rect.right - (dotTotalSize / 2),
+                    top: _rect.bottom - (dotTotalSize / 2),
+                    child: GestureDetector(
+                      onPanDown: (tap) => onTap(true),
+                      onPanEnd: (tap) => onTap(false),
+                      onPanCancel: () => onTap(false),
+                      onPanUpdate: (details) {
+                        rect = calculator.moveBottomRight(
+                          _rect,
+                          details.delta.dx,
+                          details.delta.dy,
+                          _imageRect,
+                          _aspectRatio,
+                        );
+                      },
+                      child: widget.cornerDotBuilder
+                              ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
+                          const EdgeControl(
+                              edgeAlignment: EdgeAlignment.bottomLeft),
+                    ),
+                  ),
+
+                  // Grid view
+                  if ((_isOnTap && widget.gridViewMode == GridViewMode.onTap) ||
+                      widget.gridViewMode == GridViewMode.always) ...[
+                    Positioned(
+                      left: _gridRect.left,
+                      top: _gridRect.top,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: _gridRect.width,
+                          height: _gridRect.height,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white,
+                              style: BorderStyle.solid,
+                              width: _gridThickness,
+                            ),
+                            shape: BoxShape.rectangle,
+                            color: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _gridRect.left + _gridRect.width / 3,
+                      top: _gridRect.top,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: _gridRect.width / 3,
+                          height: _gridRect.height,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white,
+                              style: BorderStyle.solid,
+                              width: _gridThickness,
+                            ),
+                            shape: BoxShape.rectangle,
+                            color: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: _gridRect.left,
+                      top: _gridRect.top + _gridRect.height / 3,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: _gridRect.width,
+                          height: _gridRect.height / 3,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white,
+                              style: BorderStyle.solid,
+                              width: _gridThickness,
+                            ),
+                            shape: BoxShape.rectangle,
+                            color: Colors.transparent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              Positioned(
-                left: _rect.left - (dotTotalSize / 2),
-                top: _rect.top - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.right - (dotTotalSize / 2),
-                top: _rect.top - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.topRight) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.left - (dotTotalSize / 2),
-                top: _rect.bottom - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
-                      const DotControl(),
-                ),
-              ),
-              Positioned(
-                left: _rect.right - (dotTotalSize / 2),
-                top: _rect.bottom - (dotTotalSize / 2),
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
-                  child: widget.cornerDotBuilder
-                          ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
-                      const DotControl(),
-                ),
-              ),
-            ],
+            ),
           );
   }
 }
 
-/// Defalt dot widget placed on corners to control cropping area.
+/// Default dot widget placed on corners to control cropping area.
 /// This Widget automaticall fits the appropriate size.
 class DotControl extends StatelessWidget {
   const DotControl({
@@ -505,6 +590,102 @@ class DotControl extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Default corner line widget placed on corners to control cropping area.
+/// This Widget automaticall fits the appropriate size.
+class EdgeControl extends StatelessWidget {
+  const EdgeControl({
+    Key? key,
+    this.color = Colors.white,
+    this.edgeAlignment,
+  }) : super(key: key);
+
+  /// [Color] of this widget. [Colors.white] by default.
+  final Color color;
+
+  /// Position of the current edge widget
+  final EdgeAlignment? edgeAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return edgeAlignment == null
+        ? DotControl(color: color)
+        : Container(
+            color: Colors.transparent,
+            width: dotTotalSize,
+            height: dotTotalSize,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (edgeAlignment == EdgeAlignment.topLeft)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        width: edgeLineSize,
+                        height: edgeLineSize,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(color: color, width: 2),
+                            top: BorderSide(color: color, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (edgeAlignment == EdgeAlignment.bottomLeft)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        width: edgeLineSize,
+                        height: edgeLineSize,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(color: color, width: 2),
+                            bottom: BorderSide(color: color, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (edgeAlignment == EdgeAlignment.topRight)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        width: edgeLineSize,
+                        height: edgeLineSize,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: color, width: 2),
+                            top: BorderSide(color: color, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (edgeAlignment == EdgeAlignment.bottomRight)
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        width: edgeLineSize,
+                        height: edgeLineSize,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: color, width: 2),
+                            bottom: BorderSide(color: color, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
   }
 }
 
@@ -558,4 +739,20 @@ image.Image _fromByteData(Uint8List data) {
       return image.copyRotate(tempImage!, -90);
   }
   return tempImage!;
+}
+
+// calculate the left and top coordinates of the border (mask) widget
+Rect _calculateTopLeft(Rect rect, double borderThickness) {
+  double fixBorderPixels = 0;
+
+  // Workaround to fix pixel issues in HTML renderer
+  if (isHtmlRenderer) {
+    fixBorderPixels = 1;
+  }
+
+  return Rect.fromLTWH(
+      rect.left - borderThickness + fixBorderPixels,
+      rect.top - borderThickness + fixBorderPixels,
+      rect.width + borderThickness * 2 - fixBorderPixels * 2,
+      rect.height + borderThickness * 2 - fixBorderPixels * 2);
 }

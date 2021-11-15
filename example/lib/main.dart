@@ -62,6 +62,8 @@ class _CropSampleState extends State<CropSample> {
   Uint8List? _croppedData;
   var _statusText = '';
 
+  GridViewMode gridViewMode = GridViewMode.always;
+
   @override
   void initState() {
     _loadAllImages();
@@ -118,7 +120,9 @@ class _CropSampleState extends State<CropSample> {
                     children: [
                       if (_imageDataList.isNotEmpty)
                         Crop(
-                          useClipNone: false,
+                          gridViewMode: _isSumbnail
+                              ? GridViewMode.none
+                              : GridViewMode.always,
                           controller: _cropController,
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {
@@ -143,7 +147,7 @@ class _CropSampleState extends State<CropSample> {
                           maskColor: _isSumbnail ? Colors.white : null,
                           cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
                               ? const SizedBox.shrink()
-                              : const DotControl(),
+                              : EdgeControl(edgeAlignment: edgeAlignment),
                         ),
                       Positioned(
                         right: 16,
