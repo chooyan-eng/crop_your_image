@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   image: ^3.0.2
-  get_web_renderer: ^0.0.1
+  get_web_renderer: ^1.0.0
 
 dev_dependencies:
   flutter_test:

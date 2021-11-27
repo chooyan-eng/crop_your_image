@@ -88,18 +88,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_web_plugins:
-    dependency: transitive
-    description: flutter
-    source: sdk
-    version: "0.0.0"
   get_web_renderer:
     dependency: transitive
     description:
       name: get_web_renderer
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.1"
+    version: "1.0.0"
   image:
     dependency: transitive
     description:
@@ -107,13 +102,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.2"
-  js:
-    dependency: transitive
-    description:
-      name: js
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.6.3"
   matcher:
     dependency: transitive
     description:
@@ -212,4 +200,4 @@ packages:
     version: "5.0.2"
 sdks:
   dart: ">=2.14.0 <3.0.0"
-  flutter: ">=2.5.0"
+  flutter: ">=1.17.0"
