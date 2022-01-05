@@ -57,6 +57,7 @@ class _CropSampleState extends State<CropSample> {
   }
 
   var _isSumbnail = false;
+  var _useBorders = false;
   var _isCropping = false;
   var _isCircleUi = false;
   Uint8List? _croppedData;
@@ -117,6 +118,7 @@ class _CropSampleState extends State<CropSample> {
                     children: [
                       if (_imageDataList.isNotEmpty)
                         Crop(
+                          borderColor: _useBorders ? Colors.black : null,
                           controller: _cropController,
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {
@@ -143,6 +145,20 @@ class _CropSampleState extends State<CropSample> {
                               ? const SizedBox.shrink()
                               : const DotControl(),
                         ),
+                      Positioned(
+                        right: 16,
+                        bottom: 60,
+                        child: GestureDetector(
+                          onTap: () => setState(()  => _useBorders = !_useBorders),
+                          child: CircleAvatar(
+                            backgroundColor:
+                            _useBorders ? Colors.blue.shade50 : Colors.blue,
+                            child: Center(
+                              child: Icon(Icons.border_outer_rounded),
+                            ),
+                          ),
+                        ),
+                      ),
                       Positioned(
                         right: 16,
                         bottom: 16,

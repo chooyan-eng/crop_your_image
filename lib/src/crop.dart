@@ -66,6 +66,12 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
+  /// [Color] of the image border
+  /// When [borderColor] is set, a border with the given color is added to the
+  /// image exterior, making it better to see the image ending when
+  /// the [baseColor] and the image background are similar
+  final Color? borderColor;
+
   const Crop({
     Key? key,
     required this.image,
@@ -80,6 +86,7 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
+    this.borderColor,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -106,6 +113,7 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
+            borderColor: borderColor,
           ),
         );
       },
@@ -126,6 +134,7 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
+  final Color? borderColor;
 
   const _CropEditor({
     Key? key,
@@ -141,6 +150,7 @@ class _CropEditor extends StatefulWidget {
     this.maskColor,
     required this.baseColor,
     this.cornerDotBuilder,
+    this.borderColor,
   }) : super(key: key);
 
   @override
@@ -306,9 +316,23 @@ class _CropEditorState extends State<_CropEditor> {
                 color: widget.baseColor,
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,
-                child: Image.memory(
-                  widget.image,
-                  fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+                child: Flex(
+                  direction: _isFitVertically ? Axis.vertical : Axis.horizontal,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        foregroundDecoration: (widget.borderColor != null && widget.maskColor == null)
+                            ? BoxDecoration(
+                                border: Border.all(color: widget.borderColor!, width: 2),
+                              )
+                            : null,
+                        child: Image.memory(
+                          widget.image,
+                          fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               IgnorePointer(
