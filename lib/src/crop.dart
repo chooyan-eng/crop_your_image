@@ -66,6 +66,15 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
+  /// If [true], cropping area is fixed and CANNOT be moved.
+  /// [false] by default.
+  final bool fixArea;
+
+  /// * Experimental Feature *
+  /// If [true], users can move and zoom image.
+  /// [false] by default.
+  final bool interactive;
+
   const Crop({
     Key? key,
     required this.image,
@@ -80,6 +89,8 @@ class Crop extends StatelessWidget {
     this.maskColor,
     this.baseColor = Colors.white,
     this.cornerDotBuilder,
+    this.fixArea = false,
+    this.interactive = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -106,6 +117,8 @@ class Crop extends StatelessWidget {
             maskColor: maskColor,
             baseColor: baseColor,
             cornerDotBuilder: cornerDotBuilder,
+            fixArea: fixArea,
+            interactive: interactive,
           ),
         );
       },
@@ -126,6 +139,8 @@ class _CropEditor extends StatefulWidget {
   final Color? maskColor;
   final Color baseColor;
   final CornerDotBuilder? cornerDotBuilder;
+  final bool fixArea;
+  final bool interactive;
 
   const _CropEditor({
     Key? key,
@@ -141,6 +156,8 @@ class _CropEditor extends StatefulWidget {
     this.maskColor,
     required this.baseColor,
     this.cornerDotBuilder,
+    required this.fixArea,
+    required this.interactive,
   }) : super(key: key);
 
   @override
@@ -169,6 +186,65 @@ class _CropEditorState extends State<_CropEditor> {
       _rect = newRect;
     });
     widget.onMoved?.call(_rect);
+  }
+
+  // for zooming
+  int _pointerNum = 0;
+  double _scale = 1.0;
+  double _baseScale = 1.0;
+
+  void _startScale(ScaleStartDetails detail) {
+    _baseScale = _scale;
+  }
+
+  void _updateScale(ScaleUpdateDetails detail) {
+    // move
+    setState(() {
+      _imageRect = Rect.fromLTWH(
+        _imageRect.left + detail.focalPointDelta.dx,
+        _imageRect.top + detail.focalPointDelta.dy,
+        _imageRect.width,
+        _imageRect.height,
+      );
+    });
+
+    // scale
+    if (_pointerNum >= 2) {
+      final nextScale = _baseScale * detail.scale;
+
+      late double baseHeight;
+      late double baseWidth;
+      final ratio = _targetImage!.height / _targetImage!.width;
+
+      if (_isFitVertically) {
+        baseHeight = MediaQuery.of(context).size.height;
+        baseWidth = baseHeight / ratio;
+      } else {
+        baseWidth = MediaQuery.of(context).size.width;
+        baseHeight = baseWidth * ratio;
+      }
+
+      // width
+      final newWidth = baseWidth * nextScale;
+      final leftPositionDelta = (newWidth - _imageRect.width) * 0.5;
+
+      // height
+      final newHeight = baseHeight * nextScale;
+      final topPositionDelta = (newHeight - _imageRect.height) * 0.5;
+
+      // apply
+      setState(() {
+        final newLeft = _imageRect.left - leftPositionDelta;
+        final newTop = _imageRect.top - topPositionDelta;
+        _imageRect = Rect.fromLTRB(
+          newLeft,
+          newTop,
+          newLeft + newWidth,
+          newTop + newHeight,
+        );
+        _scale = nextScale;
+      });
+    }
   }
 
   @override
@@ -284,10 +360,10 @@ class _CropEditorState extends State<_CropEditor> {
       [
         _targetImage!,
         Rect.fromLTWH(
-          (_rect.left - _imageRect.left) * screenSizeRatio,
-          (_rect.top - _imageRect.top) * screenSizeRatio,
-          _rect.width * screenSizeRatio,
-          _rect.height * screenSizeRatio,
+          (_rect.left - _imageRect.left) * screenSizeRatio / _scale,
+          (_rect.top - _imageRect.top) * screenSizeRatio / _scale,
+          _rect.width * screenSizeRatio / _scale,
+          _rect.height * screenSizeRatio / _scale,
         ),
       ],
     );
@@ -302,13 +378,34 @@ class _CropEditorState extends State<_CropEditor> {
         ? Center(child: const CircularProgressIndicator())
         : Stack(
             children: [
-              Container(
-                color: widget.baseColor,
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                child: Image.memory(
-                  widget.image,
-                  fit: _isFitVertically ? BoxFit.fitHeight : BoxFit.fitWidth,
+              Listener(
+                onPointerDown: (_) => _pointerNum++,
+                onPointerUp: (_) => _pointerNum--,
+                child: GestureDetector(
+                  onScaleStart: widget.interactive ? _startScale : null,
+                  onScaleUpdate: widget.interactive ? _updateScale : null,
+                  child: Container(
+                    color: widget.baseColor,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: _imageRect.left,
+                          top: _imageRect.top,
+                          child: Image.memory(
+                            widget.image,
+                            width: _isFitVertically
+                                ? null
+                                : MediaQuery.of(context).size.width * _scale,
+                            height: _isFitVertically
+                                ? MediaQuery.of(context).size.height * _scale
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               IgnorePointer(
@@ -323,38 +420,41 @@ class _CropEditorState extends State<_CropEditor> {
                   ),
                 ),
               ),
-              Positioned(
-                left: _rect.left,
-                top: _rect.top,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveRect(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                    );
-                  },
-                  child: Container(
-                    width: _rect.width,
-                    height: _rect.height,
-                    color: Colors.transparent,
+              if (!widget.interactive && !widget.fixArea)
+                Positioned(
+                  left: _rect.left,
+                  top: _rect.top,
+                  child: GestureDetector(
+                    onPanUpdate: (details) {
+                      rect = calculator.moveRect(
+                        _rect,
+                        details.delta.dx,
+                        details.delta.dy,
+                        _imageRect,
+                      );
+                    },
+                    child: Container(
+                      width: _rect.width,
+                      height: _rect.height,
+                      color: Colors.transparent,
+                    ),
                   ),
                 ),
-              ),
               Positioned(
                 left: _rect.left - (dotTotalSize / 2),
                 top: _rect.top - (dotTotalSize / 2),
                 child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
+                  onPanUpdate: widget.fixArea
+                      ? null
+                      : (details) {
+                          rect = calculator.moveTopLeft(
+                            _rect,
+                            details.delta.dx,
+                            details.delta.dy,
+                            _imageRect,
+                            _aspectRatio,
+                          );
+                        },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
                       const DotControl(),
@@ -364,15 +464,17 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _rect.right - (dotTotalSize / 2),
                 top: _rect.top - (dotTotalSize / 2),
                 child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveTopRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
+                  onPanUpdate: widget.fixArea
+                      ? null
+                      : (details) {
+                          rect = calculator.moveTopRight(
+                            _rect,
+                            details.delta.dx,
+                            details.delta.dy,
+                            _imageRect,
+                            _aspectRatio,
+                          );
+                        },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.topRight) ??
                       const DotControl(),
@@ -382,15 +484,17 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _rect.left - (dotTotalSize / 2),
                 top: _rect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomLeft(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
+                  onPanUpdate: widget.fixArea
+                      ? null
+                      : (details) {
+                          rect = calculator.moveBottomLeft(
+                            _rect,
+                            details.delta.dx,
+                            details.delta.dy,
+                            _imageRect,
+                            _aspectRatio,
+                          );
+                        },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
                       const DotControl(),
@@ -400,15 +504,17 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _rect.right - (dotTotalSize / 2),
                 top: _rect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
-                  onPanUpdate: (details) {
-                    rect = calculator.moveBottomRight(
-                      _rect,
-                      details.delta.dx,
-                      details.delta.dy,
-                      _imageRect,
-                      _aspectRatio,
-                    );
-                  },
+                  onPanUpdate: widget.fixArea
+                      ? null
+                      : (details) {
+                          rect = calculator.moveBottomRight(
+                            _rect,
+                            details.delta.dx,
+                            details.delta.dy,
+                            _imageRect,
+                            _aspectRatio,
+                          );
+                        },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
                       const DotControl(),
