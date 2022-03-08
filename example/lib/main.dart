@@ -142,6 +142,7 @@ class _CropSampleState extends State<CropSample> {
                           cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
                               ? const SizedBox.shrink()
                               : const DotControl(),
+                          interactive: true,
                         ),
                       Positioned(
                         right: 16,
