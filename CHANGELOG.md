@@ -1,3 +1,8 @@
+## [0.7.0] - 2022.03.08
+* Add _experimental_ feature of moving and zooming images.
+  * setting `interactive: true` enables the feature.
+* Add `fixArea` flag to fix cropping area. 
+
 ## [0.6.0+1] - 2021.08.14
 * Fix static analysis issues.
 
