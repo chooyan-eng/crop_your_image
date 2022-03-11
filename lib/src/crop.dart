@@ -210,41 +210,43 @@ class _CropEditorState extends State<_CropEditor> {
 
     // scale
     if (_pointerNum >= 2) {
-      final nextScale = _baseScale * detail.scale;
-
-      late double baseHeight;
-      late double baseWidth;
-      final ratio = _targetImage!.height / _targetImage!.width;
-
-      if (_isFitVertically) {
-        baseHeight = MediaQuery.of(context).size.height;
-        baseWidth = baseHeight / ratio;
-      } else {
-        baseWidth = MediaQuery.of(context).size.width;
-        baseHeight = baseWidth * ratio;
-      }
-
-      // width
-      final newWidth = baseWidth * nextScale;
-      final leftPositionDelta = (newWidth - _imageRect.width) * 0.5;
-
-      // height
-      final newHeight = baseHeight * nextScale;
-      final topPositionDelta = (newHeight - _imageRect.height) * 0.5;
-
-      // apply
-      setState(() {
-        final newLeft = _imageRect.left - leftPositionDelta;
-        final newTop = _imageRect.top - topPositionDelta;
-        _imageRect = Rect.fromLTRB(
-          newLeft,
-          newTop,
-          newLeft + newWidth,
-          newTop + newHeight,
-        );
-        _scale = nextScale;
-      });
+      _applyScale(_baseScale * detail.scale);
     }
+  }
+
+  void _applyScale(double nextScale) {
+    late double baseHeight;
+    late double baseWidth;
+    final ratio = _targetImage!.height / _targetImage!.width;
+
+    if (_isFitVertically) {
+      baseHeight = MediaQuery.of(context).size.height;
+      baseWidth = baseHeight / ratio;
+    } else {
+      baseWidth = MediaQuery.of(context).size.width;
+      baseHeight = baseWidth * ratio;
+    }
+
+    // width
+    final newWidth = baseWidth * nextScale;
+    final leftPositionDelta = (newWidth - _imageRect.width) * 0.5;
+
+    // height
+    final newHeight = baseHeight * nextScale;
+    final topPositionDelta = (newHeight - _imageRect.height) * 0.5;
+
+    // apply
+    setState(() {
+      final newLeft = _imageRect.left - leftPositionDelta;
+      final newTop = _imageRect.top - topPositionDelta;
+      _imageRect = Rect.fromLTRB(
+        newLeft,
+        newTop,
+        newLeft + newWidth,
+        newTop + newHeight,
+      );
+      _scale = nextScale;
+    });
   }
 
   @override
@@ -314,6 +316,11 @@ class _CropEditorState extends State<_CropEditor> {
     _isFitVertically = imageRatio < screenSize.aspectRatio;
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
+
+    if (widget.fixArea) {
+      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
+      _applyScale(initialScale);
+    }
 
     _resizeWith(widget.aspectRatio, widget.initialArea);
   }
