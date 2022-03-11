@@ -5,6 +5,8 @@ const dotTotalSize = 32.0; // fixed corner dot size.
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
+typedef CroppingAreaBuilder = Rect Function(Rect imageRect);
+
 enum CropStatus { nothing, loading, ready, cropping }
 
 /// Widget for the entry point of crop_your_image.
@@ -24,6 +26,11 @@ class Crop extends StatelessWidget {
   /// if initialSize is 1.0 (or null),
   /// cropping area would expand as much as possible.
   final double? initialSize;
+
+  /// Builder for initial [Rect] of cropping area based on viewport.
+  /// Builder is called when calculating initial cropping area passing
+  /// [Rect] of [Crop] viewport.
+  final CroppingAreaBuilder? initialAreaBuilder;
 
   /// Initial [Rect] of cropping area.
   /// This [Rect] must be based on the rect of [image] data, not screen.
@@ -84,6 +91,7 @@ class Crop extends StatelessWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.initialAreaBuilder,
     this.initialArea,
     this.withCircleUi = false,
     this.controller,
@@ -113,6 +121,7 @@ class Crop extends StatelessWidget {
             onCropped: onCropped,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
+            initialAreaBuilder: initialAreaBuilder,
             initialArea: initialArea,
             withCircleUi: withCircleUi,
             controller: controller,
@@ -136,6 +145,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
+  final CroppingAreaBuilder? initialAreaBuilder;
   final Rect? initialArea;
   final bool withCircleUi;
   final CropController? controller;
@@ -154,6 +164,7 @@ class _CropEditor extends StatefulWidget {
     required this.onCropped,
     this.aspectRatio,
     this.initialSize,
+    this.initialAreaBuilder,
     this.initialArea,
     this.withCircleUi = false,
     this.controller,
@@ -329,7 +340,16 @@ class _CropEditorState extends State<_CropEditor> {
       _applyScale(initialScale);
     }
 
-    _resizeWith(widget.aspectRatio, widget.initialArea);
+    if (widget.initialAreaBuilder != null) {
+      rect = widget.initialAreaBuilder!(Rect.fromLTWH(
+        0,
+        0,
+        screenSize.width,
+        screenSize.height,
+      ));
+    } else {
+      _resizeWith(widget.aspectRatio, widget.initialArea);
+    }
   }
 
   /// resize cropping area with given aspect ratio.
