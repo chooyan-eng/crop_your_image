@@ -60,6 +60,9 @@ class Crop extends StatelessWidget {
   /// [Color] of the base color of the cropping editor.
   final Color baseColor;
 
+  /// Corner radius of cropping area
+  final double radius;
+
   /// builder for corner dot widget.
   /// [CornerDotBuilder] passes [size] which indicates the size of each dots
   /// and [EdgeAlignment] which indicates the position of each dots.
@@ -88,6 +91,7 @@ class Crop extends StatelessWidget {
     this.onStatusChanged,
     this.maskColor,
     this.baseColor = Colors.white,
+    this.radius = 0,
     this.cornerDotBuilder,
     this.fixArea = false,
     this.interactive = false,
@@ -116,6 +120,7 @@ class Crop extends StatelessWidget {
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
+            radius: radius,
             cornerDotBuilder: cornerDotBuilder,
             fixArea: fixArea,
             interactive: interactive,
@@ -138,6 +143,7 @@ class _CropEditor extends StatefulWidget {
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
+  final double radius;
   final CornerDotBuilder? cornerDotBuilder;
   final bool fixArea;
   final bool interactive;
@@ -155,6 +161,7 @@ class _CropEditor extends StatefulWidget {
     this.onStatusChanged,
     this.maskColor,
     required this.baseColor,
+    required this.radius,
     this.cornerDotBuilder,
     required this.fixArea,
     required this.interactive,
@@ -419,7 +426,7 @@ class _CropEditorState extends State<_CropEditor> {
                 child: ClipPath(
                   clipper: _withCircleUi
                       ? _CircleCropAreaClipper(_rect)
-                      : _CropAreaClipper(_rect),
+                      : _CropAreaClipper(_rect, widget.radius),
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
@@ -533,19 +540,29 @@ class _CropEditorState extends State<_CropEditor> {
 }
 
 class _CropAreaClipper extends CustomClipper<Path> {
-  final Rect rect;
+  _CropAreaClipper(this.rect, this.radius);
 
-  _CropAreaClipper(this.rect);
+  final Rect rect;
+  final double radius;
 
   @override
   Path getClip(Size size) {
+    final radiusOffset = radius / 2;
     return Path()
       ..addPath(
         Path()
-          ..moveTo(rect.left, rect.top)
-          ..lineTo(rect.right, rect.top)
-          ..lineTo(rect.right, rect.bottom)
-          ..lineTo(rect.left, rect.bottom)
+          ..moveTo(rect.left, rect.top + radiusOffset)
+          ..arcToPoint(Offset(rect.left + radiusOffset, rect.top),
+              radius: Radius.circular(radiusOffset))
+          ..lineTo(rect.right - radiusOffset, rect.top)
+          ..arcToPoint(Offset(rect.right, rect.top + radiusOffset),
+              radius: Radius.circular(radiusOffset))
+          ..lineTo(rect.right, rect.bottom - radiusOffset)
+          ..arcToPoint(Offset(rect.right - radiusOffset, rect.bottom),
+              radius: Radius.circular(radiusOffset))
+          ..lineTo(rect.left + radiusOffset, rect.bottom)
+          ..arcToPoint(Offset(rect.left, rect.bottom - radiusOffset),
+              radius: Radius.circular(radiusOffset))
           ..close(),
         Offset.zero,
       )
