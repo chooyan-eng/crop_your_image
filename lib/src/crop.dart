@@ -435,6 +435,7 @@ class _CropEditorState extends State<_CropEditor> {
                             height: _isFitVertically
                                 ? MediaQuery.of(context).size.height * _scale
                                 : null,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],
