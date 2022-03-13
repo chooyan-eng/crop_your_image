@@ -1,3 +1,10 @@
+## [0.7.1] - 2022.03.13
+* Add `initialAreaBuilder` parameter to configure inital cropping area based on viewport of `Crop`.
+* Add `radius` parameter to configure corner radius of cropping area.
+* Control image scale not to be smaller than cropping area.
+* Calculate initial scale to cover cropping area.
+* Fix bug image could't be bigger than certain scale.
+
 ## [0.7.0] - 2022.03.08
 * Add _experimental_ feature of moving and zooming images.
   * setting `interactive: true` enables the feature.
