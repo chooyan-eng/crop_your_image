@@ -217,10 +217,20 @@ class _CropEditorState extends State<_CropEditor> {
 
   void _updateScale(ScaleUpdateDetails detail) {
     // move
+
+    var movedLeft = _imageRect.left + detail.focalPointDelta.dx;
+    if (movedLeft + _imageRect.width < _rect.right) {
+      movedLeft = _rect.right - _imageRect.width;
+    }
+
+    var movedTop = _imageRect.top + detail.focalPointDelta.dy;
+    if (movedTop + _imageRect.height < _rect.bottom) {
+      movedTop = _rect.bottom - _imageRect.height;
+    }
     setState(() {
       _imageRect = Rect.fromLTWH(
-        _imageRect.left + detail.focalPointDelta.dx,
-        _imageRect.top + detail.focalPointDelta.dy,
+        min(_rect.left, movedLeft),
+        min(_rect.top, movedTop),
         _imageRect.width,
         _imageRect.height,
       );
@@ -253,10 +263,17 @@ class _CropEditorState extends State<_CropEditor> {
     final newHeight = baseHeight * nextScale;
     final topPositionDelta = (newHeight - _imageRect.height) * 0.5;
 
+    // position
+    final newLeft = max(min(_rect.left, _imageRect.left - leftPositionDelta),
+        _rect.right - newWidth);
+    final newTop = max(min(_rect.top, _imageRect.top - topPositionDelta),
+        _rect.bottom - newHeight);
+
+    if (newWidth < _rect.width || newHeight < _rect.height) {
+      return;
+    }
     // apply
     setState(() {
-      final newLeft = _imageRect.left - leftPositionDelta;
-      final newTop = _imageRect.top - topPositionDelta;
       _imageRect = Rect.fromLTRB(
         newLeft,
         newTop,
@@ -335,11 +352,6 @@ class _CropEditorState extends State<_CropEditor> {
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
-    if (widget.fixArea) {
-      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
-      _applyScale(initialScale);
-    }
-
     if (widget.initialAreaBuilder != null) {
       rect = widget.initialAreaBuilder!(Rect.fromLTWH(
         0,
@@ -349,6 +361,11 @@ class _CropEditorState extends State<_CropEditor> {
       ));
     } else {
       _resizeWith(widget.aspectRatio, widget.initialArea);
+    }
+
+    if (widget.interactive) {
+      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
+      _applyScale(initialScale);
     }
   }
 
