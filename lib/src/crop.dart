@@ -585,22 +585,21 @@ class _CropAreaClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    final radiusOffset = radius / 2;
     return Path()
       ..addPath(
         Path()
-          ..moveTo(rect.left, rect.top + radiusOffset)
-          ..arcToPoint(Offset(rect.left + radiusOffset, rect.top),
-              radius: Radius.circular(radiusOffset))
-          ..lineTo(rect.right - radiusOffset, rect.top)
-          ..arcToPoint(Offset(rect.right, rect.top + radiusOffset),
-              radius: Radius.circular(radiusOffset))
-          ..lineTo(rect.right, rect.bottom - radiusOffset)
-          ..arcToPoint(Offset(rect.right - radiusOffset, rect.bottom),
-              radius: Radius.circular(radiusOffset))
-          ..lineTo(rect.left + radiusOffset, rect.bottom)
-          ..arcToPoint(Offset(rect.left, rect.bottom - radiusOffset),
-              radius: Radius.circular(radiusOffset))
+          ..moveTo(rect.left, rect.top + radius)
+          ..arcToPoint(Offset(rect.left + radius, rect.top),
+              radius: Radius.circular(radius))
+          ..lineTo(rect.right - radius, rect.top)
+          ..arcToPoint(Offset(rect.right, rect.top + radius),
+              radius: Radius.circular(radius))
+          ..lineTo(rect.right, rect.bottom - radius)
+          ..arcToPoint(Offset(rect.right - radius, rect.bottom),
+              radius: Radius.circular(radius))
+          ..lineTo(rect.left + radius, rect.bottom)
+          ..arcToPoint(Offset(rect.left, rect.bottom - radius),
+              radius: Radius.circular(radius))
           ..close(),
         Offset.zero,
       )
