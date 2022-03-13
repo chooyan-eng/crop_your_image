@@ -143,6 +143,7 @@ class _CropSampleState extends State<CropSample> {
                               ? const SizedBox.shrink()
                               : const DotControl(),
                           interactive: true,
+                          fixArea: true,
                         ),
                       Positioned(
                         right: 16,
