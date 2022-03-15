@@ -1,3 +1,6 @@
+## [0.7.2] - 2022.03.16
+* Enhanced zooming / panning behavior
+
 ## [0.7.1] - 2022.03.13
 * Add `initialAreaBuilder` parameter to configure inital cropping area based on viewport of `Crop`.
 * Add `radius` parameter to configure corner radius of cropping area.
