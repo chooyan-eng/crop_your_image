@@ -217,7 +217,6 @@ class _CropEditorState extends State<_CropEditor> {
 
   void _updateScale(ScaleUpdateDetails detail) {
     // move
-
     var movedLeft = _imageRect.left + detail.focalPointDelta.dx;
     if (movedLeft + _imageRect.width < _rect.right) {
       movedLeft = _rect.right - _imageRect.width;
@@ -238,11 +237,17 @@ class _CropEditorState extends State<_CropEditor> {
 
     // scale
     if (_pointerNum >= 2) {
-      _applyScale(_baseScale * detail.scale);
+      _applyScale(
+        _baseScale * detail.scale,
+        focalPoint: detail.localFocalPoint,
+      );
     }
   }
 
-  void _applyScale(double nextScale) {
+  void _applyScale(
+    double nextScale, {
+    Offset? focalPoint,
+  }) {
     late double baseHeight;
     late double baseWidth;
     final ratio = _targetImage!.height / _targetImage!.width;
@@ -257,11 +262,19 @@ class _CropEditorState extends State<_CropEditor> {
 
     // width
     final newWidth = baseWidth * nextScale;
-    final leftPositionDelta = (newWidth - _imageRect.width) * 0.5;
+    final horizontalFocalPointBias = focalPoint == null
+        ? 0.5
+        : (focalPoint.dx - _imageRect.left) / _imageRect.width;
+    final leftPositionDelta =
+        (newWidth - _imageRect.width) * horizontalFocalPointBias;
 
     // height
     final newHeight = baseHeight * nextScale;
-    final topPositionDelta = (newHeight - _imageRect.height) * 0.5;
+    final verticalFocalPointBias = focalPoint == null
+        ? 0.5
+        : (focalPoint.dy - _imageRect.top) / _imageRect.height;
+    final topPositionDelta =
+        (newHeight - _imageRect.height) * verticalFocalPointBias;
 
     // position
     final newLeft = max(min(_rect.left, _imageRect.left - leftPositionDelta),
