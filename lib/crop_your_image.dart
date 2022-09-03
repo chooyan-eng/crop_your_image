@@ -1,6 +1,6 @@
 library crop_your_image;
 
-import 'dart:io' if (dart.library.html) 'dart:html';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
