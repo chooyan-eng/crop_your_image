@@ -119,6 +119,7 @@ Widget build(BuildContext context) {
 - `onMoved` callback is called when cropping area is moved regardless of its reasons. `newRect` of argument is current `Rect` of cropping area.
 - `onStatusChanged` callback is called when status of Crop is changed.
 - `cornerDotBuilder` is the builder to build Widget placed at corners. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.
+- `progressIndicator` is used for showing preparing image to cropped is in progress. Nothing (`SizedBox.shrink()` actually) is shown by default.
 - `interactive` enables _experimental_ feature of moving / zooming images.
 - `fixArea` is the flag if crop area should be fixed.
 

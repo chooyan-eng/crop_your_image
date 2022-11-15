@@ -80,6 +80,10 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool fixArea;
 
+  /// [Widget] for showing preparing for image is in progress.
+  /// [SizedBox.shrink()] is used by default.
+  final Widget progressIndicator;
+
   /// * Experimental Feature *
   /// If [true], users can move and zoom image.
   /// [false] by default.
@@ -102,6 +106,7 @@ class Crop extends StatelessWidget {
     this.radius = 0,
     this.cornerDotBuilder,
     this.fixArea = false,
+    this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
@@ -132,6 +137,7 @@ class Crop extends StatelessWidget {
             radius: radius,
             cornerDotBuilder: cornerDotBuilder,
             fixArea: fixArea,
+            progressIndicator: progressIndicator,
             interactive: interactive,
           ),
         );
@@ -156,6 +162,7 @@ class _CropEditor extends StatefulWidget {
   final double radius;
   final CornerDotBuilder? cornerDotBuilder;
   final bool fixArea;
+  final Widget progressIndicator;
   final bool interactive;
 
   const _CropEditor({
@@ -175,6 +182,7 @@ class _CropEditor extends StatefulWidget {
     required this.radius,
     this.cornerDotBuilder,
     required this.fixArea,
+    required this.progressIndicator,
     required this.interactive,
   }) : super(key: key);
 
@@ -439,7 +447,7 @@ class _CropEditorState extends State<_CropEditor> {
   @override
   Widget build(BuildContext context) {
     return _isImageLoading
-        ? Center(child: const CircularProgressIndicator())
+        ? Center(child: widget.progressIndicator)
         : Stack(
             children: [
               Listener(
