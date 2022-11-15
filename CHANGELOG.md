@@ -1,5 +1,6 @@
 ## [0.7.3] - 2022.11.15
 * Add `progressIndicator` parameter to pass a Widget indicating progress.
+* Updated versions of dependencies.
 
 ## [0.7.2] - 2022.03.16
 * Enhanced zooming / panning behavior
