@@ -697,7 +697,7 @@ Uint8List _doCrop(List<dynamic> cropData) {
         originalImage,
         x: rect.left.toInt(),
         y: rect.top.toInt(),
-        width:rect.width.toInt(),
+        width: rect.width.toInt(),
         height: rect.height.toInt(),
       ),
     ),
@@ -709,7 +709,10 @@ Uint8List _doCrop(List<dynamic> cropData) {
 Uint8List _doCropCircle(List<dynamic> cropData) {
   final originalImage = cropData[0] as image.Image;
   final rect = cropData[1] as Rect;
-  final center = image.Point(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  final center = image.Point(
+    rect.left + rect.width / 2,
+    rect.top + rect.height / 2,
+  );
   return Uint8List.fromList(
     image.encodePng(
       image.copyCropCircle(
@@ -732,9 +735,9 @@ image.Image _fromByteData(Uint8List data) {
     case 3:
       return image.copyRotate(tempImage!, angle: 180);
     case 6:
-      return image.copyRotate(tempImage!,angle:  90);
+      return image.copyRotate(tempImage!, angle: 90);
     case 8:
-      return image.copyRotate(tempImage!,angle:  -90);
+      return image.copyRotate(tempImage!, angle: -90);
   }
   return tempImage!;
 }
