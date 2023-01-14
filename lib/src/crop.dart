@@ -349,6 +349,9 @@ class _CropEditorState extends State<_CropEditor> {
     _lastComputed = future;
     future.then((converted) {
       if (_lastComputed == future) {
+        if (!mounted) {
+          return;
+        }
         setState(() {
           _targetImage = converted;
           _lastComputed = null;
