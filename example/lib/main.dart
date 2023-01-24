@@ -116,7 +116,7 @@ class _CropSampleState extends State<CropSample> {
                   visible: _croppedData == null,
                   child: Stack(
                     children: [
-                      if (_imageDataList.isNotEmpty)
+                      if (_imageDataList.isNotEmpty) ...[
                         Crop(
                           borderColor: _useBorders ? Colors.black : null,
                           controller: _cropController,
@@ -141,10 +141,33 @@ class _CropSampleState extends State<CropSample> {
                           }),
                           initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
-                          cornerDotBuilder: (size, edgeAlignment) => _isSumbnail
-                              ? const SizedBox.shrink()
-                              : const DotControl(),
+                          cornerDotBuilder: (size, edgeAlignment) =>
+                              const SizedBox.shrink(),
+                          interactive: true,
+                          fixArea: true,
+                          radius: 20,
+                          initialAreaBuilder: (rect) {
+                            return Rect.fromLTRB(
+                              rect.left + 24,
+                              rect.top + 24,
+                              rect.right - 24,
+                              rect.bottom - 24,
+                            );
+                          },
                         ),
+                        IgnorePointer(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border:
+                                    Border.all(width: 4, color: Colors.white),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       Positioned(
                         right: 16,
                         bottom: 60,

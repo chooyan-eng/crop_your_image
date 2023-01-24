@@ -1,3 +1,25 @@
+## [0.7.4] - 2023.10.
+* Update versions of depencencies.
+
+## [0.7.3] - 2022.11.15
+* Add `progressIndicator` parameter to pass a Widget indicating progress.
+* Updated versions of dependencies.
+
+## [0.7.2] - 2022.03.16
+* Enhanced zooming / panning behavior
+
+## [0.7.1] - 2022.03.13
+* Add `initialAreaBuilder` parameter to configure inital cropping area based on viewport of `Crop`.
+* Add `radius` parameter to configure corner radius of cropping area.
+* Control image scale not to be smaller than cropping area.
+* Calculate initial scale to cover cropping area.
+* Fix bug image could't be bigger than certain scale.
+
+## [0.7.0] - 2022.03.08
+* Add _experimental_ feature of moving and zooming images.
+  * setting `interactive: true` enables the feature.
+* Add `fixArea` flag to fix cropping area. 
+
 ## [0.6.0+1] - 2021.08.14
 * Fix static analysis issues.
 
