@@ -54,7 +54,7 @@ class Crop extends StatelessWidget {
 
   /// Callback called when cropping area moved.
   final ValueChanged<Rect>? onMoved;
-  final void Function(Rect imageRect, Rect cropRect)? onImageMoved;
+  final void Function(Rect imageRect)? onImageMoved;
 
   /// Callback called when status of Crop widget is changed.
   ///
@@ -159,7 +159,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
-  final void Function(Rect imageRect, Rect cropRect)? onImageMoved;
+  final void Function(Rect imageRect)? onImageMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
@@ -223,7 +223,7 @@ class _CropEditorState extends State<_CropEditor> {
     setState(() {
       _imageRect = newRect;
     });
-    widget.onImageMoved?.call(_imageRect, _rect);
+    widget.onImageMoved?.call(_imageRect);
   }
 
   // for zooming
