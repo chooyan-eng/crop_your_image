@@ -54,6 +54,7 @@ class Crop extends StatelessWidget {
 
   /// Callback called when cropping area moved.
   final ValueChanged<Rect>? onMoved;
+  final void Function(Rect imageRect, Rect cropRect)? onImageMoved;
 
   /// Callback called when status of Crop widget is changed.
   ///
@@ -100,6 +101,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
     this.baseColor = Colors.white,
@@ -131,6 +133,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            onImageMoved: onImageMoved,
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
@@ -156,6 +159,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final ValueChanged<Rect>? onMoved;
+  final void Function(Rect imageRect, Rect cropRect)? onImageMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
@@ -176,6 +180,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
     required this.baseColor,
@@ -214,6 +219,13 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onMoved?.call(_rect);
   }
 
+  set imageRect(Rect newRect) {
+    setState(() {
+      _imageRect = newRect;
+    });
+    widget.onImageMoved?.call(_imageRect, _rect);
+  }
+
   // for zooming
   int _pointerNum = 0;
   double _scale = 1.0;
@@ -234,14 +246,13 @@ class _CropEditorState extends State<_CropEditor> {
     if (movedTop + _imageRect.height < _rect.bottom) {
       movedTop = _rect.bottom - _imageRect.height;
     }
-    setState(() {
-      _imageRect = Rect.fromLTWH(
-        min(_rect.left, movedLeft),
-        min(_rect.top, movedTop),
-        _imageRect.width,
-        _imageRect.height,
-      );
-    });
+
+    imageRect = Rect.fromLTWH(
+      min(_rect.left, movedLeft),
+      min(_rect.top, movedTop),
+      _imageRect.width,
+      _imageRect.height,
+    );
 
     // scale
     if (_pointerNum >= 2) {
@@ -294,15 +305,13 @@ class _CropEditorState extends State<_CropEditor> {
       return;
     }
     // apply
-    setState(() {
-      _imageRect = Rect.fromLTRB(
-        newLeft,
-        newTop,
-        newLeft + newWidth,
-        newTop + newHeight,
-      );
-      _scale = nextScale;
-    });
+    imageRect = Rect.fromLTRB(
+      newLeft,
+      newTop,
+      newLeft + newWidth,
+      newTop + newHeight,
+    );
+    _scale = nextScale;
   }
 
   @override
@@ -371,7 +380,7 @@ class _CropEditorState extends State<_CropEditor> {
     final imageRatio = _targetImage!.width / _targetImage!.height;
     _isFitVertically = imageRatio < screenSize.aspectRatio;
 
-    _imageRect = calculator.imageRect(screenSize, imageRatio);
+    imageRect = calculator.imageRect(screenSize, imageRatio);
 
     if (widget.initialAreaBuilder != null) {
       rect = widget.initialAreaBuilder!(Rect.fromLTWH(

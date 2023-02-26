@@ -119,6 +119,12 @@ class _CropSampleState extends State<CropSample> {
                         Crop(
                           controller: _cropController,
                           image: _imageDataList[_currentImage],
+                          onMoved: (value) {
+                            debugPrint("onMoved($value)");
+                          },
+                          onImageMoved: ((imageRect, cropRect) {
+                            debugPrint("onImageMoved($imageRect, $cropRect)");
+                          }),
                           onCropped: (croppedData) {
                             setState(() {
                               _croppedData = croppedData;
