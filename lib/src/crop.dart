@@ -311,18 +311,21 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = (aspectRatio) {
-        _resizeWith(aspectRatio, null);
+        _changeAaspectRatio(aspectRatio);
+        _resizeWith(null);
       }
       ..onChangeWithCircleUi = (withCircleUi) {
         _withCircleUi = withCircleUi;
-        _resizeWith(null, null);
+        _changeAaspectRatio(null);
+        _resizeWith(null);
       }
       ..onImageChanged = _resetImage
       ..onChangeRect = (newRect) {
         rect = calculator.correct(newRect, _imageRect);
       }
       ..onChangeArea = (newArea) {
-        _resizeWith(_aspectRatio, newArea);
+        _changeAaspectRatio(_aspectRatio);
+        _resizeWith(newArea);
       };
 
     super.initState();
@@ -373,6 +376,7 @@ class _CropEditorState extends State<_CropEditor> {
 
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
+    _changeAaspectRatio(widget.aspectRatio);
     if (widget.initialAreaBuilder != null) {
       rect = widget.initialAreaBuilder!(Rect.fromLTWH(
         0,
@@ -381,7 +385,7 @@ class _CropEditorState extends State<_CropEditor> {
         screenSize.height,
       ));
     } else {
-      _resizeWith(widget.aspectRatio, widget.initialArea);
+      _resizeWith(widget.initialArea);
     }
 
     if (widget.interactive) {
@@ -390,10 +394,12 @@ class _CropEditorState extends State<_CropEditor> {
     }
   }
 
-  /// resize cropping area with given aspect ratio.
-  void _resizeWith(double? aspectRatio, Rect? initialArea) {
+  void _changeAaspectRatio(double? aspectRatio){
     _aspectRatio = _withCircleUi ? 1 : aspectRatio;
+  }
 
+  /// resize cropping area with given aspect ratio.
+  void _resizeWith(Rect? initialArea) {
     if (initialArea == null) {
       rect = calculator.initialCropRect(
         MediaQuery.of(context).size,
