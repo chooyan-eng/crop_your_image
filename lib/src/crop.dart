@@ -89,6 +89,9 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
+  /// Sets the mouse-wheel zoom sensitivity for web applications.
+  final double scrollZoomSensitivity;
+
   const Crop({
     Key? key,
     required this.image,
@@ -108,6 +111,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.scrollZoomSensitivity = 0.05,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -139,6 +143,7 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            scrollZoomSensitivity: scrollZoomSensitivity,
           ),
         );
       },
@@ -164,6 +169,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
+  final double scrollZoomSensitivity;
 
   const _CropEditor({
     Key? key,
@@ -184,6 +190,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
+    required this.scrollZoomSensitivity,
   }) : super(key: key);
 
   @override
@@ -268,6 +275,15 @@ class _CropEditorState extends State<_CropEditor> {
       baseHeight = baseWidth * ratio;
     }
 
+    // clamp the scale
+    nextScale = max(
+      nextScale,
+      max(_rect.width / baseWidth, _rect.height / baseHeight),
+    );
+    if (_scale == nextScale) {
+      return;
+    }
+
     // width
     final newWidth = baseWidth * nextScale;
     final horizontalFocalPointBias = focalPoint == null
@@ -290,9 +306,6 @@ class _CropEditorState extends State<_CropEditor> {
     final newTop = max(min(_rect.top, _imageRect.top - topPositionDelta),
         _rect.bottom - newHeight);
 
-    if (newWidth < _rect.width || newHeight < _rect.height) {
-      return;
-    }
     // apply
     setState(() {
       _imageRect = Rect.fromLTRB(
@@ -453,6 +466,22 @@ class _CropEditorState extends State<_CropEditor> {
               Listener(
                 onPointerDown: (_) => _pointerNum++,
                 onPointerUp: (_) => _pointerNum--,
+                onPointerSignal: (signal) {
+                  if (signal is PointerScrollEvent) {
+                    if (signal.scrollDelta.dy > 0) {
+                      _applyScale(
+                        _scale - widget.scrollZoomSensitivity,
+                        focalPoint: signal.localPosition,
+                      );
+                    } else if (signal.scrollDelta.dy < 0) {
+                      _applyScale(
+                        _scale + widget.scrollZoomSensitivity,
+                        focalPoint: signal.localPosition,
+                      );
+                    }
+                    //print(_scale);
+                  }
+                },
                 child: GestureDetector(
                   onScaleStart: widget.interactive ? _startScale : null,
                   onScaleUpdate: widget.interactive ? _updateScale : null,
