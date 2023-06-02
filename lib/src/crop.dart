@@ -193,13 +193,13 @@ class _CropEditor extends StatefulWidget {
 class _CropEditorState extends State<_CropEditor> {
   late CropController _cropController;
   late Rect _rect;
-  image.Image? _targetImage;
+  img.Image? _targetImage;
   late Rect _imageRect;
 
   double? _aspectRatio;
   bool _withCircleUi = false;
   bool _isFitVertically = false;
-  Future<image.Image?>? _lastComputed;
+  Future<img.Image?>? _lastComputed;
 
   bool get _isImageLoading => _lastComputed != null;
 
@@ -689,11 +689,11 @@ class DotControl extends StatelessWidget {
 /// process cropping image.
 /// this method is supposed to be called only via compute()
 Uint8List _doCrop(List<dynamic> cropData) {
-  final originalImage = cropData[0] as image.Image;
+  final originalImage = cropData[0] as img.Image;
   final rect = cropData[1] as Rect;
   return Uint8List.fromList(
-    image.encodePng(
-      image.copyCrop(
+    img.encodePng(
+      img.copyCrop(
         originalImage,
         x: rect.left.toInt(),
         y: rect.top.toInt(),
@@ -707,15 +707,15 @@ Uint8List _doCrop(List<dynamic> cropData) {
 /// process cropping image with circle shape.
 /// this method is supposed to be called only via compute()
 Uint8List _doCropCircle(List<dynamic> cropData) {
-  final originalImage = cropData[0] as image.Image;
+  final originalImage = cropData[0] as img.Image;
   final rect = cropData[1] as Rect;
-  final center = image.Point(
+  final center = img.Point(
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
   );
   return Uint8List.fromList(
-    image.encodePng(
-      image.copyCropCircle(
+    img.encodePng(
+      img.copyCropCircle(
         originalImage,
         centerX: center.xi,
         centerY: center.yi,
@@ -726,18 +726,18 @@ Uint8List _doCropCircle(List<dynamic> cropData) {
 }
 
 // decode orientation awared Image.
-image.Image _fromByteData(Uint8List data) {
-  final tempImage = image.decodeImage(data);
+img.Image _fromByteData(Uint8List data) {
+  final tempImage = img.decodeImage(data);
   assert(tempImage != null);
 
   // check orientation
   switch (tempImage?.exif.exifIfd.orientation ?? -1) {
     case 3:
-      return image.copyRotate(tempImage!, angle: 180);
+      return img.copyRotate(tempImage!, angle: 180);
     case 6:
-      return image.copyRotate(tempImage!, angle: 90);
+      return img.copyRotate(tempImage!, angle: 90);
     case 8:
-      return image.copyRotate(tempImage!, angle: -90);
+      return img.copyRotate(tempImage!, angle: -90);
   }
   return tempImage!;
 }
