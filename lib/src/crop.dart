@@ -89,6 +89,16 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
+  /// Function for encoding the cropped image.
+  ///
+  /// This can be used to change the encoding format of the cropped image,
+  /// as well as to specify the quality of the final image.
+  ///
+  /// Typically one of the functions from `package:image`
+  /// package is used here, for example [img.encodePng] (the default) or
+  /// [img.encodeJpg].
+  final Uint8List Function(img.Image croppedImage) encodeFunction;
+
   const Crop({
     Key? key,
     required this.image,
@@ -108,6 +118,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.encodeFunction = img.encodePng,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -139,6 +150,7 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            encodeFunction: encodeFunction,
           ),
         );
       },
@@ -164,6 +176,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
+  final Uint8List Function(img.Image croppedImage) encodeFunction;
 
   const _CropEditor({
     Key? key,
@@ -184,6 +197,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
+    required this.encodeFunction,
   }) : super(key: key);
 
   @override
@@ -437,6 +451,7 @@ class _CropEditorState extends State<_CropEditor> {
           _rect.width * screenSizeRatio / _scale,
           _rect.height * screenSizeRatio / _scale,
         ),
+        widget.encodeFunction,
       ],
     );
     widget.onCropped(cropResult);
@@ -691,8 +706,10 @@ class DotControl extends StatelessWidget {
 Uint8List _doCrop(List<dynamic> cropData) {
   final originalImage = cropData[0] as img.Image;
   final rect = cropData[1] as Rect;
+  final encode = cropData[2] as Uint8List Function(img.Image croppedImage);
+
   return Uint8List.fromList(
-    img.encodePng(
+    encode(
       img.copyCrop(
         originalImage,
         x: rect.left.toInt(),
@@ -709,12 +726,14 @@ Uint8List _doCrop(List<dynamic> cropData) {
 Uint8List _doCropCircle(List<dynamic> cropData) {
   final originalImage = cropData[0] as img.Image;
   final rect = cropData[1] as Rect;
+  final encode = cropData[2] as Uint8List Function(img.Image croppedImage);
+
   final center = img.Point(
     rect.left + rect.width / 2,
     rect.top + rect.height / 2,
   );
   return Uint8List.fromList(
-    img.encodePng(
+    encode(
       img.copyCropCircle(
         originalImage,
         centerX: center.xi,
