@@ -593,6 +593,75 @@ class _CropEditorState extends State<_CropEditor> {
                       const DotControl(),
                 ),
               ),
+              // Paint the extra spaces around the main imageRect with base color.
+              // Masking the top region of the mask widget.
+              Positioned(
+                top: 0,
+                left: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: ((MediaQuery.of(context).size.height -
+                            _imageRect.height) /
+                        2),
+                    decoration: BoxDecoration(
+                      color: widget.baseColor,
+                    ),
+                  ),
+                ),
+              ),
+              // Masking the bottom region of the mask widget.
+              Positioned(
+                top: ((MediaQuery.of(context).size.height - _imageRect.height) /
+                        2) +
+                    _imageRect.height,
+                left: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: ((MediaQuery.of(context).size.height -
+                            _imageRect.height) /
+                        2),
+                    decoration: BoxDecoration(
+                      color: widget.baseColor,
+                    ),
+                  ),
+                ),
+              ),
+              // Masking the left region of the mask widget.
+              Positioned(
+                top: 0,
+                left: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    width:
+                        (MediaQuery.of(context).size.width - _imageRect.width) /
+                            2,
+                    height: MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      color: widget.baseColor,
+                    ),
+                  ),
+                ),
+              ),
+              // Masking the right region of the mask widget.
+              Positioned(
+                top: 0,
+                left:
+                    (MediaQuery.of(context).size.width - _imageRect.width) / 2 +
+                        _imageRect.width,
+                child: IgnorePointer(
+                  child: Container(
+                    width:
+                        (MediaQuery.of(context).size.width - _imageRect.width) /
+                            2,
+                    height: MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      color: widget.baseColor,
+                    ),
+                  ),
+                ),
+              ),
             ],
           );
   }
