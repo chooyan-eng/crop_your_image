@@ -61,6 +61,7 @@ class _CropSampleState extends State<CropSample> {
   var _isCircleUi = false;
   Uint8List? _croppedData;
   var _statusText = '';
+  var _isOverlayActive = true;
 
   @override
   void initState() {
@@ -152,6 +153,18 @@ class _CropSampleState extends State<CropSample> {
                               rect.bottom - 24,
                             );
                           },
+                          overlayBuilder: _isOverlayActive
+                              ? (context, rect, radius) {
+                                  final overlay = CustomPaint(
+                                    painter: GridPainter(),
+                                  );
+                                  return _isCircleUi
+                                      ? ClipOval(
+                                          child: overlay,
+                                        )
+                                      : overlay;
+                                }
+                              : null,
                         ),
                         IgnorePointer(
                           child: Padding(
@@ -236,6 +249,20 @@ class _CropSampleState extends State<CropSample> {
                               }),
                         ],
                       ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Show Grid'),
+                          Switch(
+                            value: _isOverlayActive,
+                            onChanged: (value) {
+                              setState(() {
+                                _isOverlayActive = value;
+                              });
+                            },
+                          )
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       Container(
                         width: double.infinity,
@@ -295,4 +322,37 @@ class _CropSampleState extends State<CropSample> {
       ),
     );
   }
+}
+
+class GridPainter extends CustomPainter {
+  final divisions = 2;
+  final strokeWidth = 1.0;
+  final Color color = Colors.black54;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = strokeWidth
+      ..color = color;
+
+    final spacing = size / (divisions + 1);
+    for (var i = 1; i < divisions + 1; i++) {
+      // draw vertical line
+      canvas.drawLine(
+        Offset(spacing.width * i, 0),
+        Offset(spacing.width * i, size.height),
+        paint,
+      );
+
+      // draw horizontal line
+      canvas.drawLine(
+        Offset(0, spacing.height * i),
+        Offset(size.width, spacing.height * i),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(GridPainter oldDelegate) => false;
 }
