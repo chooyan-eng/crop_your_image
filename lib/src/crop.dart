@@ -14,6 +14,9 @@ class Crop extends StatelessWidget {
   /// original image data
   final Uint8List image;
 
+  // The rendering quality of the image
+  final FilterQuality filterQuality;
+
   /// callback when cropping completed
   final ValueChanged<Uint8List> onCropped;
 
@@ -93,6 +96,7 @@ class Crop extends StatelessWidget {
     Key? key,
     required this.image,
     required this.onCropped,
+    this.filterQuality = FilterQuality.low,
     this.aspectRatio,
     this.initialSize,
     this.initialAreaBuilder,
@@ -124,6 +128,7 @@ class Crop extends StatelessWidget {
           child: _CropEditor(
             image: image,
             onCropped: onCropped,
+            filterQuality: filterQuality,
             aspectRatio: aspectRatio,
             initialSize: initialSize,
             initialAreaBuilder: initialAreaBuilder,
@@ -148,6 +153,7 @@ class Crop extends StatelessWidget {
 
 class _CropEditor extends StatefulWidget {
   final Uint8List image;
+  final FilterQuality filterQuality;
   final ValueChanged<Uint8List> onCropped;
   final double? aspectRatio;
   final double? initialSize;
@@ -169,6 +175,7 @@ class _CropEditor extends StatefulWidget {
     Key? key,
     required this.image,
     required this.onCropped,
+    required this.filterQuality,
     this.aspectRatio,
     this.initialSize,
     this.initialAreaBuilder,
@@ -474,6 +481,7 @@ class _CropEditorState extends State<_CropEditor> {
                                 ? MediaQuery.of(context).size.height * _scale
                                 : null,
                             fit: BoxFit.contain,
+                            filterQuality: widget.filterQuality,
                           ),
                         ),
                       ],
