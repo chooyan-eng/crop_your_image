@@ -89,6 +89,11 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
+  /// If set, the image will start scaled from the center by this amount.
+  /// Set double value >= 1.0
+  /// 1.0 by default.
+  final double initialZoom;
+
   const Crop({
     Key? key,
     required this.image,
@@ -108,6 +113,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.initialZoom = 1.0,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         super(key: key);
@@ -139,6 +145,7 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            initialZoom: initialZoom,
           ),
         );
       },
@@ -164,6 +171,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
+  final double? initialZoom;
 
   const _CropEditor({
     Key? key,
@@ -184,6 +192,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
+    this.initialZoom,
   }) : super(key: key);
 
   @override
@@ -385,7 +394,8 @@ class _CropEditorState extends State<_CropEditor> {
     }
 
     if (widget.interactive) {
-      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
+      final initialScale = calculator.scaleToCover(screenSize, _imageRect) *
+          max(1, (widget.initialZoom ?? 1));
       _applyScale(initialScale);
     }
   }

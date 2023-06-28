@@ -6,7 +6,7 @@ A flutter plugin which provides `Crop` widget for cropping images.
 
 # Philosophy
 
-crop_your_image provides _flexible_ and _custamizable_ `Crop` widget which can be placed at anyware in well designed apps.
+crop*your_image provides \_flexible* and _custamizable_ `Crop` widget which can be placed at anyware in well designed apps.
 
 As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottomsheets. It's totally up to you!
 
@@ -18,12 +18,12 @@ Build your own cropping UI!
 
 ## Features
 
-- __Minimum UI restrictions__
-- Flexible `Crop` widget __which can be placed anywhere__ on your widget tree
+- **Minimum UI restrictions**
+- Flexible `Crop` widget **which can be placed anywhere** on your widget tree
 - `CropController` to control `Crop`
-- __Zooming / panning__ images
-- Crop with __rect__ or __circle__ whichever you want
-- Fix __aspect ratio__
+- **Zooming / panning** images
+- Crop with **rect** or **circle** whichever you want
+- Fix **aspect ratio**
 - Configure the rect of cropping area programmatically
 
 Note that this package _DON'T_
@@ -39,6 +39,7 @@ crop_your_image is under developping and it's still possible to happen broken ch
 ## Usage
 
 ### Basics
+
 Place `Crop` Widget wherever you want to place image cropping UI.
 
 ```dart
@@ -46,10 +47,10 @@ final _controller = CropController();
 
 Widget build(BuildContext context) {
   return Crop(
-    image: _imageData, 
+    image: _imageData,
     controller: _controller,
     onCropped: (image) {
-      // do something with image data 
+      // do something with image data
     }
   );
 }
@@ -71,6 +72,7 @@ ElevatedButton(
 Because `_controller.crop()` only kicks the cropping process, this method returns immediately without any cropped image data. You can obtain the result of cropping images via `onCropped` callback of `Crop` Widget.
 
 ### Advanced
+
 All the properties of `Crop` and their usages are below.
 
 ```dart
@@ -81,14 +83,14 @@ Widget build(BuildContext context) {
     image: _imageData,
     controller: _controller,
     onCropped: (image) {
-      // do something with image data 
+      // do something with image data
     },
     aspectRatio: 4 / 3,
     // initialSize: 0.5,
     // initialArea: Rect.fromLTWH(240, 212, 800, 600),
     initialAreaBuilder: (rect) => Rect.fromLTRB(
       rect.left + 24, rect.top + 32, rect.right - 24, rect.bottom - 32
-    ), 
+    ),
     // withCircleUi: true,
     baseColor: Colors.blue.shade900,
     maskColor: Colors.white.withAlpha(100),
@@ -102,6 +104,7 @@ Widget build(BuildContext context) {
     cornerDotBuilder: (size, edgeAlignment) => const DotControl(color: Colors.blue),
     interactive: true,
     // fixArea: true,
+    // initialZoom: 1.0
   );
 }
 ```
@@ -122,6 +125,7 @@ Widget build(BuildContext context) {
 - `progressIndicator` is used for showing preparing image to cropped is in progress. Nothing (`SizedBox.shrink()` actually) is shown by default.
 - `interactive` enables _experimental_ feature of moving / zooming images.
 - `fixArea` is the flag if crop area should be fixed.
+- `initialZoom` is the amount the image should be intially zoomed (must be >= 1.0).
 
 In addition, `image`, `aspectRatio`, `withCircleUi`, `rect` and `area` can also be changed via `CropController`, and other properties, such as `baseColor`, `maskColor` and `cornerDotBuilder`, can be changed by `setState`.
 
