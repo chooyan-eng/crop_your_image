@@ -208,9 +208,11 @@ class _CropEditorState extends State<_CropEditor> {
       : const _HorizontalCalculator();
 
   set rect(Rect newRect) {
-    setState(() {
-      _rect = newRect;
-    });
+    if (mounted) {
+      setState(() {
+        _rect = newRect;
+      });
+    }
     widget.onMoved?.call(_rect);
   }
 
@@ -234,15 +236,16 @@ class _CropEditorState extends State<_CropEditor> {
     if (movedTop + _imageRect.height < _rect.bottom) {
       movedTop = _rect.bottom - _imageRect.height;
     }
-    setState(() {
-      _imageRect = Rect.fromLTWH(
-        min(_rect.left, movedLeft),
-        min(_rect.top, movedTop),
-        _imageRect.width,
-        _imageRect.height,
-      );
-    });
-
+    if (mounted) {
+      setState(() {
+        _imageRect = Rect.fromLTWH(
+          min(_rect.left, movedLeft),
+          min(_rect.top, movedTop),
+          _imageRect.width,
+          _imageRect.height,
+        );
+      });
+    }
     // scale
     if (_pointerNum >= 2) {
       _applyScale(
@@ -294,15 +297,17 @@ class _CropEditorState extends State<_CropEditor> {
       return;
     }
     // apply
-    setState(() {
-      _imageRect = Rect.fromLTRB(
-        newLeft,
-        newTop,
-        newLeft + newWidth,
-        newTop + newHeight,
-      );
-      _scale = nextScale;
-    });
+    if (mounted) {
+      setState(() {
+        _imageRect = Rect.fromLTRB(
+          newLeft,
+          newTop,
+          newLeft + newWidth,
+          newTop + newHeight,
+        );
+        _scale = nextScale;
+      });
+    }
   }
 
   @override
@@ -338,9 +343,11 @@ class _CropEditorState extends State<_CropEditor> {
         _withCircleUi = widget.withCircleUi;
         _resetCroppingArea();
 
-        setState(() {
-          _lastComputed = null;
-        });
+        if (mounted) {
+          setState(() {
+            _lastComputed = null;
+          });
+        }
         widget.onStatusChanged?.call(CropStatus.ready);
       }
     });
@@ -354,10 +361,12 @@ class _CropEditorState extends State<_CropEditor> {
     _lastComputed = future;
     future.then((converted) {
       if (_lastComputed == future) {
-        setState(() {
-          _targetImage = converted;
-          _lastComputed = null;
-        });
+        if (mounted) {
+          setState(() {
+            _targetImage = converted;
+            _lastComputed = null;
+          });
+        }
         _resetCroppingArea();
         widget.onStatusChanged?.call(CropStatus.ready);
       }
@@ -366,6 +375,9 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// reset [Rect] of cropping area with current state
   void _resetCroppingArea() {
+    if (!mounted) {
+      return;
+    }
     final screenSize = MediaQuery.of(context).size;
 
     final imageRatio = _targetImage!.width / _targetImage!.height;
