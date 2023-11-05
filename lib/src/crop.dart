@@ -244,7 +244,8 @@ class _CropEditorState extends State<_CropEditor> {
     });
 
     // scale
-    if (_pointerNum >= 2) {
+    // _pointerNum >= 2
+    if (true) {
       _applyScale(
         _baseScale * detail.scale,
         focalPoint: detail.localFocalPoint,
