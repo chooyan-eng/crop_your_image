@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
-import 'package:crop_your_image/src/logic/parser/image_detail.dart';
 import 'package:flutter/widgets.dart';
 
 /// Calculation logics for various [Rect] data.

@@ -2,11 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
-import 'package:crop_your_image/src/logic/cropper/image_cropper.dart';
-import 'package:crop_your_image/src/logic/format_detector/format.dart';
-import 'package:crop_your_image/src/logic/format_detector/format_detector.dart';
-import 'package:crop_your_image/src/logic/parser/image_detail.dart';
-import 'package:crop_your_image/src/logic/parser/image_parser.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
