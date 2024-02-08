@@ -11,6 +11,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
+
+typedef AllowScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
@@ -93,10 +95,14 @@ class Crop extends StatelessWidget {
   /// [SizedBox.shrink()] is used by default.
   final Widget progressIndicator;
 
-  /// * Experimental Feature *
   /// If [true], users can move and zoom image.
   /// [false] by default.
   final bool interactive;
+
+  /// Function whether to allow scale image or not.
+  /// This function is always called when user tries to scale image.
+  /// If this function returns [false], image cannot be scaled.
+  final AllowScale? allowScale;
 
   /// Injected logic for cropping image.
   final ImageCropper imageCropper;
@@ -126,6 +132,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.allowScale,
     this.formatDetector = defaultFormatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
@@ -161,6 +168,7 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            allowScale: allowScale,
             imageCropper: imageCropper,
             formatDetector: formatDetector,
             imageParser: imageParser,
@@ -189,6 +197,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
+  final AllowScale? allowScale;
   final ImageCropper imageCropper;
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
@@ -212,6 +221,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
+    required this.allowScale,
     required this.imageCropper,
     required this.formatDetector,
     required this.imageParser,
@@ -463,6 +473,11 @@ class _CropEditorState extends State<_CropEditor> {
     double nextScale, {
     Offset? focalPoint,
   }) {
+    final allowScale = widget.allowScale?.call(nextScale) ?? true;
+    if (!allowScale) {
+      return;
+    }
+
     late double baseHeight;
     late double baseWidth;
     final ratio = _parsedImageDetail!.height / _parsedImageDetail!.width;
