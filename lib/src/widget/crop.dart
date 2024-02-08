@@ -348,6 +348,11 @@ class _CropEditorState extends State<_CropEditor> {
     );
     _lastComputed = future;
     future.then((parsed) {
+      // check if Crop is still alive
+      if (!mounted) {
+        return;
+      }
+
       // if _parseImageWith() is called again before future completed,
       // just skip and the last future is used.
       if (_lastComputed == future) {
