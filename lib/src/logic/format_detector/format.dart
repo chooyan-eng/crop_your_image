@@ -5,5 +5,4 @@ enum ImageFormat {
   webp,
   bmp,
   ico,
-  raw,
 }

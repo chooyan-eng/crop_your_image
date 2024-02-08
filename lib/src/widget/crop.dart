@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:crop_your_image/src/logic/cropper/image_cropper.dart';
+import 'package:crop_your_image/src/logic/format_detector/format.dart';
+import 'package:crop_your_image/src/logic/format_detector/format_detector.dart';
 import 'package:crop_your_image/src/logic/parser/image_detail.dart';
 import 'package:crop_your_image/src/logic/parser/image_parser.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
@@ -104,6 +106,9 @@ class Crop extends StatelessWidget {
   /// Injected logic for cropping image.
   final ImageCropper imageCropper;
 
+  /// Injected logic for detecting image format.
+  final FormatDetector? formatDetector;
+
   /// Injected logic for parsing image detail.
   final ImageParser imageParser;
 
@@ -126,6 +131,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.formatDetector = defaultFormatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
   })  : assert((initialSize ?? 1.0) <= 1.0,
@@ -161,6 +167,7 @@ class Crop extends StatelessWidget {
             progressIndicator: progressIndicator,
             interactive: interactive,
             imageCropper: imageCropper,
+            formatDetector: formatDetector,
             imageParser: imageParser,
           ),
         );
@@ -188,6 +195,7 @@ class _CropEditor extends StatefulWidget {
   final Widget progressIndicator;
   final bool interactive;
   final ImageCropper imageCropper;
+  final FormatDetector? formatDetector;
   final ImageParser imageParser;
 
   const _CropEditor({
@@ -210,6 +218,7 @@ class _CropEditor extends StatefulWidget {
     required this.progressIndicator,
     required this.interactive,
     required this.imageCropper,
+    required this.formatDetector,
     required this.imageParser,
   });
 
@@ -240,14 +249,13 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onMoved?.call(_rect);
   }
 
-  /// temporary field to detect last computed [ImageParser] logic.
-  Future<ImageDetail?>? _lastComputed;
-
   bool get _isImageLoading => _lastComputed != null;
 
   Calculator get calculator => _isFitVertically
       ? const VerticalCalculator()
       : const HorizontalCalculator();
+
+  ImageFormat? _detectedFormat;
 
   @override
   void initState() {
@@ -275,26 +283,147 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
+    _parseImageWith(
+      parser: widget.imageParser,
+      formatDetector: widget.formatDetector,
+      image: widget.image,
+    );
+    super.didChangeDependencies();
+  }
+
+  /// reset image to be cropped
+  void _resetImage(Uint8List targetImage) {
+    widget.onStatusChanged?.call(CropStatus.loading);
+    _parseImageWith(
+      parser: widget.imageParser,
+      formatDetector: widget.formatDetector,
+      image: targetImage,
+    );
+  }
+
+  /// temporary field to detect last computed.
+  ImageParser? _lastParser;
+  FormatDetector? _lastFormatDetector;
+  Uint8List? _lastImage;
+  Future<ImageDetail?>? _lastComputed;
+
+  void _parseImageWith({
+    required ImageParser parser,
+    required FormatDetector? formatDetector,
+    required Uint8List image,
+  }) {
+    if (_lastParser == parser &&
+        _lastImage == image &&
+        _lastFormatDetector == formatDetector) {
+      // no change
+      return;
+    }
+
+    _lastParser = parser;
+    _lastFormatDetector = formatDetector;
+    _lastImage = image;
+
     final future = compute(
       _parseFunc,
-      [widget.imageParser, widget.image],
+      [widget.imageParser, formatDetector, image],
     );
     _lastComputed = future;
-    future.then((converted) {
-      // if didChangeDependencies is called again or _resetImage() is called
-      // before future completed, just skip and the last future is used.
+    future.then((parsed) {
+      // if _parseImageWith() is called again before future completed,
+      // just skip and the last future is used.
       if (_lastComputed == future) {
-        _parsedImageDetail = converted;
-        _withCircleUi = widget.withCircleUi;
-        _resetCroppingArea();
-
         setState(() {
+          _parsedImageDetail = parsed;
           _lastComputed = null;
+          _detectedFormat = widget.formatDetector?.call(image);
         });
+        _resetCroppingArea();
         widget.onStatusChanged?.call(CropStatus.ready);
       }
     });
-    super.didChangeDependencies();
+  }
+
+  /// reset [Rect] of cropping area with current state
+  void _resetCroppingArea() {
+    final screenSize = MediaQuery.of(context).size;
+
+    final imageRatio = _parsedImageDetail!.width / _parsedImageDetail!.height;
+    _isFitVertically = imageRatio < screenSize.aspectRatio;
+
+    _imageRect = calculator.imageRect(screenSize, imageRatio);
+
+    if (widget.initialAreaBuilder != null) {
+      rect = widget.initialAreaBuilder!(Rect.fromLTWH(
+        0,
+        0,
+        screenSize.width,
+        screenSize.height,
+      ));
+    } else {
+      _resizeWith(widget.aspectRatio, widget.initialArea);
+    }
+
+    if (widget.interactive) {
+      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
+      _applyScale(initialScale);
+    }
+  }
+
+  /// resize cropping area with given aspect ratio.
+  void _resizeWith(double? aspectRatio, Rect? initialArea) {
+    _aspectRatio = _withCircleUi ? 1 : aspectRatio;
+
+    if (initialArea == null) {
+      rect = calculator.initialCropRect(
+        MediaQuery.of(context).size,
+        _imageRect,
+        _aspectRatio ?? 1,
+        widget.initialSize ?? 1,
+      );
+    } else {
+      final screenSizeRatio = calculator.screenSizeRatio(
+        _parsedImageDetail!,
+        MediaQuery.of(context).size,
+      );
+      rect = Rect.fromLTWH(
+        _imageRect.left + initialArea.left / screenSizeRatio,
+        _imageRect.top + initialArea.top / screenSizeRatio,
+        initialArea.width / screenSizeRatio,
+        initialArea.height / screenSizeRatio,
+      );
+    }
+  }
+
+  /// crop given image with given area.
+  Future<void> _crop(bool withCircleShape) async {
+    assert(_parsedImageDetail != null);
+
+    final screenSizeRatio = calculator.screenSizeRatio(
+      _parsedImageDetail!,
+      MediaQuery.of(context).size,
+    );
+
+    widget.onStatusChanged?.call(CropStatus.cropping);
+
+    // use compute() not to block UI update
+    final cropResult = await compute(
+      _cropFunc,
+      [
+        widget.imageCropper,
+        _parsedImageDetail!.image,
+        Rect.fromLTWH(
+          (_rect.left - _imageRect.left) * screenSizeRatio / _scale,
+          (_rect.top - _imageRect.top) * screenSizeRatio / _scale,
+          _rect.width * screenSizeRatio / _scale,
+          _rect.height * screenSizeRatio / _scale,
+        ),
+        withCircleShape,
+        _detectedFormat,
+      ],
+    );
+
+    widget.onCropped(cropResult);
+    widget.onStatusChanged?.call(CropStatus.ready);
   }
 
   // for zooming
@@ -387,110 +516,6 @@ class _CropEditorState extends State<_CropEditor> {
       );
       _scale = nextScale;
     });
-  }
-
-  /// reset image to be cropped
-  void _resetImage(Uint8List targetImage) {
-    widget.onStatusChanged?.call(CropStatus.loading);
-    final future = compute(
-      _parseFunc,
-      [widget.imageParser, targetImage],
-    );
-    _lastComputed = future;
-    future.then((parsed) {
-      // if didChangeDependencies is called or _resetImage() is called again
-      // before future completed, just skip and the last future is used.
-      if (_lastComputed == future) {
-        setState(() {
-          _parsedImageDetail = parsed;
-          _lastComputed = null;
-        });
-        _resetCroppingArea();
-        widget.onStatusChanged?.call(CropStatus.ready);
-      }
-    });
-  }
-
-  /// reset [Rect] of cropping area with current state
-  void _resetCroppingArea() {
-    final screenSize = MediaQuery.of(context).size;
-
-    final imageRatio = _parsedImageDetail!.width / _parsedImageDetail!.height;
-    _isFitVertically = imageRatio < screenSize.aspectRatio;
-
-    _imageRect = calculator.imageRect(screenSize, imageRatio);
-
-    if (widget.initialAreaBuilder != null) {
-      rect = widget.initialAreaBuilder!(Rect.fromLTWH(
-        0,
-        0,
-        screenSize.width,
-        screenSize.height,
-      ));
-    } else {
-      _resizeWith(widget.aspectRatio, widget.initialArea);
-    }
-
-    if (widget.interactive) {
-      final initialScale = calculator.scaleToCover(screenSize, _imageRect);
-      _applyScale(initialScale);
-    }
-  }
-
-  /// resize cropping area with given aspect ratio.
-  void _resizeWith(double? aspectRatio, Rect? initialArea) {
-    _aspectRatio = _withCircleUi ? 1 : aspectRatio;
-
-    if (initialArea == null) {
-      rect = calculator.initialCropRect(
-        MediaQuery.of(context).size,
-        _imageRect,
-        _aspectRatio ?? 1,
-        widget.initialSize ?? 1,
-      );
-    } else {
-      final screenSizeRatio = calculator.screenSizeRatio(
-        _parsedImageDetail!,
-        MediaQuery.of(context).size,
-      );
-      rect = Rect.fromLTWH(
-        _imageRect.left + initialArea.left / screenSizeRatio,
-        _imageRect.top + initialArea.top / screenSizeRatio,
-        initialArea.width / screenSizeRatio,
-        initialArea.height / screenSizeRatio,
-      );
-    }
-  }
-
-  /// crop given image with given area.
-  Future<void> _crop(bool withCircleShape) async {
-    assert(_parsedImageDetail != null);
-
-    final screenSizeRatio = calculator.screenSizeRatio(
-      _parsedImageDetail!,
-      MediaQuery.of(context).size,
-    );
-
-    widget.onStatusChanged?.call(CropStatus.cropping);
-
-    // use compute() not to block UI update
-    final cropResult = await compute(
-      _cropFunc,
-      [
-        widget.imageCropper,
-        _parsedImageDetail!.image,
-        Rect.fromLTWH(
-          (_rect.left - _imageRect.left) * screenSizeRatio / _scale,
-          (_rect.top - _imageRect.top) * screenSizeRatio / _scale,
-          _rect.width * screenSizeRatio / _scale,
-          _rect.height * screenSizeRatio / _scale,
-        ),
-        withCircleShape,
-      ],
-    );
-
-    widget.onCropped(cropResult);
-    widget.onStatusChanged?.call(CropStatus.ready);
   }
 
   @override
@@ -651,7 +676,8 @@ class _CropEditorState extends State<_CropEditor> {
 /// calls [ImageParser.call] with given arguments
 ImageDetail _parseFunc(List<dynamic> args) {
   final parser = args[0] as ImageParser;
-  return parser(args[1] as Uint8List);
+  final formatDetector = args[1] as FormatDetector?;
+  return parser(args[2] as Uint8List, formatDetector: formatDetector);
 }
 
 /// top-level function for [compute]
@@ -661,6 +687,10 @@ FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
   final originalImage = args[1];
   final rect = args[2] as Rect;
   final withCircleShape = args[3] as bool;
+
+  // TODO(chooyan-eng): currently always PNG
+  // final outputFormat = args[4] as ImageFormat?;
+
   return cropper.call(
     original: originalImage,
     topLeft: Offset(rect.left, rect.top),

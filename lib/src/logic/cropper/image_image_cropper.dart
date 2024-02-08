@@ -13,16 +13,14 @@ import 'package:image/image.dart';
 
 /// an implementation of [ImageCropper] using image package
 class ImageImageCropper extends ImageCropper<Image> {
-  const ImageImageCropper({
-    required super.formatDetector,
-  });
+  const ImageImageCropper();
 
   @override
   FutureOr<Uint8List> call({
     required Image original,
     required Offset topLeft,
     required Offset bottomRight,
-    ImageFormat format = ImageFormat.jpeg,
+    ImageFormat outputFormat = ImageFormat.jpeg,
     ImageShape shape = ImageShape.rectangle,
   }) {
     final function = switch (shape) {
