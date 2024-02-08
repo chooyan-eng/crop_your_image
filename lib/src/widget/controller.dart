@@ -1,4 +1,6 @@
-part of crop_your_image;
+import 'dart:typed_data';
+
+import 'package:flutter/widgets.dart';
 
 /// Controller to control crop actions.
 class CropController {
