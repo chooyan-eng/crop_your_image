@@ -1,8 +1,11 @@
-part of crop_your_image;
+import 'dart:math';
+
+import 'package:crop_your_image/src/logic/parser/image_detail.dart';
+import 'package:flutter/widgets.dart';
 
 /// Calculation logics for various [Rect] data.
-abstract class _Calculator {
-  const _Calculator();
+abstract class Calculator {
+  const Calculator();
 
   /// calculates [Rect] of image to fit the screenSize.
   Rect imageRect(Size screenSize, double imageRatio);
@@ -15,7 +18,7 @@ abstract class _Calculator {
   double scaleToCover(Size screenSize, Rect imageRect);
 
   /// calculates ratio of [targetImage] and [screenSize]
-  double screenSizeRatio(image.Image targetImage, Size screenSize);
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize);
 
   /// calculates [Rect] of the result of user moving the cropping area.
   Rect moveRect(Rect original, double deltaX, double deltaY, Rect imageRect) {
@@ -235,8 +238,8 @@ abstract class _Calculator {
   }
 }
 
-class _HorizontalCalculator extends _Calculator {
-  const _HorizontalCalculator();
+class HorizontalCalculator extends Calculator {
+  const HorizontalCalculator();
 
   @override
   Rect imageRect(Size screenSize, double imageRatio) {
@@ -272,13 +275,13 @@ class _HorizontalCalculator extends _Calculator {
   }
 
   @override
-  double screenSizeRatio(image.Image targetImage, Size screenSize) {
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
     return targetImage.width / screenSize.width;
   }
 }
 
-class _VerticalCalculator extends _Calculator {
-  const _VerticalCalculator();
+class VerticalCalculator extends Calculator {
+  const VerticalCalculator();
 
   @override
   Rect imageRect(Size screenSize, double imageRatio) {
@@ -314,7 +317,7 @@ class _VerticalCalculator extends _Calculator {
   }
 
   @override
-  double screenSizeRatio(image.Image targetImage, Size screenSize) {
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
     return targetImage.height / screenSize.height;
   }
 }

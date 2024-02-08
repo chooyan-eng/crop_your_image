@@ -1,6 +1,19 @@
-part of crop_your_image;
+import 'dart:async';
+import 'dart:math';
 
-const dotTotalSize = 32.0; // fixed corner dot size.
+import 'package:crop_your_image/crop_your_image.dart';
+import 'package:crop_your_image/src/logic/cropper/image_cropper.dart';
+import 'package:crop_your_image/src/logic/parser/image_detail.dart';
+import 'package:crop_your_image/src/logic/parser/image_parser.dart';
+import 'package:crop_your_image/src/logic/shape.dart';
+import 'package:crop_your_image/src/widget/calculator.dart';
+import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
+import 'package:crop_your_image/src/widget/constants.dart';
+import 'package:crop_your_image/src/widget/dot_controll.dart';
+import 'package:crop_your_image/src/widget/edge_alignment.dart';
+import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
@@ -89,8 +102,14 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
-  const Crop({
-    Key? key,
+  /// Injected logic for cropping image.
+  final ImageCropper imageCropper;
+
+  /// Injected logic for parsing image detail.
+  final ImageParser imageParser;
+
+  Crop({
+    super.key,
     required this.image,
     required this.onCropped,
     this.aspectRatio,
@@ -108,9 +127,11 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.imageCropper = defaultImageCropper,
+    ImageParser? imageParser,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
-        super(key: key);
+        this.imageParser = imageParser ?? defaultImageParser;
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +143,7 @@ class Crop extends StatelessWidget {
         return MediaQuery(
           data: newData,
           child: _CropEditor(
+            key: key,
             image: image,
             onCropped: onCropped,
             aspectRatio: aspectRatio,
@@ -139,6 +161,8 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            imageCropper: imageCropper,
+            imageParser: imageParser,
           ),
         );
       },
@@ -164,9 +188,11 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
+  final ImageCropper imageCropper;
+  final ImageParser imageParser;
 
   const _CropEditor({
-    Key? key,
+    super.key,
     required this.image,
     required this.onCropped,
     this.aspectRatio,
@@ -184,7 +210,9 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
-  }) : super(key: key);
+    required this.imageCropper,
+    required this.imageParser,
+  });
 
   @override
   _CropEditorState createState() => _CropEditorState();
@@ -193,19 +221,19 @@ class _CropEditor extends StatefulWidget {
 class _CropEditorState extends State<_CropEditor> {
   late CropController _cropController;
   late Rect _rect;
-  image.Image? _targetImage;
+  ImageDetail? _targetImage;
   late Rect _imageRect;
 
   double? _aspectRatio;
   bool _withCircleUi = false;
   bool _isFitVertically = false;
-  Future<image.Image?>? _lastComputed;
+  Future<ImageDetail?>? _lastComputed;
 
   bool get _isImageLoading => _lastComputed != null;
 
-  _Calculator get calculator => _isFitVertically
-      ? const _VerticalCalculator()
-      : const _HorizontalCalculator();
+  Calculator get calculator => _isFitVertically
+      ? const VerticalCalculator()
+      : const HorizontalCalculator();
 
   set rect(Rect newRect) {
     setState(() {
@@ -330,7 +358,10 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    final future = compute(_fromByteData, widget.image);
+    final future = compute(
+      _parseFunc,
+      [widget.imageParser, widget.image],
+    );
     _lastComputed = future;
     future.then((converted) {
       if (_lastComputed == future) {
@@ -350,7 +381,10 @@ class _CropEditorState extends State<_CropEditor> {
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
     widget.onStatusChanged?.call(CropStatus.loading);
-    final future = compute(_fromByteData, targetImage);
+    final future = compute(
+      _parseFunc,
+      [widget.imageParser, targetImage],
+    );
     _lastComputed = future;
     future.then((converted) {
       if (_lastComputed == future) {
@@ -428,19 +462,21 @@ class _CropEditorState extends State<_CropEditor> {
 
     // use compute() not to block UI update
     final cropResult = await compute(
-      withCircleShape ? _doCropCircle : _doCrop,
+      _cropFunc,
       [
-        _targetImage!,
+        widget.imageCropper,
+        _targetImage!.image,
         Rect.fromLTWH(
           (_rect.left - _imageRect.left) * screenSizeRatio / _scale,
           (_rect.top - _imageRect.top) * screenSizeRatio / _scale,
           _rect.width * screenSizeRatio / _scale,
           _rect.height * screenSizeRatio / _scale,
         ),
+        withCircleShape,
       ],
     );
-    widget.onCropped(cropResult);
 
+    widget.onCropped(cropResult);
     widget.onStatusChanged?.call(CropStatus.ready);
   }
 
@@ -484,8 +520,8 @@ class _CropEditorState extends State<_CropEditor> {
               IgnorePointer(
                 child: ClipPath(
                   clipper: _withCircleUi
-                      ? _CircleCropAreaClipper(_rect)
-                      : _CropAreaClipper(_rect, widget.radius),
+                      ? CircleCropAreaClipper(_rect)
+                      : CropAreaClipper(_rect, widget.radius),
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
@@ -598,146 +634,20 @@ class _CropEditorState extends State<_CropEditor> {
   }
 }
 
-class _CropAreaClipper extends CustomClipper<Path> {
-  _CropAreaClipper(this.rect, this.radius);
-
-  final Rect rect;
-  final double radius;
-
-  @override
-  Path getClip(Size size) {
-    return Path()
-      ..addPath(
-        Path()
-          ..moveTo(rect.left, rect.top + radius)
-          ..arcToPoint(Offset(rect.left + radius, rect.top),
-              radius: Radius.circular(radius))
-          ..lineTo(rect.right - radius, rect.top)
-          ..arcToPoint(Offset(rect.right, rect.top + radius),
-              radius: Radius.circular(radius))
-          ..lineTo(rect.right, rect.bottom - radius)
-          ..arcToPoint(Offset(rect.right - radius, rect.bottom),
-              radius: Radius.circular(radius))
-          ..lineTo(rect.left + radius, rect.bottom)
-          ..arcToPoint(Offset(rect.left, rect.bottom - radius),
-              radius: Radius.circular(radius))
-          ..close(),
-        Offset.zero,
-      )
-      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
-      ..fillType = PathFillType.evenOdd;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+ImageDetail _parseFunc(List<dynamic> args) {
+  final parser = args[0] as ImageParser;
+  return parser(args[1] as Uint8List);
 }
 
-class _CircleCropAreaClipper extends CustomClipper<Path> {
-  final Rect rect;
-
-  _CircleCropAreaClipper(this.rect);
-
-  @override
-  Path getClip(Size size) {
-    return Path()
-      ..addOval(Rect.fromCircle(center: rect.center, radius: rect.width / 2))
-      ..addRect(Rect.fromLTWH(0.0, 0.0, size.width, size.height))
-      ..fillType = PathFillType.evenOdd;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
-}
-
-/// Defalt dot widget placed on corners to control cropping area.
-/// This Widget automaticall fits the appropriate size.
-class DotControl extends StatelessWidget {
-  const DotControl({
-    Key? key,
-    this.color = Colors.white,
-    this.padding = 8,
-  }) : super(key: key);
-
-  /// [Color] of this widget. [Colors.white] by default.
-  final Color color;
-
-  /// The size of transparent padding which exists to make dot easier to touch.
-  /// Though total size of this widget cannot be changed,
-  /// but visible size can be changed by setting this value.
-  final double padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.transparent,
-      width: dotTotalSize,
-      height: dotTotalSize,
-      child: Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(dotTotalSize),
-          child: Container(
-            width: dotTotalSize - (padding * 2),
-            height: dotTotalSize - (padding * 2),
-            color: color,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// process cropping image.
-/// this method is supposed to be called only via compute()
-Uint8List _doCrop(List<dynamic> cropData) {
-  final originalImage = cropData[0] as image.Image;
-  final rect = cropData[1] as Rect;
-  return Uint8List.fromList(
-    image.encodePng(
-      image.copyCrop(
-        originalImage,
-        x: rect.left.toInt(),
-        y: rect.top.toInt(),
-        width: rect.width.toInt(),
-        height: rect.height.toInt(),
-      ),
-    ),
+FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
+  final cropper = args[0] as ImageCropper;
+  final originalImage = args[1];
+  final rect = args[2] as Rect;
+  final withCircleShape = args[3] as bool;
+  return cropper.call(
+    original: originalImage,
+    topLeft: Offset(rect.left, rect.top),
+    bottomRight: Offset(rect.right, rect.bottom),
+    shape: withCircleShape ? ImageShape.circle : ImageShape.rectangle,
   );
-}
-
-/// process cropping image with circle shape.
-/// this method is supposed to be called only via compute()
-Uint8List _doCropCircle(List<dynamic> cropData) {
-  final originalImage = cropData[0] as image.Image;
-  final rect = cropData[1] as Rect;
-  final center = image.Point(
-    rect.left + rect.width / 2,
-    rect.top + rect.height / 2,
-  );
-  return Uint8List.fromList(
-    image.encodePng(
-      image.copyCropCircle(
-        originalImage,
-        centerX: center.xi,
-        centerY: center.yi,
-        radius: min(rect.width, rect.height) ~/ 2,
-      ),
-    ),
-  );
-}
-
-// decode orientation awared Image.
-image.Image _fromByteData(Uint8List data) {
-  final tempImage = image.decodeImage(data);
-  assert(tempImage != null);
-
-  // check orientation
-  switch (tempImage?.exif.exifIfd.orientation ?? -1) {
-    case 3:
-      return image.copyRotate(tempImage!, angle: 180);
-    case 6:
-      return image.copyRotate(tempImage!, angle: 90);
-    case 8:
-      return image.copyRotate(tempImage!, angle: -90);
-  }
-  return tempImage!;
 }

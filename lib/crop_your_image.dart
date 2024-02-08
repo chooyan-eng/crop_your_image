@@ -1,12 +1,13 @@
-library crop_your_image;
+import 'package:crop_your_image/src/logic/cropper/image_image_cropper.dart';
+import 'package:crop_your_image/src/logic/format_detector/format_detector.dart';
+import 'package:crop_your_image/src/logic/parser/image_image_parser.dart';
 
-import 'dart:math';
+export 'src/widget/widget.dart';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:image/image.dart' as image;
+final defaultImageParser = imageImageParser;
 
-part 'src/crop.dart';
-part 'src/controller.dart';
-part 'src/calculator.dart';
-part 'src/edge_alignment.dart';
+// TODO(chooyan-eng): implement format detector if possible
+const FormatDetector? defaultFormatDetector = null;
+
+const defaultImageCropper =
+    ImageImageCropper(formatDetector: defaultFormatDetector);
