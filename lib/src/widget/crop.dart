@@ -9,8 +9,6 @@ import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
-import 'package:crop_your_image/src/widget/dot_controll.dart';
-import 'package:crop_your_image/src/widget/edge_alignment.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
