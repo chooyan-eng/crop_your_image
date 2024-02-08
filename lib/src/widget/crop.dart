@@ -87,6 +87,10 @@ class Crop extends StatelessWidget {
   /// If default dot Widget with different color is needed, [DotControl] is available.
   final CornerDotBuilder? cornerDotBuilder;
 
+  /// [Clip] configuration for Crop editor, especially corner dots.
+  /// [Clip.hardEdge] by default.
+  final Clip clipBehavior;
+
   /// If [true], cropping area is fixed and CANNOT be moved.
   /// [false] by default.
   final bool fixArea;
@@ -129,6 +133,7 @@ class Crop extends StatelessWidget {
     this.baseColor = Colors.white,
     this.radius = 0,
     this.cornerDotBuilder,
+    this.clipBehavior = Clip.hardEdge,
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
@@ -165,6 +170,7 @@ class Crop extends StatelessWidget {
             baseColor: baseColor,
             radius: radius,
             cornerDotBuilder: cornerDotBuilder,
+            clipBehavior: clipBehavior,
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
@@ -194,6 +200,7 @@ class _CropEditor extends StatefulWidget {
   final Color baseColor;
   final double radius;
   final CornerDotBuilder? cornerDotBuilder;
+  final Clip clipBehavior;
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
@@ -206,18 +213,19 @@ class _CropEditor extends StatefulWidget {
     super.key,
     required this.image,
     required this.onCropped,
-    this.aspectRatio,
-    this.initialSize,
-    this.initialAreaBuilder,
-    this.initialArea,
+    required this.aspectRatio,
+    required this.initialSize,
+    required this.initialAreaBuilder,
+    required this.initialArea,
     this.withCircleUi = false,
-    this.controller,
-    this.onMoved,
-    this.onStatusChanged,
-    this.maskColor,
+    required this.controller,
+    required this.onMoved,
+    required this.onStatusChanged,
+    required this.maskColor,
     required this.baseColor,
     required this.radius,
-    this.cornerDotBuilder,
+    required this.cornerDotBuilder,
+    required this.clipBehavior,
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
@@ -538,6 +546,7 @@ class _CropEditorState extends State<_CropEditor> {
     return _isImageLoading
         ? Center(child: widget.progressIndicator)
         : Stack(
+            clipBehavior: widget.clipBehavior,
             children: [
               Listener(
                 onPointerDown: (_) => _pointerNum++,
