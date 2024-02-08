@@ -237,6 +237,10 @@ class _CropEditorState extends State<_CropEditor> {
   /// image with detail info parsed with [widget.imageParser]
   ImageDetail? _parsedImageDetail;
 
+  /// [Size] of viewport
+  /// This is equivalent to [MediaQuery.of(context).size]
+  late Size _viewportSize;
+
   /// [Rect] of displaying image
   /// Note that this is not the actual [Size] of the image.
   late ViewportBasedRect _imageRect;
@@ -288,6 +292,8 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
+    _viewportSize = MediaQuery.of(context).size;
+
     _parseImageWith(
       parser: widget.imageParser,
       formatDetector: widget.formatDetector,
@@ -350,7 +356,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// reset [Rect] of cropping area with current state
   void _resetCroppingArea() {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = _viewportSize;
 
     final imageRatio = _parsedImageDetail!.width / _parsedImageDetail!.height;
     _isFitVertically = imageRatio < screenSize.aspectRatio;
@@ -380,7 +386,7 @@ class _CropEditorState extends State<_CropEditor> {
 
     if (initialArea == null) {
       rect = calculator.initialCropRect(
-        MediaQuery.of(context).size,
+        _viewportSize,
         _imageRect,
         _aspectRatio ?? 1,
         widget.initialSize ?? 1,
@@ -388,7 +394,7 @@ class _CropEditorState extends State<_CropEditor> {
     } else {
       final screenSizeRatio = calculator.screenSizeRatio(
         _parsedImageDetail!,
-        MediaQuery.of(context).size,
+        _viewportSize,
       );
       rect = Rect.fromLTWH(
         _imageRect.left + initialArea.left / screenSizeRatio,
@@ -405,7 +411,7 @@ class _CropEditorState extends State<_CropEditor> {
 
     final screenSizeRatio = calculator.screenSizeRatio(
       _parsedImageDetail!,
-      MediaQuery.of(context).size,
+      _viewportSize,
     );
 
     widget.onStatusChanged?.call(CropStatus.cropping);
@@ -484,10 +490,10 @@ class _CropEditorState extends State<_CropEditor> {
     final ratio = _parsedImageDetail!.height / _parsedImageDetail!.width;
 
     if (_isFitVertically) {
-      baseHeight = MediaQuery.of(context).size.height;
+      baseHeight = _viewportSize.height;
       baseWidth = baseHeight / ratio;
     } else {
-      baseWidth = MediaQuery.of(context).size.width;
+      baseWidth = _viewportSize.width;
       baseHeight = baseWidth * ratio;
     }
 
