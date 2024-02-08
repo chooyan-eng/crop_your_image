@@ -1,3 +1,8 @@
+## [1.0.0-dev.1] - 2024.2.8
+* Refactor and update the architecture of the entire codebase.
+* Add injecting backend logic features.
+* Add `allowScale` flag.
+
 ## [0.7.5] - 2023.6.5
 * Update Fluter version to 3.10.3
 
