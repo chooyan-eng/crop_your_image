@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
 
-typedef AllowScale = bool Function(double newScale);
+typedef WillUpdateScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
@@ -103,10 +103,10 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
-  /// Function whether to allow scale image or not.
-  /// This function is always called when user tries to scale image.
-  /// If this function returns [false], image cannot be scaled.
-  final AllowScale? allowScale;
+  /// Function called before scaling image.
+  /// This function is called multiple times during user tries to scale image.
+  /// If this function returns [false], scaling is canceled.
+  final WillUpdateScale? willUpdateScale;
 
   /// Injected logic for cropping image.
   final ImageCropper imageCropper;
@@ -137,7 +137,7 @@ class Crop extends StatelessWidget {
     this.fixArea = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
-    this.allowScale,
+    this.willUpdateScale,
     this.formatDetector = defaultFormatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
@@ -174,7 +174,7 @@ class Crop extends StatelessWidget {
             fixArea: fixArea,
             progressIndicator: progressIndicator,
             interactive: interactive,
-            allowScale: allowScale,
+            willUpdateScale: willUpdateScale,
             imageCropper: imageCropper,
             formatDetector: formatDetector,
             imageParser: imageParser,
@@ -204,7 +204,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixArea;
   final Widget progressIndicator;
   final bool interactive;
-  final AllowScale? allowScale;
+  final WillUpdateScale? willUpdateScale;
   final ImageCropper imageCropper;
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
@@ -229,7 +229,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixArea,
     required this.progressIndicator,
     required this.interactive,
-    required this.allowScale,
+    required this.willUpdateScale,
     required this.imageCropper,
     required this.formatDetector,
     required this.imageParser,
@@ -494,7 +494,7 @@ class _CropEditorState extends State<_CropEditor> {
     double nextScale, {
     Offset? focalPoint,
   }) {
-    final allowScale = widget.allowScale?.call(nextScale) ?? true;
+    final allowScale = widget.willUpdateScale?.call(nextScale) ?? true;
     if (!allowScale) {
       return;
     }
