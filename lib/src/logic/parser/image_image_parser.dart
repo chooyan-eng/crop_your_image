@@ -8,10 +8,8 @@ import 'image_parser.dart';
 
 /// Implementation of [ImageParser] using image package
 /// Parsed image is represented as [image.Image]
-final ImageParser<image.Image> imageImageParser = (data, {formatDetector}) {
-  final format = formatDetector?.call(data);
-
-  final tempImage = _decodeWith(data, format: format);
+final ImageParser<image.Image> imageImageParser = (data, {inputFormat}) {
+  final tempImage = _decodeWith(data, format: inputFormat);
   assert(tempImage != null);
 
   // check orientation

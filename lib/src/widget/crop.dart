@@ -91,13 +91,13 @@ class Crop extends StatelessWidget {
   /// [Clip.hardEdge] by default.
   final Clip clipBehavior;
 
-  /// If [true], cropping area is fixed and CANNOT be moved.
-  /// [false] by default.
-  final bool fixArea;
-
   /// [Widget] for showing preparing for image is in progress.
   /// [SizedBox.shrink()] is used by default.
   final Widget progressIndicator;
+
+  /// If [fixArea] and [interactive] are both [true], cropping area is fixed and CANNOT be moved.
+  /// [false] by default.
+  final bool fixArea;
 
   /// If [true], users can move and zoom image.
   /// [false] by default.
@@ -342,9 +342,10 @@ class _CropEditorState extends State<_CropEditor> {
     _lastFormatDetector = formatDetector;
     _lastImage = image;
 
+    final format = formatDetector?.call(image);
     final future = compute(
       _parseFunc,
-      [widget.imageParser, formatDetector, image],
+      [widget.imageParser, format, image],
     );
     _lastComputed = future;
     future.then((parsed) {
@@ -359,7 +360,7 @@ class _CropEditorState extends State<_CropEditor> {
         setState(() {
           _parsedImageDetail = parsed;
           _lastComputed = null;
-          _detectedFormat = widget.formatDetector?.call(image);
+          _detectedFormat = format;
         });
         _resetCroppingArea();
         widget.onStatusChanged?.call(CropStatus.ready);
@@ -706,8 +707,8 @@ class _CropEditorState extends State<_CropEditor> {
 /// calls [ImageParser.call] with given arguments
 ImageDetail _parseFunc(List<dynamic> args) {
   final parser = args[0] as ImageParser;
-  final formatDetector = args[1] as FormatDetector?;
-  return parser(args[2] as Uint8List, formatDetector: formatDetector);
+  final format = args[1] as ImageFormat?;
+  return parser(args[2] as Uint8List, inputFormat: format);
 }
 
 /// top-level function for [compute]
