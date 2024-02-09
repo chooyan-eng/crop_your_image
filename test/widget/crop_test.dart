@@ -6,6 +6,8 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'helper.dart';
+
 void main() {
   late Uint8List testImage;
 
@@ -18,7 +20,7 @@ void main() {
     testWidgets(
       'pump Crop with minimum arguments works without errors',
       (tester) async {
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -36,7 +38,7 @@ void main() {
         final completer = Completer<void>();
 
         final controller = CropController();
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) => completer.complete(),
@@ -65,7 +67,7 @@ void main() {
         CropStatus? lastStatus;
 
         final controller = CropController();
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -99,7 +101,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -126,7 +128,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -155,7 +157,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -190,7 +192,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -228,7 +230,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -264,7 +266,7 @@ void main() {
         // to ensure callback is only called when initialized
         var calledCount = 0;
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -301,7 +303,7 @@ void main() {
         // to ensure callback is called
         final completer = Completer<void>();
 
-        final widget = _withMaterial(
+        final widget = withMaterial(
           Crop(
             image: testImage,
             onCropped: (value) {},
@@ -323,14 +325,4 @@ void main() {
       },
     );
   });
-}
-
-Widget _withMaterial(Widget widget) {
-  return MaterialApp(
-    home: Scaffold(
-      // TODO(chooyan-eng): fix error on cropping if image is not large enough comparing to viewport
-      // body: SizedBox.expand(child: widget),
-      body: SizedBox(width: 300, height: 300, child: widget),
-    ),
-  );
 }
