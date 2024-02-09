@@ -31,7 +31,7 @@ class CropController {
   /// the value is corrected if it indicates outside of the image.
   set rect(Rect value) => _delegate.onChangeRect(value);
 
-  /// change [Rect] of cropping area based on [Rect] of original imgage.
+  /// change [Rect] of cropping area based on [Rect] of original image.
   set area(Rect value) => _delegate.onChangeArea(value);
 }
 
