@@ -1,3 +1,9 @@
+## [1.0.0-dev.2] - 2024.2.9
+* Add test codes and fix some bugs.
+* Update README.md
+* Add `clipBehavior`.
+* Rename `allowScale` to `willUpdateScale`.
+
 ## [1.0.0-dev.1] - 2024.2.8
 * Refactor and update the architecture of the entire codebase.
 * Add injecting backend logic features.
