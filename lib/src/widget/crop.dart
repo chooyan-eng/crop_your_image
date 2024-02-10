@@ -476,7 +476,6 @@ class _CropEditorState extends State<_CropEditor> {
   }
 
   // for zooming
-  int _pointerNum = 0;
   double _scale = 1.0;
   double _baseScale = 1.0;
 
@@ -504,14 +503,10 @@ class _CropEditorState extends State<_CropEditor> {
       );
     });
 
-    // scale
-    // _pointerNum >= 2
-    if (true) {
-      _applyScale(
-        _baseScale * detail.scale,
-        focalPoint: detail.localFocalPoint,
-      );
-    }
+    _applyScale(
+      _baseScale * detail.scale,
+      focalPoint: detail.localFocalPoint,
+    );
   }
 
   void _applyScale(
@@ -588,8 +583,6 @@ class _CropEditorState extends State<_CropEditor> {
             clipBehavior: widget.clipBehavior,
             children: [
               Listener(
-                onPointerDown: (_) => _pointerNum++,
-                onPointerUp: (_) => _pointerNum--,
                 onPointerSignal: (signal) {
                   if (signal is PointerScrollEvent) {
                     if (signal.scrollDelta.dy > 0) {
