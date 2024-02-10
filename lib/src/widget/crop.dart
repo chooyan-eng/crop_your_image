@@ -388,10 +388,11 @@ class _CropEditorState extends State<_CropEditor> {
   void _resetCropRect() {
     final screenSize = _viewportSize;
 
-    final imageRatio = _parsedImageDetail!.width / _parsedImageDetail!.height;
-    _isFitVertically = imageRatio < screenSize.aspectRatio;
+    final imageAspectRatio =
+        _parsedImageDetail!.width / _parsedImageDetail!.height;
+    _isFitVertically = imageAspectRatio < screenSize.aspectRatio;
 
-    _imageRect = calculator.imageRect(screenSize, imageRatio);
+    _imageRect = calculator.imageRect(screenSize, imageAspectRatio);
 
     if (widget.initialRectBuilder != null) {
       cropRect = calculator.correct(

@@ -8,7 +8,7 @@ abstract class Calculator {
   const Calculator();
 
   /// calculates [ViewportBasedRect] of image to fit the screenSize.
-  ViewportBasedRect imageRect(Size screenSize, double imageRatio);
+  ViewportBasedRect imageRect(Size screenSize, double imageAspectRatio);
 
   /// calculates [ViewportBasedRect] of initial cropping area.
   ViewportBasedRect initialCropRect(Size screenSize,
