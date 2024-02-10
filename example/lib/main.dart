@@ -143,14 +143,14 @@ class _CropSampleState extends State<CropSample> {
                           cornerDotBuilder: (size, edgeAlignment) =>
                               const SizedBox.shrink(),
                           interactive: true,
-                          fixArea: true,
+                          fixCropRect: true,
                           radius: 20,
-                          initialAreaBuilder: (rect) {
+                          initialRectBuilder: (viewportRect, imageRect) {
                             return Rect.fromLTRB(
-                              rect.left + 24,
-                              rect.top + 24,
-                              rect.right - 24,
-                              rect.bottom - 24,
+                              imageRect.left + 24,
+                              imageRect.top + 24,
+                              imageRect.right - 24,
+                              imageRect.bottom - 24,
                             );
                           },
                         ),

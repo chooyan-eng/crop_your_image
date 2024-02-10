@@ -170,7 +170,7 @@ void main() {
           // wait for parsing image
           await Future.delayed(const Duration(seconds: 2));
 
-          controller.rect = Rect.fromLTRB(10, 50, 50, 100);
+          controller.cropRect = Rect.fromLTRB(10, 50, 50, 100);
           // wait for cropping image
           await Future.delayed(const Duration(seconds: 2));
         });
@@ -204,7 +204,7 @@ void main() {
           // wait for parsing image
           await Future.delayed(const Duration(seconds: 2));
 
-          controller.rect = Rect.fromLTRB(10, 10, 50, 100);
+          controller.cropRect = Rect.fromLTRB(10, 10, 50, 100);
           // wait for cropping image
           await Future.delayed(const Duration(seconds: 2));
         });
