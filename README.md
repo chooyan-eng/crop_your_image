@@ -136,6 +136,12 @@ Widget build(BuildContext context) {
 |fixCropRect|bool?|Flag if crop rect should be fixed on _interactive_ mode. `false` by default|
 |clipBehavior|Clip?|Decide clipping strategy for `Crop`. `Clip.hardEdge` by default|
 
+### for Web
+
+|argument|type|description|
+|-|-|-|
+|scrollZoomSensitivity|double?|Sensitivity for zoom gesture using mouse-wheel. For web applications only.|
+
 ### Advanced
 
 `crop_your_image` also allows you to customize backend logic for 
