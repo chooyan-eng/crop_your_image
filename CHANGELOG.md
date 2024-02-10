@@ -1,3 +1,7 @@
+## [1.0.0-dev.3] - 2024.2.10
+* Rename some arguments of `Crop` and setter of `CropController`. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/133).
+* `interactive` is now available for Web!
+
 ## [1.0.0-dev.2] - 2024.2.9
 * Add test codes and fix some bugs.
 * Update README.md
