@@ -17,7 +17,7 @@ typedef WillUpdateScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
 
-typedef CroppingAreaBuilder = Rect Function(Rect imageRect);
+typedef CroppingAreaBuilder = Rect Function(Rect viewportRect, Rect imageRect);
 
 enum CropStatus { nothing, loading, ready, cropping }
 
@@ -386,12 +386,15 @@ class _CropEditorState extends State<_CropEditor> {
     _imageRect = calculator.imageRect(screenSize, imageRatio);
 
     if (widget.initialAreaBuilder != null) {
-      rect = widget.initialAreaBuilder!(Rect.fromLTWH(
-        0,
-        0,
-        screenSize.width,
-        screenSize.height,
-      ));
+      rect = widget.initialAreaBuilder!(
+        Rect.fromLTWH(
+          0,
+          0,
+          screenSize.width,
+          screenSize.height,
+        ),
+        _imageRect,
+      );
     } else {
       _resizeWith(widget.aspectRatio, widget.initialArea);
     }
