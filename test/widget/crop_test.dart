@@ -105,7 +105,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            initialAreaBuilder: (imageRect) {
+            initialAreaBuilder: (viewportRect, imageRect) {
               completer.complete();
               return imageRect;
             },
@@ -132,7 +132,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            initialAreaBuilder: (imageRect) {
+            initialAreaBuilder: (viewportRect, imageRect) {
               completer.complete();
               return imageRect;
             },
