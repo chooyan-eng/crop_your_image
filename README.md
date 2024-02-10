@@ -8,11 +8,11 @@ A flutter plugin that provides `Crop` widget for cropping images.
 
 crop_your_image provides _flexible_ and _custamizable_ `Crop` widget that can be placed at anywhere in your well designed apps.
 
-As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottomsheets. It's totally up to you!
+As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed anywhere such as, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottomsheets. It's totally up to you!
 
-Users' cropping operation is also customizable. By default, images are fixed on the screen and users can move cropping area to decide where to crop. Once configured _interactive_ mode, images can be zoomed/panned, and cropping area can be configured as fixed.
+Users' cropping operation is also customizable. By default, images are fixed on the screen and users can move crop rect to decide where to crop. Once configured _interactive_ mode, images can be zoomed/panned, and crop rect can be configured as fixed.
 
-`CropController` enables you to control cropping area outside of `Crop`. The controller allows you to run cropping (or related actions) from anywhere on your codebase.
+`CropController` enables you to control _crop rect_ from outside of `Crop`. The controller allows you to run cropping (or related actions) from anywhere on your codebase.
 
 Enjoy building your own cropping UI with __crop_your_image__!
 
@@ -24,7 +24,7 @@ Enjoy building your own cropping UI with __crop_your_image__!
 - __Zooming / panning__ images
 - Crop with __rect__ or __circle__ whichever you want
 - Fix __aspect ratio__
-- Configure `Rect` of cropping area programmatically
+- Configure `Rect` of _crop rect_ programmatically
 - Detect events of users' operation
 - (advanced) Cropping backend logics are also customizable
 
@@ -58,7 +58,7 @@ Then, `Crop` widget will automatically display cropping editor UI on users scree
 
 By passing `CropController` instance to `controller` argument of `Crop`'s constructor, you can controll the `Crop` widget from anywhere on your source code.
 
-For example, when you want to crop the image with current selected cropping area, you can just call `_controller.crop()` whenever you want, such like the code below.
+For example, when you want to crop the image with the current crop rect, you can just call `_controller.crop()` whenever you want, such like the code below.
 
 ```dart
 ElevatedButton(
@@ -85,7 +85,7 @@ Widget build(BuildContext context) {
     aspectRatio: 4 / 3,
     // initialSize: 0.5,
     // initialArea: Rect.fromLTWH(240, 212, 800, 600),
-    initialAreaBuilder: (rect) => Rect.fromLTRB(
+    initialRectBuilder: (rect) => Rect.fromLTRB(
       rect.left + 24, rect.top + 32, rect.right - 24, rect.bottom - 32
     ), 
     // withCircleUi: true,
@@ -94,7 +94,7 @@ Widget build(BuildContext context) {
     progressIndicator: const CircularProgressIndicator(),
     radius: 20,
     onMoved: (newRect) {
-      // do something with current cropping area.
+      // do something with current crop rect.
     },
     onStatusChanged: (status) {
       // do something with current CropStatus
@@ -106,7 +106,7 @@ Widget build(BuildContext context) {
     cornerDotBuilder: (size, edgeAlignment) => const DotControl(color: Colors.blue),
     clipBehavior: Clip.none,
     interactive: true,
-    // fixArea: true,
+    // fixCropRect: true,
     // formatDetector: (image) {},
     // imageCropper: myCustomImageCropper,
     // imageParser: (image, {format}) {},
@@ -119,21 +119,21 @@ Widget build(BuildContext context) {
 |image|Uint8List|Original image data to be cropped. The result of cropping operation can be obtained via `onCropped` callback.|
 |onCropped|void Function(Uint8List)|Callback called when cropping operation is completed.|
 |controller|CropController|Controller for managing cropping operation.|
-|aspectRatio|double?| Initial aspect ratio of cropping area. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
-|initialSize|double?| is the initial size of cropping area. `1.0` (or `null`, by default) fits the size of image, which means cropping area extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
-|initialArea|Rect?|Initial `Rect` of cropping area based on actual image size.|
-|initialAreaBuilder|Rect Function(Rect)|Callback to decide initial `Rect` of cropping area based on viewport of `Crop` itself. `Rect` of `Crop`'s viewport is passed as an argument of the callback.|
+|aspectRatio|double?| Initial aspect ratio of crop rect. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
+|initialSize|double?| is the initial size of crop rect. `1.0` (or `null`, by default) fits the size of image, which means crop rect extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
+|initialArea|Rect?|Initial `Rect` of crop rect based on actual image size.|
+|initialRectBuilder|Rect Function(Rect)|Callback to decide initial `Rect` of crop  rect based on viewport of `Crop` itself. `Rect` of `Crop`'s viewport is passed as an argument of the callback.|
 |withCircleUi|bool|Flag to decide the shape of cropping UI. If `true`, the shape of cropping UI is circle and `aspectRatio` is automatically set `1.0`. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.|
 |maskColor|Color?|Color of the mask widget which is placed over the cropping editor.|
 |baseColor|Color?|Color of the base color of the cropping editor.|
-|radius|double?|Corner radius of cropping area.|
-|onMoved|void Function(Rect)?|Callback called when cropping area is moved regardless of its reasons. `newRect` of argument is current `Rect` of cropping area.|
+|radius|double?|Corner radius of crop rect.|
+|onMoved|void Function(Rect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `Rect` of crop rect.|
 |onStatusChanged|void Function(CropStatus)?|Callback called when status of Crop is changed.|
 |willUpdateScale|bool Function(double)?|Callback called before scale changes on _interactive_ mode. By returning `false` to this callback, updating scale will be canceled.|
-|cornerDotBuilder|Widget Function(Size, EdgeAlignment)?|Builder function to build Widget placed at four corners used to move cropping area. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.|
+|cornerDotBuilder|Widget Function(Size, EdgeAlignment)?|Builder function to build Widget placed at four corners used to move crop rect. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.|
 |progressIndicator|Widget?|Widget for showing preparing image is in progress. Nothing (`SizedBox.shrink()` actually) is shown by default.|
 |interactive|bool?|Flag to enable _interactive_ mode that users can move / zoom images. `false` by default|
-|fixArea|bool?|Flag if crop area should be fixed on _interactive_ mode. `false` by default|
+|fixCropRect|bool?|Flag if crop rect should be fixed on _interactive_ mode. `false` by default|
 |clipBehavior|Clip?|Decide clipping strategy for `Crop`. `Clip.hardEdge` by default|
 
 ### Advanced

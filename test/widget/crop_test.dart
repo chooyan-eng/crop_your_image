@@ -96,7 +96,7 @@ void main() {
     );
 
     testWidgets(
-      'initialAreaBuilder is called right after pumpWidget',
+      'initialRectBuilder is called right after pumpWidget',
       (tester) async {
         // to ensure callback is called
         final completer = Completer<void>();
@@ -105,7 +105,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            initialAreaBuilder: (viewportRect, imageRect) {
+            initialRectBuilder: (viewportRect, imageRect) {
               completer.complete();
               return imageRect;
             },
@@ -123,7 +123,7 @@ void main() {
     );
 
     testWidgets(
-      'initialAreaBuilder is called even if initialArea is also given',
+      'initialRectBuilder is called even if initialArea is also given',
       (tester) async {
         // to ensure callback is called
         final completer = Completer<void>();
@@ -132,11 +132,11 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            initialAreaBuilder: (viewportRect, imageRect) {
+            initialRectBuilder: (viewportRect, imageRect) {
               completer.complete();
               return imageRect;
             },
-            // initialArea is ignored because initialAreaBuilder is priored
+            // initialArea is ignored because initialRectBuilder is priored
             initialArea: Rect.zero,
           ),
         );
@@ -239,7 +239,7 @@ void main() {
                 completer.complete();
               }
             },
-            fixArea: true,
+            fixCropRect: true,
           ),
         );
 
@@ -273,7 +273,7 @@ void main() {
             onMoved: (value) {
               calledCount++;
             },
-            fixArea: true,
+            fixCropRect: true,
             interactive: true,
           ),
         );
