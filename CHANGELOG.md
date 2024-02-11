@@ -1,3 +1,6 @@
+## [1.0.1] - 2024.2.11
+* fix bug of `withCircleUi` not working
+
 ## [1.0.0] - 2024.2.11
 * `crop_your_image` is now stable!
 * well architectured and tested
