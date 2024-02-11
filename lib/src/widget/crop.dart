@@ -294,6 +294,8 @@ class _CropEditorState extends State<_CropEditor> {
   void initState() {
     super.initState();
 
+    _withCircleUi = widget.withCircleUi;
+
     // prepare for controller
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
