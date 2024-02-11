@@ -147,10 +147,10 @@ class _CropSampleState extends State<CropSample> {
                           radius: 20,
                           initialRectBuilder: (viewportRect, imageRect) {
                             return Rect.fromLTRB(
-                              imageRect.left + 24,
-                              imageRect.top + 24,
-                              imageRect.right - 24,
-                              imageRect.bottom - 24,
+                              viewportRect.left + 24,
+                              viewportRect.top + 24,
+                              viewportRect.right - 24,
+                              viewportRect.bottom - 24,
                             );
                           },
                         ),
