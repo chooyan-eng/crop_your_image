@@ -1,24 +1,32 @@
-part of crop_your_image;
+import 'dart:math';
+
+import 'package:crop_your_image/crop_your_image.dart';
+import 'package:flutter/widgets.dart';
 
 /// Calculation logics for various [Rect] data.
-abstract class _Calculator {
-  const _Calculator();
+abstract class Calculator {
+  const Calculator();
 
-  /// calculates [Rect] of image to fit the screenSize.
-  Rect imageRect(Size screenSize, double imageRatio);
+  /// calculates [ViewportBasedRect] of image to fit the screenSize.
+  ViewportBasedRect imageRect(Size screenSize, double imageAspectRatio);
 
-  /// calculates [Rect] of initial cropping area.
-  Rect initialCropRect(
-      Size screenSize, Rect imageRect, double aspectRatio, double sizeRatio);
+  /// calculates [ViewportBasedRect] of initial cropping area.
+  ViewportBasedRect initialCropRect(Size screenSize,
+      ViewportBasedRect imageRect, double aspectRatio, double sizeRatio);
 
   /// calculates initial scale of image to cover _CropEditor
-  double scaleToCover(Size screenSize, Rect imageRect);
+  double scaleToCover(Size screenSize, ViewportBasedRect imageRect);
 
   /// calculates ratio of [targetImage] and [screenSize]
-  double screenSizeRatio(image.Image targetImage, Size screenSize);
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize);
 
-  /// calculates [Rect] of the result of user moving the cropping area.
-  Rect moveRect(Rect original, double deltaX, double deltaY, Rect imageRect) {
+  /// calculates [ViewportBasedRect] of the result of user moving the cropping area.
+  ViewportBasedRect moveRect(
+    ViewportBasedRect original,
+    double deltaX,
+    double deltaY,
+    ViewportBasedRect imageRect,
+  ) {
     if (original.left + deltaX < imageRect.left) {
       deltaX = (original.left - imageRect.left) * -1;
     }
@@ -39,9 +47,14 @@ abstract class _Calculator {
     );
   }
 
-  /// calculates [Rect] of the result of user moving the top-left dot.
-  Rect moveTopLeft(Rect original, double deltaX, double deltaY, Rect imageRect,
-      double? aspectRatio) {
+  /// calculates [ViewportBasedRect] of the result of user moving the top-left dot.
+  ViewportBasedRect moveTopLeft(
+    ViewportBasedRect original,
+    double deltaX,
+    double deltaY,
+    ViewportBasedRect imageRect,
+    double? aspectRatio,
+  ) {
     final newLeft =
         max(imageRect.left, min(original.left + deltaX, original.right - 40));
     final newTop =
@@ -85,9 +98,14 @@ abstract class _Calculator {
     }
   }
 
-  /// calculates [Rect] of the result of user moving the top-right dot.
-  Rect moveTopRight(Rect original, double deltaX, double deltaY, Rect imageRect,
-      double? aspectRatio) {
+  /// calculates [ViewportBasedRect] of the result of user moving the top-right dot.
+  ViewportBasedRect moveTopRight(
+    ViewportBasedRect original,
+    double deltaX,
+    double deltaY,
+    ViewportBasedRect imageRect,
+    double? aspectRatio,
+  ) {
     final newTop =
         min(max(original.top + deltaY, imageRect.top), original.bottom - 40);
     final newRight =
@@ -131,9 +149,14 @@ abstract class _Calculator {
     }
   }
 
-  /// calculates [Rect] of the result of user moving the bottom-left dot.
-  Rect moveBottomLeft(Rect original, double deltaX, double deltaY,
-      Rect imageRect, double? aspectRatio) {
+  /// calculates [ViewportBasedRect] of the result of user moving the bottom-left dot.
+  ViewportBasedRect moveBottomLeft(
+    ViewportBasedRect original,
+    double deltaX,
+    double deltaY,
+    ViewportBasedRect imageRect,
+    double? aspectRatio,
+  ) {
     final newLeft =
         max(imageRect.left, min(original.left + deltaX, original.right - 40));
     final newBottom =
@@ -178,9 +201,14 @@ abstract class _Calculator {
     }
   }
 
-  /// calculates [Rect] of the result of user moving the bottom-right dot.
-  Rect moveBottomRight(Rect original, double deltaX, double deltaY,
-      Rect imageRect, double? aspectRatio) {
+  /// calculates [ViewportBasedRect] of the result of user moving the bottom-right dot.
+  ViewportBasedRect moveBottomRight(
+    ViewportBasedRect original,
+    double deltaX,
+    double deltaY,
+    ViewportBasedRect imageRect,
+    double? aspectRatio,
+  ) {
     final newRight =
         min(imageRect.right, max(original.right + deltaX, original.left + 40));
     final newBottom =
@@ -224,8 +252,11 @@ abstract class _Calculator {
     }
   }
 
-  /// correct [Rect] not to exceed [Rect] of image.
-  Rect correct(Rect rect, Rect imageRect) {
+  /// correct [ViewportBasedRect] not to exceed [ViewportBasedRect] of image.
+  ViewportBasedRect correct(
+    ViewportBasedRect rect,
+    ViewportBasedRect imageRect,
+  ) {
     return Rect.fromLTRB(
       max(rect.left, imageRect.left),
       max(rect.top, imageRect.top),
@@ -235,11 +266,11 @@ abstract class _Calculator {
   }
 }
 
-class _HorizontalCalculator extends _Calculator {
-  const _HorizontalCalculator();
+class HorizontalCalculator extends Calculator {
+  const HorizontalCalculator();
 
   @override
-  Rect imageRect(Size screenSize, double imageRatio) {
+  ViewportBasedRect imageRect(Size screenSize, double imageRatio) {
     final imageScreenHeight = screenSize.width / imageRatio;
     final top = (screenSize.height - imageScreenHeight) / 2;
     final bottom = top + imageScreenHeight;
@@ -247,14 +278,18 @@ class _HorizontalCalculator extends _Calculator {
   }
 
   @override
-  Rect initialCropRect(
-      Size screenSize, Rect imageRect, double aspectRatio, double sizeRatio) {
+  ViewportBasedRect initialCropRect(
+    Size screenSize,
+    ViewportBasedRect imageRect,
+    double aspectRatio,
+    double sizeRatio,
+  ) {
     final imageRatio = imageRect.width / imageRect.height;
-    final imageScreenHeight = screenSize.width / imageRatio;
 
+    // consider crop area will fit vertically or horizontally to image
     final initialSize = imageRatio > aspectRatio
-        ? Size((imageScreenHeight * aspectRatio) * sizeRatio,
-            imageScreenHeight * sizeRatio)
+        ? Size((imageRect.height * aspectRatio) * sizeRatio,
+            imageRect.height * sizeRatio)
         : Size(screenSize.width * sizeRatio,
             (screenSize.width / aspectRatio) * sizeRatio);
 
@@ -267,21 +302,21 @@ class _HorizontalCalculator extends _Calculator {
   }
 
   @override
-  double scaleToCover(Size screenSize, Rect imageRect) {
+  double scaleToCover(Size screenSize, ViewportBasedRect imageRect) {
     return screenSize.height / imageRect.height;
   }
 
   @override
-  double screenSizeRatio(image.Image targetImage, Size screenSize) {
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
     return targetImage.width / screenSize.width;
   }
 }
 
-class _VerticalCalculator extends _Calculator {
-  const _VerticalCalculator();
+class VerticalCalculator extends Calculator {
+  const VerticalCalculator();
 
   @override
-  Rect imageRect(Size screenSize, double imageRatio) {
+  ViewportBasedRect imageRect(Size screenSize, double imageRatio) {
     final imageScreenWidth = screenSize.height * imageRatio;
     final left = (screenSize.width - imageScreenWidth) / 2;
     final right = left + imageScreenWidth;
@@ -289,14 +324,17 @@ class _VerticalCalculator extends _Calculator {
   }
 
   @override
-  Rect initialCropRect(
-      Size screenSize, Rect imageRect, double aspectRatio, double sizeRatio) {
+  ViewportBasedRect initialCropRect(
+    Size screenSize,
+    ViewportBasedRect imageRect,
+    double aspectRatio,
+    double sizeRatio,
+  ) {
     final imageRatio = imageRect.width / imageRect.height;
-    final imageScreenWidth = screenSize.height * imageRatio;
 
     final initialSize = imageRatio < aspectRatio
-        ? Size(imageScreenWidth * sizeRatio,
-            imageScreenWidth / aspectRatio * sizeRatio)
+        ? Size(imageRect.width * sizeRatio,
+            imageRect.width / aspectRatio * sizeRatio)
         : Size((screenSize.height * aspectRatio) * sizeRatio,
             screenSize.height * sizeRatio);
 
@@ -309,12 +347,12 @@ class _VerticalCalculator extends _Calculator {
   }
 
   @override
-  double scaleToCover(Size screenSize, Rect imageRect) {
+  double scaleToCover(Size screenSize, ViewportBasedRect imageRect) {
     return screenSize.width / imageRect.width;
   }
 
   @override
-  double screenSizeRatio(image.Image targetImage, Size screenSize) {
+  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
     return targetImage.height / screenSize.height;
   }
 }
