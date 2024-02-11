@@ -1,3 +1,10 @@
+## [1.0.0] - 2024.2.11
+* `crop_your_image` is now stable!
+* well architectured and tested
+* works also on Web / Desktop 
+* backend logic is also interchangeable
+* some breaking changes. see [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/133).
+
 ## [1.0.0-dev.4] - 2024.2.10
 * `interactive` is now available for macOS! 
 * fix a tiny bug
