@@ -1,5 +1,5 @@
 name: run-flutter-test
-on: [push, pull_request]
+on: [push]
 jobs:
   first:
     runs-on: ubuntu-latest

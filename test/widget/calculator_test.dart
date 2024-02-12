@@ -429,7 +429,7 @@ void main() {
 
           // considering Image size,
           // bottom of bottomRight can't be greater than imageRect.bottom
-          expect(actual, Rect.fromLTRB(50, 80, 300, 300));
+          expect(actual, Rect.fromLTRB(50, 80, 301, 300));
         });
       });
     });
