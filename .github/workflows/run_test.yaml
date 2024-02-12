@@ -1,7 +1,7 @@
 name: run-flutter-test
 on: [push]
 jobs:
-  first:
+  flutter-test:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v4
