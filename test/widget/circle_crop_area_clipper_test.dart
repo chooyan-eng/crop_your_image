@@ -3,6 +3,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('shouldReclip is always true', () {
+    final oldClipper = CircleCropAreaClipper(Rect.fromLTWH(50, 50, 100, 100));
+    final clipper = CircleCropAreaClipper(Rect.fromLTWH(50, 50, 100, 100));
+
+    expect(clipper.shouldReclip(oldClipper), true);
+  });
+
   group('when viewport is 200 x 200', () {
     final viewportSize = 200.0;
     testWidgets(
