@@ -4,7 +4,25 @@ jobs:
   flutter-test:
     runs-on: ubuntu-latest
     steps: 
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-      - run: flutter pub get
-      - run: flutter test
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter 
+        uses: subosito/flutter-action@v2
+
+      - name: Install depencencies 
+        run: flutter pub get
+
+      - name: Run tests and generate coverage
+        run: flutter test --no-pub --coverage
+        
+      - name: Install lcov
+        run: sudo apt-get -y install lcov
+
+      - name: Convert lcov.info to HTML
+        run: genhtml coverage/lcov.info -o coverage/html
+
+      - name: Upload coverage directory
+        uses: actions/upload-artifact@v4
+        with:
+          path: coverage
