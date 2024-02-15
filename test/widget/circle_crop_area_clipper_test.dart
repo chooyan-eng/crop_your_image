@@ -1,5 +1,5 @@
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -24,7 +24,7 @@ void main() {
               child: ClipPath(
                 clipper: CircleCropAreaClipper(Rect.fromLTWH(50, 50, 100, 100)),
                 child: ColoredBox(
-                  color: Color(0xFF0000FF),
+                  color: Colors.grey,
                 ),
               ),
             ),
@@ -34,7 +34,7 @@ void main() {
         await expectLater(
           find.byType(RepaintBoundary),
           matchesGoldenFile(
-              'circle_crop_area_clipper.viewportSizex200.crop_center.png'),
+              'circle_crop_area_clipper.viewportSize200x200.crop_center.png'),
         );
       },
     );
