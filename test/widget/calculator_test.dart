@@ -238,6 +238,26 @@ void main() {
       });
 
       test(
+          'moving crop rect by dx:-50, dy:-50'
+          'result in Rect(0, 50, 100, 170)', () {
+        final actual = calculator.moveRect(original, -50, -50, imageRect);
+
+        // considering image size, dx, dy of crop rect
+        // can't be smaller than imageRect.left, imageRect.top
+        expect(actual, Rect.fromLTRB(0, 50, 100, 170));
+      });
+
+      test(
+          'moving crop rect by dx:200, dy:50'
+          'result in Rect(200, 130, 300, 250)', () {
+        final actual = calculator.moveRect(original, 200, 50, imageRect);
+
+        // considering image size, dy of crop rect
+        // can't be greater than imageRect.bottom
+        expect(actual, Rect.fromLTRB(200, 130, 300, 250));
+      });
+
+      test(
           'moving topLeft dot by dx:10, dy:10'
           'result in Rect(60, 90, 150, 200)', () {
         final actual =
