@@ -1,3 +1,6 @@
+## [1.0.2] - 2024.2.26
+* fix bug of causing `InvalidRectError` unexpectedly
+
 ## [1.0.1] - 2024.2.11
 * fix bug of `withCircleUi` not working
 
