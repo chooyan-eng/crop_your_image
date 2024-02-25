@@ -24,14 +24,14 @@ class ImageImageCropper extends ImageCropper<Image> {
     ImageFormat outputFormat = ImageFormat.jpeg,
     ImageShape shape = ImageShape.rectangle,
   }) {
-    if (topLeft.dx < 0 ||
-        topLeft.dy < 0 ||
-        bottomRight.dx < 0 ||
-        bottomRight.dy < 0 ||
-        topLeft.dx > original.width.toDouble() ||
-        topLeft.dy > original.height.toDouble() ||
-        bottomRight.dx > original.width.toDouble() ||
-        bottomRight.dy > original.height.toDouble()) {
+    if (topLeft.dx.isNegative ||
+        topLeft.dy.isNegative ||
+        bottomRight.dx.isNegative ||
+        bottomRight.dy.isNegative ||
+        topLeft.dx.toInt() > original.width ||
+        topLeft.dy.toInt() > original.height ||
+        bottomRight.dx.toInt() > original.width ||
+        bottomRight.dy.toInt() > original.height) {
       throw InvalidRectError(topLeft: topLeft, bottomRight: bottomRight);
     }
     if (topLeft.dx > bottomRight.dx || topLeft.dy > bottomRight.dy) {
