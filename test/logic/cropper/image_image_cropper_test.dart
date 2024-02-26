@@ -86,5 +86,23 @@ void main() {
         );
       },
     );
+
+    test(
+      'NegativeSizeError is NOT thrown'
+      'if the value of bottomRight is slightly greater than image size',
+      () async {
+        final croppedImage = await cropper.call(
+          original: testImage,
+          topLeft: Offset(100, 50),
+          bottomRight: Offset(656.0004, 453.00005),
+        );
+
+        final imageDetail = decodeImage(croppedImage);
+
+        expect(imageDetail, isNotNull);
+        expect(imageDetail!.width, 556);
+        expect(imageDetail.height, 403);
+      },
+    );
   });
 }
