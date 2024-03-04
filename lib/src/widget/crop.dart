@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
+import 'package:crop_your_image/src/logic/cropper/crop_result.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
@@ -31,7 +32,7 @@ class Crop extends StatelessWidget {
   final Uint8List image;
 
   /// callback when cropping completed
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
 
   /// fixed aspect ratio of cropping rect.
   /// null, by default, means no fixed aspect ratio.
@@ -201,7 +202,7 @@ class Crop extends StatelessWidget {
 
 class _CropEditor extends StatefulWidget {
   final Uint8List image;
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
   final double? aspectRatio;
   final double? initialSize;
   final CroppingRectBuilder? initialRectBuilder;
@@ -454,21 +455,27 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onStatusChanged?.call(CropStatus.cropping);
 
     // use compute() not to block UI update
-    final cropResult = await compute(
-      _cropFunc,
-      [
-        widget.imageCropper,
-        _parsedImageDetail!.image,
-        Rect.fromLTWH(
-          (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
-          (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
-          _cropRect.width * screenSizeRatio / _scale,
-          _cropRect.height * screenSizeRatio / _scale,
-        ),
-        withCircleShape,
-        _detectedFormat,
-      ],
-    );
+    late CropResult cropResult;
+    try {
+      final image = await compute(
+        _cropFunc,
+        [
+          widget.imageCropper,
+          _parsedImageDetail!.image,
+          Rect.fromLTWH(
+            (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
+            (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
+            _cropRect.width * screenSizeRatio / _scale,
+            _cropRect.height * screenSizeRatio / _scale,
+          ),
+          withCircleShape,
+          _detectedFormat,
+        ],
+      );
+      cropResult = CropResult(image, null, null);
+    } catch(e, trace) {
+      cropResult = CropResult(null, e, trace);
+    }
 
     widget.onCropped(cropResult);
     widget.onStatusChanged?.call(CropStatus.ready);

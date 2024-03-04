@@ -122,7 +122,7 @@ class _CropSampleState extends State<CropSample> {
                           image: _imageDataList[_currentImage],
                           onCropped: (croppedData) {
                             setState(() {
-                              _croppedData = croppedData;
+                              _croppedData = croppedData.image!;
                               _isCropping = false;
                             });
                           },
