@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'dart:typed_data';
-
 import 'dart:ui';
 
 import 'package:crop_your_image/src/logic/cropper/errors.dart';
 import 'package:crop_your_image/src/logic/cropper/image_cropper.dart';
 import 'package:crop_your_image/src/logic/format_detector/format.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
-
 import 'package:image/image.dart';
 
 /// an implementation of [ImageCropper] using image package
@@ -24,10 +21,10 @@ class ImageImageCropper extends ImageCropper<Image> {
     ImageFormat outputFormat = ImageFormat.jpeg,
     ImageShape shape = ImageShape.rectangle,
   }) {
-    if (topLeft.dx.isNegative ||
-        topLeft.dy.isNegative ||
-        bottomRight.dx.isNegative ||
-        bottomRight.dy.isNegative ||
+    if (topLeft.dx.toInt().isNegative ||
+        topLeft.dy.toInt().isNegative ||
+        bottomRight.dx.toInt().isNegative ||
+        bottomRight.dy.toInt().isNegative ||
         topLeft.dx.toInt() > original.width ||
         topLeft.dy.toInt() > original.height ||
         bottomRight.dx.toInt() > original.width ||
