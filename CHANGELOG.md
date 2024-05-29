@@ -1,3 +1,6 @@
+## [1.1.0] - 2024.5.29
+* apply changes of latest version of `image` package
+
 ## [1.0.2] - 2024.2.26
 * fix bug of causing `InvalidRectError` unexpectedly
 
