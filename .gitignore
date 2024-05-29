@@ -73,4 +73,5 @@ build/
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 
-.fvm/flutter_sdk
+# FVM Version Cache
+.fvm/
