@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  image: ^4.0.17
+  image: ^4.2.0
 
 dev_dependencies:
   flutter_test:

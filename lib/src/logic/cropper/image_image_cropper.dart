@@ -10,7 +10,7 @@ import 'package:crop_your_image/src/logic/cropper/image_cropper.dart';
 import 'package:crop_your_image/src/logic/format_detector/format.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
 
-import 'package:image/image.dart';
+import 'package:image/image.dart' hide ImageFormat;
 
 /// an implementation of [ImageCropper] using image package
 class ImageImageCropper extends ImageCropper<Image> {
