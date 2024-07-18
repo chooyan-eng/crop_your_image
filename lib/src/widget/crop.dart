@@ -20,7 +20,12 @@ typedef CornerDotBuilder = Widget Function(
 
 typedef CroppingRectBuilder = ViewportBasedRect Function(
   ViewportBasedRect viewportRect,
-  ViewportBasedRect imageRect,
+  ImageBasedRect imageRect,
+);
+
+typedef OnMovedCallback = void Function(
+  ViewportBasedRect viewportRect,
+  ImageBasedRect imageRect,
 );
 
 enum CropStatus { nothing, loading, ready, cropping }
@@ -72,7 +77,7 @@ class Crop extends StatelessWidget {
   final CropController? controller;
 
   /// Callback called when cropping rect changes for any reasons.
-  final ValueChanged<ViewportBasedRect>? onMoved;
+  final OnMovedCallback? onMoved;
 
   /// Callback called when status of Crop widget is changed.
   ///
@@ -208,7 +213,7 @@ class _CropEditor extends StatefulWidget {
   final ImageBasedRect? initialArea;
   final bool withCircleUi;
   final CropController? controller;
-  final ValueChanged<ViewportBasedRect>? onMoved;
+  final OnMovedCallback? onMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
@@ -279,7 +284,18 @@ class _CropEditorState extends State<_CropEditor> {
   late ViewportBasedRect _cropRect;
   set cropRect(ViewportBasedRect newRect) {
     setState(() => _cropRect = newRect);
-    widget.onMoved?.call(_cropRect);
+
+    final screenSizeRatio = calculator.screenSizeRatio(
+      _parsedImageDetail!,
+      _viewportSize,
+    );
+    final imageBaseRect = Rect.fromLTWH(
+      (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
+      (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
+      _cropRect.width * screenSizeRatio / _scale,
+      _cropRect.height * screenSizeRatio / _scale,
+    );
+    widget.onMoved?.call(_cropRect, imageBaseRect);
   }
 
   bool get _isImageLoading => _lastComputed != null;
