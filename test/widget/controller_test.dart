@@ -92,7 +92,7 @@ void main() {
             image: testLandscapeImage,
             controller: controller,
             onCropped: (value) {},
-            onMoved: (rect) {
+            onMoved: (rect, _) {
               initialRect ??= rect;
               lastRect = rect;
             },
@@ -126,7 +126,7 @@ void main() {
             controller: controller,
             aspectRatio: 1,
             onCropped: (value) {},
-            onMoved: (rect) {
+            onMoved: (rect, _) {
               initialRect ??= rect;
               lastRect = rect;
             },
@@ -161,7 +161,7 @@ void main() {
             controller: controller,
             aspectRatio: 1,
             onCropped: (value) {},
-            onMoved: (rect) => lastRect = rect,
+            onMoved: (rect, _) => lastRect = rect,
           ),
         );
 
@@ -195,7 +195,7 @@ void main() {
             controller: controller,
             aspectRatio: 1,
             onCropped: (value) {},
-            onMoved: (rect) => lastRect = rect,
+            onMoved: (rect, _) => lastRect = rect,
           ),
         );
 
@@ -233,7 +233,7 @@ void main() {
             controller: controller,
             aspectRatio: 1,
             onCropped: (value) {},
-            onMoved: (rect) => lastRect = rect,
+            onMoved: (rect, _) => lastRect = rect,
           ),
         );
 
