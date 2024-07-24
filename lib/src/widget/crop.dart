@@ -8,8 +8,8 @@ import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
@@ -79,6 +79,8 @@ class Crop extends StatelessWidget {
   /// Callback called when cropping rect changes for any reasons.
   final OnMovedCallback? onMoved;
 
+  final void Function(Rect imageRect)? onImageMoved;
+
   /// Callback called when status of Crop widget is changed.
   ///
   /// note: Currently, the very first callback is [CropStatus.ready]
@@ -145,6 +147,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
     this.baseColor = Colors.white,
@@ -183,6 +186,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            onImageMoved: onImageMoved,
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
@@ -214,6 +218,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final OnMovedCallback? onMoved;
+  final void Function(Rect imageRect)? onImageMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
@@ -240,6 +245,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     required this.controller,
     required this.onMoved,
+    required this.onImageMoved,
     required this.onStatusChanged,
     required this.maskColor,
     required this.baseColor,
@@ -296,6 +302,11 @@ class _CropEditorState extends State<_CropEditor> {
       _cropRect.height * screenSizeRatio / _scale,
     );
     widget.onMoved?.call(_cropRect, imageBaseRect);
+  }
+
+  set imageRect(Rect newRect) {
+    _imageRect = newRect;
+    widget.onImageMoved?.call(_imageRect);
   }
 
   bool get _isImageLoading => _lastComputed != null;
@@ -410,7 +421,7 @@ class _CropEditorState extends State<_CropEditor> {
         _parsedImageDetail!.width / _parsedImageDetail!.height;
     _isFitVertically = imageAspectRatio < screenSize.aspectRatio;
 
-    _imageRect = calculator.imageRect(screenSize, imageAspectRatio);
+    imageRect = calculator.imageRect(screenSize, imageAspectRatio);
 
     if (widget.initialRectBuilder != null) {
       cropRect = widget.initialRectBuilder!(
@@ -510,7 +521,7 @@ class _CropEditorState extends State<_CropEditor> {
       movedTop = _cropRect.bottom - _imageRect.height;
     }
     setState(() {
-      _imageRect = ViewportBasedRect.fromLTWH(
+      imageRect = ViewportBasedRect.fromLTWH(
         min(_cropRect.left, movedLeft),
         min(_cropRect.top, movedTop),
         _imageRect.width,
@@ -580,7 +591,7 @@ class _CropEditorState extends State<_CropEditor> {
 
     // apply
     setState(() {
-      _imageRect = Rect.fromLTRB(
+      imageRect = Rect.fromLTRB(
         newLeft,
         newTop,
         newLeft + newWidth,
