@@ -290,8 +290,8 @@ class _CropEditorState extends State<_CropEditor> {
       _viewportSize,
     );
     final imageBaseRect = Rect.fromLTWH(
-      (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
-      (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
+      (max(_cropRect.left - _imageRect.left, 0)) * screenSizeRatio / _scale,
+      (max(_cropRect.top - _imageRect.top, 0)) * screenSizeRatio / _scale,
       _cropRect.width * screenSizeRatio / _scale,
       _cropRect.height * screenSizeRatio / _scale,
     );
@@ -476,8 +476,8 @@ class _CropEditorState extends State<_CropEditor> {
         widget.imageCropper,
         _parsedImageDetail!.image,
         Rect.fromLTWH(
-          (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
-          (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
+          (max(_cropRect.left - _imageRect.left, 0)) * screenSizeRatio / _scale,
+          (max(_cropRect.top - _imageRect.top, 0)) * screenSizeRatio / _scale,
           _cropRect.width * screenSizeRatio / _scale,
           _cropRect.height * screenSizeRatio / _scale,
         ),
