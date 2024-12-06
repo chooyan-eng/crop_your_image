@@ -18,7 +18,7 @@ abstract class Calculator {
   double scaleToCover(Size screenSize, ViewportBasedRect imageRect);
 
   /// calculates ratio of [targetImage] and [screenSize]
-  double screenSizeRatio(ImageDetail targetImage, Size screenSize);
+  double screenSizeRatio(Size imageSize, Size screenSize);
 
   /// calculates [ViewportBasedRect] of the result of user moving the cropping area.
   ViewportBasedRect moveRect(
@@ -307,8 +307,8 @@ class HorizontalCalculator extends Calculator {
   }
 
   @override
-  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
-    return targetImage.width / screenSize.width;
+  double screenSizeRatio(Size imageSize, Size screenSize) {
+    return imageSize.width / screenSize.width;
   }
 }
 
@@ -352,7 +352,7 @@ class VerticalCalculator extends Calculator {
   }
 
   @override
-  double screenSizeRatio(ImageDetail targetImage, Size screenSize) {
-    return targetImage.height / screenSize.height;
+  double screenSizeRatio(Size imageSize, Size screenSize) {
+    return imageSize.height / screenSize.height;
   }
 }
