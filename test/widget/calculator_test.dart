@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:crop_your_image/src/logic/parser/image_detail.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -87,11 +86,7 @@ void main() {
 
       test('screenSizeRatio is 2.0', () {
         final actual = calculator.screenSizeRatio(
-          ImageDetail<void>(
-            height: originalImageSize.height,
-            width: originalImageSize.width,
-            image: null,
-          ),
+          Size(originalImageSize.width, originalImageSize.height),
           viewportSize,
         );
 
@@ -188,11 +183,7 @@ void main() {
 
       test('screenSizeRatio is 2.0', () {
         final actual = calculator.screenSizeRatio(
-          ImageDetail<void>(
-            height: originalImageSize.height,
-            width: originalImageSize.width,
-            image: null,
-          ),
+          Size(originalImageSize.width, originalImageSize.height),
           viewportSize,
         );
 
