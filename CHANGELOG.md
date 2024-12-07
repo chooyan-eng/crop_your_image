@@ -1,3 +1,9 @@
+## [2.0.0-dev.1] - 2024.12.07
+* `onMoved` callback passes additional `imageRect` parameter.
+* Refactor the entire codebase
+* Add test codes
+* Add `topic` to pubspec.yaml
+
 ## [1.1.0] - 2024.5.29
 * apply changes of latest version of `image` package
 
