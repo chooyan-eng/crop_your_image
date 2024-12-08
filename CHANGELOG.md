@@ -1,3 +1,6 @@
+## [2.0.0-dev.2] - 2024.12.08
+* Add undo / redo related features. See [README.md](README.md) for more details.
+
 ## [2.0.0-dev.1] - 2024.12.07
 * `onMoved` callback passes additional `imageRect` parameter.
 * Refactor the entire codebase
