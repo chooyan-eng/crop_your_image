@@ -21,33 +21,40 @@ class HistoryState {
   void pushHistory(CropEditorViewState viewState) {
     history.add(viewState);
     redoHistory.clear();
-    onHistoryChanged?.call((history.length, redoHistory.length));
+    onHistoryChanged?.call(
+      (undoCount: history.length, redoCount: redoHistory.length),
+    );
   }
 
   /// request [CropEditorViewState] for undo
   /// this method will pop last history and push to redo history
-  CropEditorViewState? requestUndo() {
+  CropEditorViewState? requestUndo(CropEditorViewState current) {
     if (history.isEmpty) {
       return null;
     }
 
+    redoHistory.add(current);
     final last = history.removeLast();
-    redoHistory.add(last);
-    onHistoryChanged?.call((history.length, redoHistory.length));
+
+    onHistoryChanged?.call(
+      (undoCount: history.length, redoCount: redoHistory.length),
+    );
 
     return last;
   }
 
   /// request [CropEditorViewState] for redo
   /// this method will pop last redo history
-  CropEditorViewState? requestRedo() {
+  CropEditorViewState? requestRedo(CropEditorViewState current) {
     if (redoHistory.isEmpty) {
       return null;
     }
 
+    history.add(current);
     final last = redoHistory.removeLast();
-    history.add(last);
-    onHistoryChanged?.call((history.length, redoHistory.length));
+    onHistoryChanged?.call(
+      (undoCount: history.length, redoCount: redoHistory.length),
+    );
     return last;
   }
 }

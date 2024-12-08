@@ -18,11 +18,11 @@ void main() {
     );
   });
 
-  ReadyCropEditorViewState createViewState() {
+  ReadyCropEditorViewState createViewState({double scale = 1.0}) {
     return ReadyCropEditorViewState.prepared(
       defaultImageSize,
       viewportSize: defaultViewportSize,
-      scale: 1.0,
+      scale: scale,
       aspectRatio: null,
       withCircleUi: false,
     );
@@ -43,8 +43,8 @@ void main() {
     expect(historyState.history.length, 2);
     expect(historyState.redoHistory, isEmpty);
     expect(historyChangedCalls, [
-      (1, 0),
-      (2, 0),
+      (undoCount: 1, redoCount: 0),
+      (undoCount: 2, redoCount: 0),
     ]);
   });
 
@@ -55,20 +55,20 @@ void main() {
     historyState.pushHistory(state1);
     historyState.pushHistory(state2);
 
-    final undoState = historyState.requestUndo();
+    final undoState = historyState.requestUndo(createViewState());
 
     expect(undoState, state2);
     expect(historyState.history.length, 1);
     expect(historyState.redoHistory.length, 1);
     expect(historyChangedCalls, [
-      (1, 0),
-      (2, 0),
-      (1, 1),
+      (undoCount: 1, redoCount: 0),
+      (undoCount: 2, redoCount: 0),
+      (undoCount: 1, redoCount: 1),
     ]);
   });
 
   test('requestUndo returns null when history is empty', () {
-    final undoState = historyState.requestUndo();
+    final undoState = historyState.requestUndo(createViewState(scale: 1.0));
 
     expect(undoState, null);
     expect(historyState.history, isEmpty);
@@ -82,23 +82,25 @@ void main() {
 
     historyState.pushHistory(state1);
     historyState.pushHistory(state2);
-    historyState.requestUndo(); // Move state2 to redo history
 
-    final redoState = historyState.requestRedo();
+    final current = createViewState();
+    historyState.requestUndo(current); // add current to redo history
 
-    expect(redoState, state2);
+    final redoState = historyState.requestRedo(current);
+
+    expect(redoState, current);
     expect(historyState.history.length, 2);
     expect(historyState.redoHistory, isEmpty);
     expect(historyChangedCalls, [
-      (1, 0),
-      (2, 0),
-      (1, 1),
-      (2, 0),
+      (undoCount: 1, redoCount: 0),
+      (undoCount: 2, redoCount: 0),
+      (undoCount: 1, redoCount: 1),
+      (undoCount: 2, redoCount: 0),
     ]);
   });
 
   test('requestRedo returns null when redo history is empty', () {
-    final redoState = historyState.requestRedo();
+    final redoState = historyState.requestRedo(createViewState());
 
     expect(redoState, null);
     expect(historyState.history, isEmpty);
@@ -113,16 +115,16 @@ void main() {
 
     historyState.pushHistory(state1);
     historyState.pushHistory(state2);
-    historyState.requestUndo(); // Move state2 to redo history
+    historyState.requestUndo(createViewState()); // Move state2 to redo history
     historyState.pushHistory(state3); // Should clear redo history
 
     expect(historyState.history.length, 2);
     expect(historyState.redoHistory, isEmpty);
     expect(historyChangedCalls, [
-      (1, 0),
-      (2, 0),
-      (1, 1),
-      (2, 0),
+      (undoCount: 1, redoCount: 0),
+      (undoCount: 2, redoCount: 0),
+      (undoCount: 1, redoCount: 1),
+      (undoCount: 2, redoCount: 0),
     ]);
   });
 }

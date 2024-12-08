@@ -61,6 +61,8 @@ class _CropSampleState extends State<CropSample> {
   var _isCircleUi = false;
   Uint8List? _croppedData;
   var _statusText = '';
+  var _undoEnabled = false;
+  var _redoEnabled = false;
 
   @override
   void initState() {
@@ -153,6 +155,10 @@ class _CropSampleState extends State<CropSample> {
                               viewportRect.bottom - 24,
                             );
                           },
+                          onHistoryChanged: (history) => setState(() {
+                            _undoEnabled = history.undoCount > 0;
+                            _redoEnabled = history.redoCount > 0;
+                          }),
                         ),
                         IgnorePointer(
                           child: Padding(
@@ -237,6 +243,24 @@ class _CropSampleState extends State<CropSample> {
                               }),
                         ],
                       ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _undoEnabled
+                                ? () => _cropController.undo()
+                                : null,
+                            child: Text('UNDO'),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton(
+                            onPressed: _redoEnabled
+                                ? () => _cropController.redo()
+                                : null,
+                            child: Text('REDO'),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       Container(
                         width: double.infinity,
@@ -255,7 +279,6 @@ class _CropSampleState extends State<CropSample> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
