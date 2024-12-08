@@ -5,6 +5,7 @@ import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/crop_editor_view_state.dart';
+import 'package:crop_your_image/src/widget/history_state.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,9 @@ import 'package:flutter/gestures.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
+
+typedef History = ({int undoCount, int redoCount});
+typedef HistoryChangedCallback = void Function(History history);
 
 typedef WillUpdateScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
@@ -123,6 +127,9 @@ class Crop extends StatelessWidget {
   /// If this function returns [false], scaling is canceled.
   final WillUpdateScale? willUpdateScale;
 
+  /// Callback called when history of crop editor operation is changed.
+  final HistoryChangedCallback? onHistoryChanged;
+
   /// (for Web) Sets the mouse-wheel zoom sensitivity for web applications.
   final double scrollZoomSensitivity;
 
@@ -159,6 +166,7 @@ class Crop extends StatelessWidget {
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
     this.willUpdateScale,
+    this.onHistoryChanged,
     this.formatDetector = defaultFormatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
@@ -198,6 +206,7 @@ class Crop extends StatelessWidget {
             progressIndicator: progressIndicator,
             interactive: interactive,
             willUpdateScale: willUpdateScale,
+            onHistoryChanged: onHistoryChanged,
             scrollZoomSensitivity: scrollZoomSensitivity,
             imageCropper: imageCropper,
             formatDetector: formatDetector,
@@ -230,6 +239,7 @@ class _CropEditor extends StatefulWidget {
   final Widget progressIndicator;
   final bool interactive;
   final WillUpdateScale? willUpdateScale;
+  final HistoryChangedCallback? onHistoryChanged;
   final ImageCropper imageCropper;
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
@@ -257,6 +267,7 @@ class _CropEditor extends StatefulWidget {
     required this.progressIndicator,
     required this.interactive,
     required this.willUpdateScale,
+    required this.onHistoryChanged,
     required this.imageCropper,
     required this.formatDetector,
     required this.imageParser,
@@ -274,6 +285,11 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// an object that preserve and expose all the state for _CropEditor
   late CropEditorViewState _viewState;
+
+  /// history state of crop editor operation for undo / redo
+  /// history is stored when zoom / pan is changed, as well as crop rect moved.
+  late final HistoryState _historyState;
+
   ReadyCropEditorViewState get _readyState =>
       _viewState as ReadyCropEditorViewState;
 
@@ -304,7 +320,12 @@ class _CropEditorState extends State<_CropEditor> {
       }
       ..onChangeArea = (newArea) {
         _resizeWith(widget.aspectRatio, newArea);
-      };
+      }
+      ..onUndo = _undo
+      ..onRedo = _redo;
+
+    // prepare for history state
+    _historyState = HistoryState(onHistoryChanged: widget.onHistoryChanged);
   }
 
   @override
@@ -459,6 +480,20 @@ class _CropEditorState extends State<_CropEditor> {
     }
   }
 
+  void _undo() {
+    final last = _historyState.requestUndo(_readyState);
+    if (last != null) {
+      _updateCropRect(last);
+    }
+  }
+
+  void _redo() {
+    final last = _historyState.requestRedo(_readyState);
+    if (last != null) {
+      _updateCropRect(last);
+    }
+  }
+
   /// crop given image with given area.
   Future<void> _crop(bool withCircleShape) async {
     assert(_parsedImageDetail != null);
@@ -486,6 +521,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// handle scale events with pinching
   void _handleScaleStart(ScaleStartDetails detail) {
+    _historyState.pushHistory(_readyState);
     _baseScale = _readyState.scale;
   }
 
@@ -500,9 +536,18 @@ class _CropEditorState extends State<_CropEditor> {
     );
   }
 
+  DateTime? _pointerSignalLastUpdated;
+
   /// handle mouse pointer signal event
   void _handlePointerSignal(PointerSignalEvent signal) {
     if (signal is PointerScrollEvent) {
+      final now = DateTime.now();
+      if (_pointerSignalLastUpdated == null ||
+          now.difference(_pointerSignalLastUpdated!).inMilliseconds > 500) {
+        _pointerSignalLastUpdated = now;
+        _historyState.pushHistory(_readyState);
+      }
+
       if (signal.scrollDelta.dy > 0) {
         _applyScale(
           _readyState.scale - widget.scrollZoomSensitivity,
@@ -594,6 +639,8 @@ class _CropEditorState extends State<_CropEditor> {
                   left: _readyState.cropRect.left,
                   top: _readyState.cropRect.top,
                   child: GestureDetector(
+                    onPanStart: (details) =>
+                        _historyState.pushHistory(_readyState),
                     onPanUpdate: (details) => _updateCropRect(
                       _readyState.moveRect(details.delta),
                     ),
@@ -608,6 +655,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.left - (dotTotalSize / 2),
                 top: _readyState.cropRect.top - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -622,6 +671,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.right - (dotTotalSize / 2),
                 top: _readyState.cropRect.top - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -636,6 +687,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.left - (dotTotalSize / 2),
                 top: _readyState.cropRect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -650,6 +703,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.right - (dotTotalSize / 2),
                 top: _readyState.cropRect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
