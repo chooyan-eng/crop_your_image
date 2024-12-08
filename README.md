@@ -26,6 +26,7 @@ Enjoy building your own cropping UI with __crop_your_image__!
 - Fix __aspect ratio__
 - Configure `Rect` of _crop rect_ programmatically
 - Detect events of users' operation
+- Undo / Redo operation
 - (advanced) Cropping backend logics are also customizable
 
 Note that this package _DON'T_
@@ -68,6 +69,31 @@ ElevatedButton(
 ```
 
 Because `_controller.crop()` only kicks the cropping process, this method returns immediately without any cropped image data. You can obtain the result of cropping images via `onCropped` callback of `Crop` Widget.
+
+### Undo / Redo
+
+
+`CropController` also provides `undo` and `redo` methods.
+
+```dart
+ElevatedButton(
+  child: Text('Undo')
+  onPressed: () => _cropController.undo(),
+),
+```
+
+You can also detect history of crop rect changes via `onHistoryChanged` callback of `Crop` Widget. This callback exposes `History` object, which contains `undoCount` and `redoCount`, that indicates how many times undo / redo operation is available.
+
+```dart
+Crop(
+  onHistoryChanged: (history) {
+    setState(() {
+      _undoEnabled = history.undoCount > 0;
+      _redoEnabled = history.redoCount > 0;
+    });
+  },
+)
+```
 
 ### List of configurations 
 All the arguments of `Crop` and usages are below.
@@ -128,6 +154,7 @@ Widget build(BuildContext context) {
 |baseColor|Color?|Color of the base color of the cropping editor.|
 |radius|double?|Corner radius of crop rect.|
 |onMoved|void Function(Rect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `Rect` of crop rect.|
+|onHistoryChanged|void Function(History)?|Callback called when history of crop rect is changed. This history allows you to undo / redo feature is available or not.|
 |onStatusChanged|void Function(CropStatus)?|Callback called when status of Crop is changed.|
 |willUpdateScale|bool Function(double)?|Callback called before scale changes on _interactive_ mode. By returning `false` to this callback, updating scale will be canceled.|
 |cornerDotBuilder|Widget Function(Size, EdgeAlignment)?|Builder function to build Widget placed at four corners used to move crop rect. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.|
