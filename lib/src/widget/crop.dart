@@ -6,7 +6,6 @@ import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/crop_editor_view_state.dart';
 import 'package:crop_your_image/src/widget/history_state.dart';
-import 'package:crop_your_image/src/widget/initial_rect_builder.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -325,6 +324,9 @@ class _CropEditorState extends State<_CropEditor> {
       formatDetector: widget.formatDetector,
       image: widget.image,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
         setState(() {
           _viewState = (_viewState as PreparingCropEditorViewState).prepared(
@@ -361,6 +363,9 @@ class _CropEditorState extends State<_CropEditor> {
       formatDetector: widget.formatDetector,
       image: targetImage,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
         setState(() {
           _viewState = (_viewState as PreparingCropEditorViewState).prepared(
