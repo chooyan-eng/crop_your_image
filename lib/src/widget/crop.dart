@@ -346,6 +346,9 @@ class _CropEditorState extends State<_CropEditor> {
       formatDetector: widget.formatDetector,
       image: widget.image,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
         setState(() {
           _viewState = (_viewState as PreparingCropEditorViewState).prepared(
@@ -382,6 +385,9 @@ class _CropEditorState extends State<_CropEditor> {
       formatDetector: widget.formatDetector,
       image: targetImage,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
         setState(() {
           _viewState = (_viewState as PreparingCropEditorViewState).prepared(
