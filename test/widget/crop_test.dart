@@ -161,7 +161,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            onMoved: (value) {
+            onMoved: (_, __) {
               if (!completer.isCompleted) {
                 completer.complete();
               }
@@ -196,7 +196,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            onMoved: (value) {
+            onMoved: (_, __) {
               if (!completer.isCompleted) {
                 completer.complete();
               }
@@ -234,7 +234,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            onMoved: (value) {
+            onMoved: (_, __) {
               if (!completer.isCompleted) {
                 completer.complete();
               }
@@ -270,7 +270,7 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            onMoved: (value) {
+            onMoved: (_, __) {
               calledCount++;
             },
             fixCropRect: true,

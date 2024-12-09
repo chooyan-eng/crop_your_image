@@ -1,6 +1,6 @@
 name: crop_your_image
 description: crop_your_image helps your app to embed Widgets for cropping images.
-version: 1.0.2
+version: 1.1.0
 homepage: https://github.com/chooyan-eng/crop_your_image
 
 environment:
@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  image: ^4.0.17
+  image: ^4.2.0
 
 dev_dependencies:
   flutter_test:
