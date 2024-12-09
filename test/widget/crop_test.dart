@@ -105,39 +105,12 @@ void main() {
           Crop(
             image: testImage,
             onCropped: (value) {},
-            initialRectBuilder: (viewportRect, imageRect) {
-              completer.complete();
-              return imageRect;
-            },
-          ),
-        );
-
-        await tester.runAsync(() async {
-          await tester.pumpWidget(widget);
-          // wait for parsing image
-          await Future.delayed(const Duration(seconds: 2));
-        });
-
-        expect(completer.isCompleted, isTrue);
-      },
-    );
-
-    testWidgets(
-      'initialRectBuilder is called even if initialArea is also given',
-      (tester) async {
-        // to ensure callback is called
-        final completer = Completer<void>();
-
-        final widget = withMaterial(
-          Crop(
-            image: testImage,
-            onCropped: (value) {},
-            initialRectBuilder: (viewportRect, imageRect) {
-              completer.complete();
-              return imageRect;
-            },
-            // initialArea is ignored because initialRectBuilder is priored
-            initialArea: Rect.zero,
+            initialRectBuilder: InitialRectBuilder.withBuilder(
+              (viewportRect, imageRect) {
+                completer.complete();
+                return imageRect;
+              },
+            ),
           ),
         );
 
