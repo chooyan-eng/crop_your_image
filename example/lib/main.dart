@@ -141,21 +141,26 @@ class _CropSampleState extends State<CropSample> {
                                 }[status] ??
                                 '';
                           }),
-                          initialSize: 0.5,
                           maskColor: _isSumbnail ? Colors.white : null,
                           cornerDotBuilder: (size, edgeAlignment) =>
                               const SizedBox.shrink(),
                           interactive: true,
                           fixCropRect: true,
                           radius: 20,
-                          initialRectBuilder: (viewportRect, imageRect) {
-                            return Rect.fromLTRB(
-                              viewportRect.left + 24,
-                              viewportRect.top + 24,
-                              viewportRect.right - 24,
-                              viewportRect.bottom - 24,
-                            );
-                          },
+                          initialRectBuilder: InitialRectBuilder.withBuilder(
+                            (viewportRect, imageRect) {
+                              return Rect.fromLTRB(
+                                viewportRect.left + 24,
+                                viewportRect.top + 24,
+                                viewportRect.right - 24,
+                                viewportRect.bottom - 24,
+                              );
+                            },
+                          ),
+                          onHistoryChanged: (history) => setState(() {
+                            _undoEnabled = history.undoCount > 0;
+                            _redoEnabled = history.redoCount > 0;
+                          }),
                           overlayBuilder: _isOverlayActive
                               ? (context, rect) {
                                   final overlay = CustomPaint(
@@ -168,10 +173,6 @@ class _CropSampleState extends State<CropSample> {
                                       : overlay;
                                 }
                               : null,
-                          onHistoryChanged: (history) => setState(() {
-                            _undoEnabled = history.undoCount > 0;
-                            _redoEnabled = history.redoCount > 0;
-                          }),
                         ),
                         IgnorePointer(
                           child: Padding(
