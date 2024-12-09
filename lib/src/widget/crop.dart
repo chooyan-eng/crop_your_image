@@ -27,6 +27,8 @@ typedef OnMovedCallback = void Function(
   ImageBasedRect imageRect,
 );
 
+typedef OverlayBuilder = Widget Function(BuildContext context, Rect rect);
+
 enum CropStatus { nothing, loading, ready, cropping }
 
 /// Widget for the entry point of crop_your_image.
@@ -133,6 +135,9 @@ class Crop extends StatelessWidget {
   /// (Advanced) Injected logic for parsing image detail.
   final ImageParser imageParser;
 
+  /// builder to place a widget inside the cropping area
+  final OverlayBuilder? overlayBuilder;
+
   Crop({
     super.key,
     required this.image,
@@ -158,6 +163,7 @@ class Crop extends StatelessWidget {
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
+    this.overlayBuilder,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         this.imageParser = imageParser ?? defaultImageParser;
@@ -196,6 +202,7 @@ class Crop extends StatelessWidget {
             imageCropper: imageCropper,
             formatDetector: formatDetector,
             imageParser: imageParser,
+            overlayBuilder: overlayBuilder,
           ),
         );
       },
@@ -227,6 +234,7 @@ class _CropEditor extends StatefulWidget {
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
   final double scrollZoomSensitivity;
+  final OverlayBuilder? overlayBuilder;
 
   const _CropEditor({
     super.key,
@@ -253,6 +261,7 @@ class _CropEditor extends StatefulWidget {
     required this.formatDetector,
     required this.imageParser,
     required this.scrollZoomSensitivity,
+    this.overlayBuilder,
   });
 
   @override
@@ -560,6 +569,14 @@ class _CropEditorState extends State<_CropEditor> {
                   ),
                 ),
               ),
+              if (widget.overlayBuilder != null)
+                Positioned.fromRect(
+                  rect: _readyState.cropRect,
+                  child: IgnorePointer(
+                    child:
+                        widget.overlayBuilder!(context, _readyState.cropRect),
+                  ),
+                ),
               IgnorePointer(
                 child: ClipPath(
                   clipper: _readyState.withCircleUi
