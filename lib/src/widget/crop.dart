@@ -47,32 +47,33 @@ class Crop extends StatelessWidget {
   /// null, by default, means no fixed aspect ratio.
   final double? aspectRatio;
 
-  /// initial size of cropping rect.
-  /// Set double value less than 1.0.
-  /// if initialSize is 1.0 (or null),
-  /// cropping area would expand as much as possible.
-  final double? initialSize;
-
-  /// Builder for initial [ViewportBasedRect] of cropping rect.
-  /// Builder is called when calculating initial cropping rect
-  /// with passing [ViewportBasedRect] of viewport and image.
-  final CroppingRectBuilder? initialRectBuilder;
-
-  /// Initial [ImageBasedRect] of cropping rect, called "area" in this package.
+  /// builder object for initial cropping rect.
+  /// the legacy arguments of [initialSize], [initialArea], and [initialRectBuilder] are removed.
+  /// you can migrate to those arguments by passing [InitialRectBuilder.withSizeAndRatio], [InitialRectBuilder.withBuilder],
+  /// or [InitialRectBuilder.withArea].
+  ///
+  /// [InitialRectBuilder.withSizeAndRatio] enables you to set initial size and aspect ratio of cropping rect.
+  /// [size] need to be between 0.0 and 1.0, or null.
+  /// [aspectRatio] is an initial aspect ratio of cropping rect, which means user's interaction
+  /// will change this ratio.
+  ///
+  /// [InitialRectBuilder.withBuilder] enables you to build an initial [ViewportBasedRect] of cropping rect
+  /// with passed [ViewportBasedRect] of [viewportRect] and [imageRect].
+  ///
+  /// [InitialRectBuilder.withArea] enables you to set an initial [ViewportBasedRect] of cropping rect.
+  /// you can configure the rect based on [ImageBasedRect] and [Crop] will convert it to [ViewportBasedRect].
   ///
   /// Note that [ImageBasedRect] is [Rect] based on original [image] data, not screen.
   ///
   /// e.g. If the original image size is 1280x1024,
-  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [initialArea] would
+  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [area] would
   /// result in covering exact center of the image with 800x600 image size
   /// regardless of the size of viewport.
   ///
-  /// If [initialArea] is given, [initialSize] is ignored.
-  /// On the other hand, [aspectRatio] is still enabled although
-  /// [initialArea] is given and the initial shape of cropping rect looks ignoring [aspectRatio].
-  /// Once user moves cropping rect with their hand,
-  /// the shape of cropping area is re-calculated depending on [aspectRatio].
-  final ImageBasedRect? initialArea;
+  /// If [aspectRatio] is given at the same time, [Crop] will NOT cause error.
+  /// In that case, once user moves cropping rect with their hand,
+  /// the shape of cropping area is soon re-calculated depending on [aspectRatio].
+  final InitialRectBuilder? initialRectBuilder;
 
   /// flag if cropping image with circle shape.
   /// As oval shape is not supported, [aspectRatio] is fixed to 1 if [withCircleUi] is true.
@@ -155,9 +156,7 @@ class Crop extends StatelessWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
-    this.initialSize,
     this.initialRectBuilder,
-    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -179,9 +178,7 @@ class Crop extends StatelessWidget {
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
     this.filterQuality = FilterQuality.medium,
-  })  : assert((initialSize ?? 1.0) <= 1.0,
-            'initialSize must be less than 1.0, or null meaning not specified.'),
-        this.imageParser = imageParser ?? defaultImageParser;
+  }) : this.imageParser = imageParser ?? defaultImageParser;
 
   @override
   Widget build(BuildContext context) {
@@ -197,9 +194,7 @@ class Crop extends StatelessWidget {
             image: image,
             onCropped: onCropped,
             aspectRatio: aspectRatio,
-            initialSize: initialSize,
             initialRectBuilder: initialRectBuilder,
-            initialArea: initialArea,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
@@ -232,9 +227,7 @@ class _CropEditor extends StatefulWidget {
   final Uint8List image;
   final ValueChanged<CropResult> onCropped;
   final double? aspectRatio;
-  final double? initialSize;
-  final CroppingRectBuilder? initialRectBuilder;
-  final ImageBasedRect? initialArea;
+  final InitialRectBuilder? initialRectBuilder;
   final bool withCircleUi;
   final CropController? controller;
   final OnMovedCallback? onMoved;
@@ -262,9 +255,7 @@ class _CropEditor extends StatefulWidget {
     required this.image,
     required this.onCropped,
     required this.aspectRatio,
-    required this.initialSize,
     required this.initialRectBuilder,
-    required this.initialArea,
     this.withCircleUi = false,
     required this.controller,
     required this.onMoved,
@@ -321,18 +312,18 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = (aspectRatio) {
-        _resizeWith(aspectRatio, null);
+        _resizeWithSizeAndRatio(null, aspectRatio);
       }
       ..onChangeWithCircleUi = (withCircleUi) {
         _viewState = _readyState.copyWith(withCircleUi: withCircleUi);
-        _resizeWith(null, null);
+        _resizeWithSizeAndRatio(null, null);
       }
       ..onImageChanged = _resetImage
       ..onChangeCropRect = (newCropRect) {
         _updateCropRect(_readyState.correct(newCropRect));
       }
       ..onChangeArea = (newArea) {
-        _resizeWith(widget.aspectRatio, newArea);
+        _resizeWithArea(newArea);
       }
       ..onUndo = _undo
       ..onRedo = _redo;
@@ -456,22 +447,28 @@ class _CropEditorState extends State<_CropEditor> {
       widget.onImageMoved?.call(_readyState.imageRect);
     });
 
-    if (widget.initialRectBuilder != null) {
-      _updateCropRect(
-        _readyState.copyWith(
-          cropRect: widget.initialRectBuilder!(
-            Rect.fromLTWH(
-              0,
-              0,
-              _readyState.viewportSize.width,
-              _readyState.viewportSize.height,
+    final builder = widget.initialRectBuilder;
+    switch (builder) {
+      case (WithBuilderInitialRectBuilder()):
+        _updateCropRect(
+          _readyState.copyWith(
+            cropRect: builder.build(
+              Rect.fromLTWH(
+                0,
+                0,
+                _readyState.viewportSize.width,
+                _readyState.viewportSize.height,
+              ),
+              _readyState.imageRect,
             ),
-            _readyState.imageRect,
           ),
-        ),
-      );
-    } else {
-      _resizeWith(widget.aspectRatio, widget.initialArea);
+        );
+      case (WithAreaInitialRectBuilder()):
+        _resizeWithArea(builder.area);
+      case (WithSizeAndRatioInitialRectBuilder()):
+        _resizeWithSizeAndRatio(builder.size, builder.aspectRatio);
+      default:
+        _resizeWithSizeAndRatio(null, widget.aspectRatio);
     }
 
     if (widget.interactive) {
@@ -479,19 +476,19 @@ class _CropEditorState extends State<_CropEditor> {
     }
   }
 
+  void _resizeWithArea(ImageBasedRect area) {
+    // calculate how smaller the viewport is than the image
+    _updateCropRect(_readyState.cropRectWith(area));
+  }
+
   /// resize crop rect with given aspect ratio and area.
-  void _resizeWith(double? aspectRatio, ImageBasedRect? area) {
-    if (area == null) {
-      _updateCropRect(
-        _readyState.cropRectInitialized(
-          initialSize: widget.initialSize,
-          aspectRatio: aspectRatio,
-        ),
-      );
-    } else {
-      // calculate how smaller the viewport is than the image
-      _updateCropRect(_readyState.cropRectWith(area));
-    }
+  void _resizeWithSizeAndRatio(double? size, double? aspectRatio) {
+    _updateCropRect(
+      _readyState.cropRectInitialized(
+        initialSize: size,
+        aspectRatio: aspectRatio,
+      ),
+    );
   }
 
   void _undo() {
@@ -528,7 +525,7 @@ class _CropEditorState extends State<_CropEditor> {
         ],
       );
       cropResult = CropSuccess(image);
-    } catch(e, trace) {
+    } catch (e, trace) {
       cropResult = CropFailure(e, trace);
     }
 
