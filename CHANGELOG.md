@@ -1,3 +1,7 @@
+## [2.0.0-dev.3] - 2024.12.9
+* Change the type of `initialRectBuilder` to `InitialRectBuilder`, and now legacy `initialArea` and `initialSize` are removed and merged into `InitialRectBuilder`.
+* Add `InitialRectBuilder.withSizeAndRatio` to configure initial `aspectRatio`.
+
 ## [2.0.0-dev.2] - 2024.12.08
 * Add undo / redo related features. See [README.md](README.md) for more details.
 

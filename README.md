@@ -57,7 +57,7 @@ Widget build(BuildContext context) {
 
 Then, `Crop` widget will automatically display cropping editor UI on users screen with given image.
 
-By passing `CropController` instance to `controller` argument of `Crop`'s constructor, you can controll the `Crop` widget from anywhere on your source code.
+By passing `CropController` instance to `controller` argument of `Crop`'s constructor, you can control the `Crop` widget from anywhere on your source code.
 
 For example, when you want to crop the image with the current crop rect, you can just call `_controller.crop()` whenever you want, such like the code below.
 
@@ -109,11 +109,23 @@ Widget build(BuildContext context) {
       // do something with image data 
     },
     aspectRatio: 4 / 3,
-    // initialSize: 0.5,
-    // initialArea: Rect.fromLTWH(240, 212, 800, 600),
-    initialRectBuilder: (rect) => Rect.fromLTRB(
-      rect.left + 24, rect.top + 32, rect.right - 24, rect.bottom - 32
-    ), 
+
+    initialRectBuilder: InitialRectBuilder.withBuilder((viewportRect, imageRect) {
+      return Rect.fromLTRB(
+        viewportRect.left + 24,
+        viewportRect.top + 32,
+        viewportRect.right - 24,
+        viewportRect.bottom - 32,
+      );
+    }),
+    // initialRectBuilder: InitialRectBuilder.withArea(
+    //   ImageBasedRect.fromLTWH(240, 212, 800, 600),
+    // ),
+    // initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
+    //   size: 0.5,
+    //   aspectRatio: 4 / 3,
+    // ),
+
     // withCircleUi: true,
     baseColor: Colors.blue.shade900,
     maskColor: Colors.white.withAlpha(100),
@@ -133,6 +145,7 @@ Widget build(BuildContext context) {
     clipBehavior: Clip.none,
     interactive: true,
     // fixCropRect: true,
+
     // formatDetector: (image) {},
     // imageCropper: myCustomImageCropper,
     // imageParser: (image, {format}) {},
@@ -147,8 +160,7 @@ Widget build(BuildContext context) {
 |controller|CropController|Controller for managing cropping operation.|
 |aspectRatio|double?| Initial aspect ratio of crop rect. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
 |initialSize|double?| is the initial size of crop rect. `1.0` (or `null`, by default) fits the size of image, which means crop rect extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
-|initialArea|Rect?|Initial `Rect` of crop rect based on actual image size.|
-|initialRectBuilder|Rect Function(Rect)|Callback to decide initial `Rect` of crop  rect based on viewport of `Crop` itself. `Rect` of `Crop`'s viewport is passed as an argument of the callback.|
+|initialRectBuilder|InitialRectBuilder?|An object preserving configuration for building the initial crop rect. `InitialRectBuilder.withBuilder` enables you to configure the rect with a function to decide initial `Rect` of crop rect based on viewport of `Crop` itself. `InitialRectBuilder.withArea` enables you to configure the rect with `ImageBasedRect` which is based on actual image size. `InitialRectBuilder.withSizeAndRatio` enables you to configure the rect with `size` and `aspectRatio`.|
 |withCircleUi|bool|Flag to decide the shape of cropping UI. If `true`, the shape of cropping UI is circle and `aspectRatio` is automatically set `1.0`. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.|
 |maskColor|Color?|Color of the mask widget which is placed over the cropping editor.|
 |baseColor|Color?|Color of the base color of the cropping editor.|
