@@ -72,6 +72,10 @@ class Crop extends StatelessWidget {
   /// the shape of cropping area is re-calculated depending on [aspectRatio].
   final ImageBasedRect? initialArea;
 
+  /// initial aspect ratio of cropping area.
+  /// it is not fixed, and users interaction will change this ratio.
+  final double? initialAspectRatio;
+
   /// flag if cropping image with circle shape.
   /// As oval shape is not supported, [aspectRatio] is fixed to 1 if [withCircleUi] is true.
   final bool withCircleUi;
@@ -148,6 +152,7 @@ class Crop extends StatelessWidget {
     this.initialSize,
     this.initialRectBuilder,
     this.initialArea,
+    this.initialAspectRatio,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -168,6 +173,8 @@ class Crop extends StatelessWidget {
     this.scrollZoomSensitivity = 0.05,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
+        assert(!(initialAspectRatio != null && aspectRatio != null),
+            'initialAspectRatio and aspectRatio cannot be set at the same time.'),
         this.imageParser = imageParser ?? defaultImageParser;
 
   @override
@@ -187,6 +194,7 @@ class Crop extends StatelessWidget {
             initialSize: initialSize,
             initialRectBuilder: initialRectBuilder,
             initialArea: initialArea,
+            initialAspectRatio: initialAspectRatio,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
@@ -219,6 +227,7 @@ class _CropEditor extends StatefulWidget {
   final double? initialSize;
   final CroppingRectBuilder? initialRectBuilder;
   final ImageBasedRect? initialArea;
+  final double? initialAspectRatio;
   final bool withCircleUi;
   final CropController? controller;
   final OnMovedCallback? onMoved;
@@ -246,6 +255,7 @@ class _CropEditor extends StatefulWidget {
     required this.initialSize,
     required this.initialRectBuilder,
     required this.initialArea,
+    required this.initialAspectRatio,
     this.withCircleUi = false,
     required this.controller,
     required this.onMoved,
@@ -299,18 +309,18 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = (aspectRatio) {
-        _resizeWith(aspectRatio, null);
+        _resizeWithRatio(aspectRatio, null);
       }
       ..onChangeWithCircleUi = (withCircleUi) {
         _viewState = _readyState.copyWith(withCircleUi: withCircleUi);
-        _resizeWith(null, null);
+        _resizeWithRatio(null, null);
       }
       ..onImageChanged = _resetImage
       ..onChangeCropRect = (newCropRect) {
         _updateCropRect(_readyState.correct(newCropRect));
       }
       ..onChangeArea = (newArea) {
-        _resizeWith(widget.aspectRatio, newArea);
+        _resizeWithArea(newArea);
       }
       ..onUndo = _undo
       ..onRedo = _redo;
@@ -447,8 +457,10 @@ class _CropEditorState extends State<_CropEditor> {
           ),
         ),
       );
-    } else {
-      _resizeWith(widget.aspectRatio, widget.initialArea);
+    } else if (widget.initialArea != null) {
+      _resizeWithArea(widget.initialArea!);
+    } else if (widget.initialAspectRatio != null) {
+      _resizeWithRatio(widget.aspectRatio, widget.initialAspectRatio);
     }
 
     if (widget.interactive) {
@@ -456,19 +468,20 @@ class _CropEditorState extends State<_CropEditor> {
     }
   }
 
+  void _resizeWithArea(ImageBasedRect area) {
+    // calculate how smaller the viewport is than the image
+    _updateCropRect(_readyState.cropRectWith(area));
+  }
+
   /// resize crop rect with given aspect ratio and area.
-  void _resizeWith(double? aspectRatio, ImageBasedRect? area) {
-    if (area == null) {
-      _updateCropRect(
-        _readyState.cropRectInitialized(
-          initialSize: widget.initialSize,
-          aspectRatio: aspectRatio,
-        ),
-      );
-    } else {
-      // calculate how smaller the viewport is than the image
-      _updateCropRect(_readyState.cropRectWith(area));
-    }
+  void _resizeWithRatio(double? aspectRatio, double? initialAspectRatio) {
+    _updateCropRect(
+      _readyState.cropRectInitialized(
+        initialSize: widget.initialSize,
+        aspectRatio: aspectRatio,
+        initialAspectRatio: initialAspectRatio,
+      ),
+    );
   }
 
   void _undo() {

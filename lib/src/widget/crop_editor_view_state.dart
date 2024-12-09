@@ -130,8 +130,10 @@ class ReadyCropEditorViewState extends CropEditorViewState {
   ReadyCropEditorViewState cropRectInitialized({
     double? initialSize,
     double? aspectRatio,
+    double? initialAspectRatio,
   }) {
-    final effectiveAspectRatio = withCircleUi ? 1.0 : aspectRatio ?? 1.0;
+    final effectiveAspectRatio =
+        withCircleUi ? 1.0 : aspectRatio ?? initialAspectRatio ?? 1.0;
     return copyWith(
       cropRect: calculator.initialCropRect(
         viewportSize,
