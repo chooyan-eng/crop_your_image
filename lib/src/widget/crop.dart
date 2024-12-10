@@ -7,8 +7,8 @@ import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/crop_editor_view_state.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
@@ -80,6 +80,8 @@ class Crop extends StatelessWidget {
   /// Callback called when cropping rect changes for any reasons.
   final OnMovedCallback? onMoved;
 
+  final void Function(Rect imageRect)? onImageMoved;
+
   /// Callback called when status of Crop widget is changed.
   ///
   /// note: Currently, the very first callback is [CropStatus.ready]
@@ -149,6 +151,7 @@ class Crop extends StatelessWidget {
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
+    this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
     this.baseColor = Colors.white,
@@ -188,6 +191,7 @@ class Crop extends StatelessWidget {
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
+            onImageMoved: onImageMoved,
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
             baseColor: baseColor,
@@ -220,6 +224,7 @@ class _CropEditor extends StatefulWidget {
   final bool withCircleUi;
   final CropController? controller;
   final OnMovedCallback? onMoved;
+  final void Function(Rect imageRect)? onImageMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
   final Color baseColor;
@@ -247,6 +252,7 @@ class _CropEditor extends StatefulWidget {
     this.withCircleUi = false,
     required this.controller,
     required this.onMoved,
+    required this.onImageMoved,
     required this.onStatusChanged,
     required this.maskColor,
     required this.baseColor,
@@ -419,6 +425,7 @@ class _CropEditorState extends State<_CropEditor> {
   void _resetCropRect() {
     setState(() {
       _viewState = _readyState.resetCropRect();
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
 
     if (widget.initialRectBuilder != null) {
@@ -492,6 +499,7 @@ class _CropEditorState extends State<_CropEditor> {
   void _handleScaleUpdate(ScaleUpdateDetails detail) {
     setState(() {
       _viewState = _readyState.offsetUpdated(detail.focalPointDelta);
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
 
     _applyScale(
@@ -532,6 +540,7 @@ class _CropEditorState extends State<_CropEditor> {
         nextScale,
         focalPoint: focalPoint,
       );
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
   }
 
