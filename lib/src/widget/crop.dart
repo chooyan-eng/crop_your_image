@@ -425,6 +425,7 @@ class _CropEditorState extends State<_CropEditor> {
   void _resetCropRect() {
     setState(() {
       _viewState = _readyState.resetCropRect();
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
 
     if (widget.initialRectBuilder != null) {
@@ -498,6 +499,7 @@ class _CropEditorState extends State<_CropEditor> {
   void _handleScaleUpdate(ScaleUpdateDetails detail) {
     setState(() {
       _viewState = _readyState.offsetUpdated(detail.focalPointDelta);
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
 
     _applyScale(
@@ -538,6 +540,7 @@ class _CropEditorState extends State<_CropEditor> {
         nextScale,
         focalPoint: focalPoint,
       );
+      widget.onImageMoved?.call(_readyState.imageRect);
     });
   }
 
