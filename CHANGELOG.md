@@ -1,3 +1,10 @@
+## [2.0.0-dev.4] - 2024.12.10
+* Add `onImageMoved` callback that notifies image moved when `interactive` is enabled.
+* Add `overlayBuilder` argument to `Crop` widget that enables to configure overlay on cropping area.
+* Fix a bug that UI goes to loading state when rebuild happens.
+* Fix a bug of `InvalidRectError` happening unexpectedly.
+* Fix a bug of crashing after disposing `Crop` widget.
+
 ## [2.0.0-dev.3] - 2024.12.9
 * Change the type of `initialRectBuilder` to `InitialRectBuilder`, and now legacy `initialArea` and `initialSize` are removed and merged into `InitialRectBuilder`.
 * Add `InitialRectBuilder.withSizeAndRatio` to configure initial `aspectRatio`.

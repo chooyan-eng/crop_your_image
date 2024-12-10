@@ -129,10 +129,16 @@ Widget build(BuildContext context) {
     // withCircleUi: true,
     baseColor: Colors.blue.shade900,
     maskColor: Colors.white.withAlpha(100),
+    overlayBuilder: (context, rect) {
+      return CustomPaint(painter: MyPainter(rect));
+    },
     progressIndicator: const CircularProgressIndicator(),
     radius: 20,
     onMoved: (newRect) {
       // do something with current crop rect.
+    },
+    onImageMoved: (newImageRect) {
+      // do something with current image rect.
     },
     onStatusChanged: (status) {
       // do something with current CropStatus
@@ -164,8 +170,10 @@ Widget build(BuildContext context) {
 |withCircleUi|bool|Flag to decide the shape of cropping UI. If `true`, the shape of cropping UI is circle and `aspectRatio` is automatically set `1.0`. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.|
 |maskColor|Color?|Color of the mask widget which is placed over the cropping editor.|
 |baseColor|Color?|Color of the base color of the cropping editor.|
+|overlayBuilder|Widget Function(BuildContext, ViewportBasedRect)?|Builder function to build Widget placed over the cropping rect. `rect` of argument is current `ViewportBasedRect` of crop rect.|
 |radius|double?|Corner radius of crop rect.|
-|onMoved|void Function(Rect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `Rect` of crop rect.|
+|onMoved|void Function(ViewportBasedRect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `ViewportBasedRect` of crop rect.|
+|onImageMoved|void Function(ViewportBasedRect)?|Callback called when image is moved regardless of its reasons. `newImageRect` of argument is current `ViewportBasedRect` of image.|
 |onHistoryChanged|void Function(History)?|Callback called when history of crop rect is changed. This history allows you to undo / redo feature is available or not.|
 |onStatusChanged|void Function(CropStatus)?|Callback called when status of Crop is changed.|
 |willUpdateScale|bool Function(double)?|Callback called before scale changes on _interactive_ mode. By returning `false` to this callback, updating scale will be canceled.|
