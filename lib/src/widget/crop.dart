@@ -37,7 +37,7 @@ class Crop extends StatelessWidget {
   final Uint8List image;
 
   /// callback when cropping completed
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
 
   /// fixed aspect ratio of cropping rect.
   /// null, by default, means no fixed aspect ratio.
@@ -216,7 +216,7 @@ class Crop extends StatelessWidget {
 
 class _CropEditor extends StatefulWidget {
   final Uint8List image;
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
   final double? aspectRatio;
   final double? initialSize;
   final CroppingRectBuilder? initialRectBuilder;
@@ -473,16 +473,22 @@ class _CropEditorState extends State<_CropEditor> {
     widget.onStatusChanged?.call(CropStatus.cropping);
 
     // use compute() not to block UI update
-    final cropResult = await compute(
-      _cropFunc,
-      [
-        widget.imageCropper,
-        _parsedImageDetail!.image,
-        _readyState.rectToCrop,
-        withCircleShape,
-        _detectedFormat,
-      ],
-    );
+    late CropResult cropResult;
+    try {
+      final image = await compute(
+        _cropFunc,
+        [
+          widget.imageCropper,
+          _parsedImageDetail!.image,
+          _readyState.rectToCrop,
+          withCircleShape,
+          _detectedFormat,
+        ],
+      );
+      cropResult = CropSuccess(image);
+    } catch(e, trace) {
+      cropResult = CropFailure(e, trace);
+    }
 
     widget.onCropped(cropResult);
     widget.onStatusChanged?.call(CropStatus.ready);
