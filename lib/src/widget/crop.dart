@@ -334,12 +334,6 @@ class _CropEditorState extends State<_CropEditor> {
 
   @override
   void didChangeDependencies() {
-    _viewState = PreparingCropEditorViewState(
-      viewportSize: MediaQuery.of(context).size,
-      withCircleUi: widget.withCircleUi,
-      aspectRatio: widget.aspectRatio,
-    );
-
     /// parse image with given parser and format detector
     _parseImageWith(
       parser: widget.imageParser,
@@ -415,12 +409,18 @@ class _CropEditorState extends State<_CropEditor> {
         _lastImage == image &&
         _lastFormatDetector == formatDetector) {
       // no change
-      return null;
+      return _parsedImageDetail;
     }
 
     _lastParser = parser;
     _lastFormatDetector = formatDetector;
     _lastImage = image;
+
+    _viewState = PreparingCropEditorViewState(
+      viewportSize: MediaQuery.of(context).size,
+      withCircleUi: widget.withCircleUi,
+      aspectRatio: widget.aspectRatio,
+    );
 
     final format = formatDetector?.call(image);
     final future = compute(
