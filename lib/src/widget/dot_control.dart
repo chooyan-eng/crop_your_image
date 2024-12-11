@@ -1,8 +1,8 @@
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:flutter/material.dart';
 
-/// Defalt dot widget placed on corners to control cropping area.
-/// This Widget automaticall fits the appropriate size.
+/// Default dot widget placed on corners to control cropping area.
+/// This Widget automatically fits the appropriate size.
 class DotControl extends StatelessWidget {
   const DotControl({
     Key? key,

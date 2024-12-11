@@ -6,9 +6,9 @@ A flutter plugin that provides `Crop` widget for cropping images.
 
 # Philosophy
 
-crop_your_image provides _flexible_ and _custamizable_ `Crop` widget that can be placed at anywhere in your well designed apps.
+crop_your_image provides _flexible_ and _customizable_ `Crop` widget that can be placed at anywhere in your well designed apps.
 
-As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed anywhere such as, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottomsheets. It's totally up to you!
+As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed anywhere such as, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottom sheets. It's totally up to you!
 
 Users' cropping operation is also customizable. By default, images are fixed on the screen and users can move crop rect to decide where to crop. Once configured _interactive_ mode, images can be zoomed/panned, and crop rect can be configured as fixed.
 
@@ -214,7 +214,7 @@ by passing the arguments below.
 |-|-|-|
 |formatDetector|ImageFormat Function(Uint8List)?|Function to detect the format of original image. By detecting the format before `imageParser` parses the original image from `Uint8List` to `ImageDetail`, `imageParser` will sufficiently parse the binary, which means the initializing operation speeds up. `defaultFormatDetector` is used by default|
 |imageParser|ImageDetail<T> Function(Uint8List, {ImageFormat})?|Function for parsing original image from `Uint8List` to `ImageDetail`, which preserve `height`, `width` and parsed `image` with generic type `<T>`. `image` is passed to `imageCropper` with `Rect` to be cropped. `defaultImageParser` is used by default|
-|imageCropper|ImageCropper<T>?|By implementing `ImageCropeper<T>` and passing its instance to this argument, you can exchange cropping logic. `defaultImageCropper` is used by default|
+|imageCropper|ImageCropper<T>?|By implementing `ImageCropper<T>` and passing its instance to this argument, you can exchange cropping logic. `defaultImageCropper` is used by default|
 
 # Gallery App
 
