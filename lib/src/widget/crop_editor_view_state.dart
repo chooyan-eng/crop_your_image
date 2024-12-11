@@ -98,15 +98,8 @@ class ReadyCropEditorViewState extends CropEditorViewState {
   );
 
   late final rectToCrop = ImageBasedRect.fromLTWH(
-    (cropRect.left - imageRect.left) * screenSizeRatio / scale,
-    (cropRect.top - imageRect.top) * screenSizeRatio / scale,
-    cropRect.width * screenSizeRatio / scale,
-    cropRect.height * screenSizeRatio / scale,
-  );
-
-  late final imageBaseRect = Rect.fromLTWH(
-    (cropRect.left - imageRect.left) * screenSizeRatio / scale,
-    (cropRect.top - imageRect.top) * screenSizeRatio / scale,
+    (max(0, cropRect.left - imageRect.left)) * screenSizeRatio / scale,
+    (max(0, cropRect.top - imageRect.top)) * screenSizeRatio / scale,
     cropRect.width * screenSizeRatio / scale,
     cropRect.height * screenSizeRatio / scale,
   );

@@ -363,7 +363,7 @@ class _CropEditorState extends State<_CropEditor> {
   /// apply crop rect changed to view state
   void _updateCropRect(CropEditorViewState newState) {
     setState(() => _viewState = newState);
-    widget.onMoved?.call(_readyState.cropRect, _readyState.imageBaseRect);
+    widget.onMoved?.call(_readyState.cropRect, _readyState.rectToCrop);
   }
 
   /// reset image to be cropped
