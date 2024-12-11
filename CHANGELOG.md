@@ -1,3 +1,12 @@
+## [2.0.0-dev.6] - 2024.12.12
+* Respect original image format and output with the same format.
+* Change how to implement `ImageCropper`.
+* Errors are now implementing `Exception` instead of `Error`.
+* Fix a bug of `InvalidRectError` happening unexpectedly.
+* Fix a bug of using unmounted context.
+* Fix a bug of not expecting initial size of cropping rect when changing aspect ratio.
+* Fix some typos.
+
 ## [2.0.0-dev.5] - 2024.12.11
 * **Important Breaking Change:** Change the type of `onCropped` callback from `Uint8List` to `CropResult`.
 * Add `filterQuality` argument to `Crop` widget.
