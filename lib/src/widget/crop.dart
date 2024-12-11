@@ -368,6 +368,10 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
+    if (!mounted) {
+      return;
+    }
+
     widget.onStatusChanged?.call(CropStatus.loading);
 
     /// reset view state back to preparing state
