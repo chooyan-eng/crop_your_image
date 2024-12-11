@@ -172,13 +172,14 @@ class Crop extends StatelessWidget {
     this.interactive = false,
     this.willUpdateScale,
     this.onHistoryChanged,
-    this.formatDetector = defaultFormatDetector,
+    FormatDetector? formatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
     this.filterQuality = FilterQuality.medium,
-  }) : this.imageParser = imageParser ?? defaultImageParser;
+  })  : this.imageParser = imageParser ?? defaultImageParser,
+        this.formatDetector = formatDetector ?? defaultFormatDetector;
 
   @override
   Widget build(BuildContext context) {
@@ -761,14 +762,13 @@ FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
   final originalImage = args[1];
   final rect = args[2] as Rect;
   final withCircleShape = args[3] as bool;
-
-  // TODO(chooyan-eng): currently always PNG
-  // final outputFormat = args[4] as ImageFormat?;
+  final outputFormat = args[4] as ImageFormat;
 
   return cropper.call(
     original: originalImage,
     topLeft: Offset(rect.left, rect.top),
     bottomRight: Offset(rect.right, rect.bottom),
     shape: withCircleShape ? ImageShape.circle : ImageShape.rectangle,
+    outputFormat: outputFormat,
   );
 }
