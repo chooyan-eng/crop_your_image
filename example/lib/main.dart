@@ -56,7 +56,7 @@ class _CropSampleState extends State<CropSample> {
     _cropController.image = _imageDataList[_currentImage];
   }
 
-  var _isSumbnail = false;
+  var _isThumbnail = false;
   var _isCropping = false;
   var _isCircleUi = false;
   Uint8List? _croppedData;
@@ -103,13 +103,13 @@ class _CropSampleState extends State<CropSample> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      _buildSumbnail(_imageDataList[0]),
+                      _buildThumbnail(_imageDataList[0]),
                       const SizedBox(width: 16),
-                      _buildSumbnail(_imageDataList[1]),
+                      _buildThumbnail(_imageDataList[1]),
                       const SizedBox(width: 16),
-                      _buildSumbnail(_imageDataList[2]),
+                      _buildThumbnail(_imageDataList[2]),
                       const SizedBox(width: 16),
-                      _buildSumbnail(_imageDataList[3]),
+                      _buildThumbnail(_imageDataList[3]),
                     ],
                   ),
                 ),
@@ -157,7 +157,7 @@ class _CropSampleState extends State<CropSample> {
                                 }[status] ??
                                 '';
                           }),
-                          maskColor: _isSumbnail ? Colors.white : null,
+                          maskColor: _isThumbnail ? Colors.white : null,
                           cornerDotBuilder: (size, edgeAlignment) =>
                               const SizedBox.shrink(),
                           interactive: true,
@@ -207,11 +207,12 @@ class _CropSampleState extends State<CropSample> {
                         right: 16,
                         bottom: 16,
                         child: GestureDetector(
-                          onTapDown: (_) => setState(() => _isSumbnail = true),
-                          onTapUp: (_) => setState(() => _isSumbnail = false),
+                          onTapDown: (_) => setState(() => _isThumbnail = true),
+                          onTapUp: (_) => setState(() => _isThumbnail = false),
                           child: CircleAvatar(
-                            backgroundColor:
-                                _isSumbnail ? Colors.blue.shade50 : Colors.blue,
+                            backgroundColor: _isThumbnail
+                                ? Colors.blue.shade50
+                                : Colors.blue,
                             child: Center(
                               child: Icon(Icons.crop_free_rounded),
                             ),
@@ -338,7 +339,7 @@ class _CropSampleState extends State<CropSample> {
     );
   }
 
-  Expanded _buildSumbnail(Uint8List data) {
+  Expanded _buildThumbnail(Uint8List data) {
     final index = _imageDataList.indexOf(data);
     return Expanded(
       child: InkWell(
