@@ -16,10 +16,10 @@ final RectValidator<Image> defaultRectValidator =
       topLeft.dy.toInt() > original.height ||
       bottomRight.dx.toInt() > original.width ||
       bottomRight.dy.toInt() > original.height) {
-    return InvalidRectError(topLeft: topLeft, bottomRight: bottomRight);
+    return InvalidRectException(topLeft: topLeft, bottomRight: bottomRight);
   }
   if (topLeft.dx > bottomRight.dx || topLeft.dy > bottomRight.dy) {
-    return NegativeSizeError(topLeft: topLeft, bottomRight: bottomRight);
+    return NegativeSizeException(topLeft: topLeft, bottomRight: bottomRight);
   }
   return null;
 };

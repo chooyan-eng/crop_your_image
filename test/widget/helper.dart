@@ -20,5 +20,5 @@ class FailureCropper extends ImageCropper {
   RectCropper get rectCropper => throw UnimplementedError();
 
   @override
-  RectValidator get rectValidator => throw Error();
+  RectValidator get rectValidator => throw Exception();
 }

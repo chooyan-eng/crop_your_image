@@ -59,7 +59,7 @@ void main() {
             topLeft: Offset(-100, -50),
             bottomRight: Offset(200, 150),
           ),
-          throwsA(const TypeMatcher<InvalidRectError>()),
+          throwsA(const TypeMatcher<InvalidRectException>()),
         );
 
         expect(
@@ -68,7 +68,7 @@ void main() {
             topLeft: Offset(0, 0),
             bottomRight: Offset(-200, -150),
           ),
-          throwsA(const TypeMatcher<InvalidRectError>()),
+          throwsA(const TypeMatcher<InvalidRectException>()),
         );
       },
     );
@@ -82,7 +82,7 @@ void main() {
             topLeft: Offset(200, 50),
             bottomRight: Offset(100, 100),
           ),
-          throwsA(const TypeMatcher<NegativeSizeError>()),
+          throwsA(const TypeMatcher<NegativeSizeException>()),
         );
       },
     );

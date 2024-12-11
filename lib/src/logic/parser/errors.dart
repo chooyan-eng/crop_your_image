@@ -1,7 +1,7 @@
 import 'package:crop_your_image/src/logic/format_detector/format.dart';
 
-class InvalidInputFormatError implements Exception {
+class InvalidInputFormatException implements Exception {
   final ImageFormat? inputFormat;
 
-  InvalidInputFormatError(this.inputFormat);
+  InvalidInputFormatException(this.inputFormat);
 }

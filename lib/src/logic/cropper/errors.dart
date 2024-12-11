@@ -1,20 +1,20 @@
 import 'dart:ui';
 
-class NegativeSizeError implements Exception {
+class NegativeSizeException implements Exception {
   final Offset topLeft;
   final Offset bottomRight;
 
-  NegativeSizeError({
+  NegativeSizeException({
     required this.topLeft,
     required this.bottomRight,
   });
 }
 
-class InvalidRectError implements Exception {
+class InvalidRectException implements Exception {
   final Offset topLeft;
   final Offset bottomRight;
 
-  InvalidRectError({
+  InvalidRectException({
     required this.topLeft,
     required this.bottomRight,
   });
