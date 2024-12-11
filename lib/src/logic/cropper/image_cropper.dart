@@ -51,7 +51,7 @@ abstract class ImageCropper<T> {
   CircleCropper<T> get circleCropper;
 }
 
-typedef RectValidator<T> = Error? Function(
+typedef RectValidator<T> = Exception? Function(
     T original, Offset topLeft, Offset bottomRight);
 typedef RectCropper<T> = Uint8List Function(
   T original, {
