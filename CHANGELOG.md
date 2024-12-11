@@ -1,3 +1,7 @@
+## [2.0.0-dev.5] - 2024.12.11
+* **Important Breaking Change:** Change the type of `onCropped` callback from `Uint8List` to `CropResult`.
+* Add `filterQuality` argument to `Crop` widget.
+
 ## [2.0.0-dev.4] - 2024.12.10
 * Add `onImageMoved` callback that notifies image moved when `interactive` is enabled.
 * Add `overlayBuilder` argument to `Crop` widget that enables to configure overlay on cropping area.

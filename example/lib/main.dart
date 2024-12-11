@@ -125,16 +125,20 @@ class _CropSampleState extends State<CropSample> {
                           image: _imageDataList[_currentImage],
                           onCropped: (result) {
                             switch (result) {
-                              case CropSuccess():
-                                _croppedData = result.croppedImage;
-                              case CropFailure():
+                              case CropSuccess(:final croppedImage):
+                                _croppedData = croppedImage;
+                              case CropFailure(:final error):
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: Text('Error'),
-                                    content: Text('Failed to crop image: ${result.error}'),
+                                    content:
+                                        Text('Failed to crop image: ${error}'),
                                     actions: [
-                                      TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+                                      TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: Text('OK')),
                                     ],
                                   ),
                                 );

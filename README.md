@@ -48,8 +48,13 @@ Widget build(BuildContext context) {
   return Crop(
     image: _imageData, 
     controller: _controller,
-    onCropped: (image) {
-      // do something with cropped image data 
+    onCropped: (result) {
+      switch(result) {
+        case CropResult.success(:final croppedImage):
+          // do something with cropped image data 
+        case CropResult.error(:final error):
+          // do something with error
+      }
     }
   );
 }
@@ -105,8 +110,13 @@ Widget build(BuildContext context) {
   return Crop(
     image: _imageData,
     controller: _controller,
-    onCropped: (image) {
-      // do something with image data 
+    onCropped: (result) {
+      switch(result) {
+        case CropResult.success(:final croppedImage):
+          // do something with cropped image data 
+        case CropResult.error(:final error):
+          // do something with error
+      }
     },
     aspectRatio: 4 / 3,
 
@@ -162,7 +172,7 @@ Widget build(BuildContext context) {
 |argument|type|description|
 |-|-|-|
 |image|Uint8List|Original image data to be cropped. The result of cropping operation can be obtained via `onCropped` callback.|
-|onCropped|void Function(Uint8List)|Callback called when cropping operation is completed.|
+|onCropped|void Function(CropResult)|Callback called when cropping operation is completed. The result is exposed as `CropResult` object. `CropResult.success()` contains cropped image data, and `CropResult.error()` contains error object.|
 |controller|CropController|Controller for managing cropping operation.|
 |aspectRatio|double?| Initial aspect ratio of crop rect. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
 |initialSize|double?| is the initial size of crop rect. `1.0` (or `null`, by default) fits the size of image, which means crop rect extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
@@ -182,6 +192,7 @@ Widget build(BuildContext context) {
 |interactive|bool?|Flag to enable _interactive_ mode that users can move / zoom images. `false` by default|
 |fixCropRect|bool?|Flag if crop rect should be fixed on _interactive_ mode. `false` by default|
 |clipBehavior|Clip?|Decide clipping strategy for `Crop`. `Clip.hardEdge` by default|
+|filterQuality|FilterQuality?|Decide filter quality for `Image` showing target image. `FilterQuality.low` by default|
 
 ### for Web
 
