@@ -303,6 +303,8 @@ class _CropEditorState extends State<_CropEditor> {
   /// detected image format with [widget.formatDetector]
   ImageFormat? _detectedFormat;
 
+  double? _sizeCache;
+
   @override
   void initState() {
     super.initState();
@@ -312,11 +314,11 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = (aspectRatio) {
-        _resizeWithSizeAndRatio(null, aspectRatio);
+        _resizeWithSizeAndRatio(_sizeCache, aspectRatio);
       }
       ..onChangeWithCircleUi = (withCircleUi) {
         _viewState = _readyState.copyWith(withCircleUi: withCircleUi);
-        _resizeWithSizeAndRatio(null, null);
+        _resizeWithSizeAndRatio(_sizeCache, null);
       }
       ..onImageChanged = _resetImage
       ..onChangeCropRect = (newCropRect) {
@@ -473,6 +475,7 @@ class _CropEditorState extends State<_CropEditor> {
         _resizeWithArea(builder.area);
       case (WithSizeAndRatioInitialRectBuilder()):
         _resizeWithSizeAndRatio(builder.size, builder.aspectRatio);
+        _sizeCache = builder.size;
       default:
         _resizeWithSizeAndRatio(null, widget.aspectRatio);
     }
