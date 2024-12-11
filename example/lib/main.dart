@@ -121,11 +121,23 @@ class _CropSampleState extends State<CropSample> {
                           willUpdateScale: (newScale) => newScale < 5,
                           controller: _cropController,
                           image: _imageDataList[_currentImage],
-                          onCropped: (croppedData) {
-                            setState(() {
-                              _croppedData = croppedData;
-                              _isCropping = false;
-                            });
+                          onCropped: (result) {
+                            switch (result) {
+                              case CropSuccess():
+                                _croppedData = result.croppedImage;
+                              case CropFailure():
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('Error'),
+                                    content: Text('Failed to crop image: ${result.error}'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+                                    ],
+                                  ),
+                                );
+                            }
+                            setState(() => _isCropping = false);
                           },
                           withCircleUi: _isCircleUi,
                           onStatusChanged: (status) => setState(() {

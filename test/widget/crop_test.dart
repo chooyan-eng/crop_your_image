@@ -31,34 +31,70 @@ void main() {
       },
     );
 
-    testWidgets(
-      'onCropped is called after calling CropController.crop()',
-      (tester) async {
-        // to ensure callback is called
-        final completer = Completer<void>();
+    group('onCropped', () {
+      testWidgets(
+        'onCropped is called after calling CropController.crop()',
+            (tester) async {
+          // to ensure callback is called
+          final completer = Completer<void>();
 
-        final controller = CropController();
-        final widget = withMaterial(
-          Crop(
-            image: testImage,
-            onCropped: (value) => completer.complete(),
-            controller: controller,
-          ),
-        );
+          final controller = CropController();
+          final widget = withMaterial(
+            Crop(
+              image: testImage,
+              onCropped: (value) => completer.complete(),
+              controller: controller,
+            ),
+          );
 
-        await tester.runAsync(() async {
-          await tester.pumpWidget(widget);
-          // wait for parsing image
-          await Future.delayed(const Duration(seconds: 2));
+          await tester.runAsync(() async {
+            await tester.pumpWidget(widget);
+            // wait for parsing image
+            await Future.delayed(const Duration(seconds: 2));
 
-          controller.crop();
-          // wait for cropping image
-          await Future.delayed(const Duration(seconds: 2));
-        });
+            controller.crop();
+            // wait for cropping image
+            await Future.delayed(const Duration(seconds: 2));
+          });
 
-        expect(completer.isCompleted, isTrue);
-      },
-    );
+          expect(completer.isCompleted, isTrue);
+        },
+      );
+
+      testWidgets(
+        'onCropped returns an error if cropping fails',
+            (tester) async {
+          // to ensure callback is called
+          bool hasError = false;
+
+          final controller = CropController();
+          final widget = withMaterial(
+            Crop(
+              image: testImage,
+              onCropped: (value) {
+                hasError = value is CropFailure;
+              },
+              controller: controller,
+              imageCropper: FailureCropper(),
+            ),
+          );
+
+          await tester.runAsync(() async {
+            await tester.pumpWidget(widget);
+            // wait for parsing image
+            await Future.delayed(const Duration(seconds: 2));
+
+            controller.crop();
+
+            // wait for cropping image
+            await Future.delayed(const Duration(seconds: 2));
+          });
+
+          expect(hasError, isTrue);
+        },
+      );
+    });
+
 
     testWidgets(
       'status is changing with null -> .ready -> .cropping -> .ready',
