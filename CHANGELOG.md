@@ -1,39 +1,28 @@
-## [2.0.0-dev.7] - 2024.12.13
-* Fix a bug of circle crop not working with JPEG images.
-* Fix a bug of causing cast error internally.
+## [2.0.0] - 2024.12.13
+### Breaking Changes
+This major update includes some breaking changes. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/176) for more details.
 
-## [2.0.0-dev.6] - 2024.12.12
-* Respect original image format and output with the same format.
-* Change how to implement `ImageCropper`.
+### Interface Enhancements
+* Change the argument type exposed by `onCropped` callback into `CropResult` from `Uint8List`. This allows to handle errors as well as cropped image data. Thank you [@justprodev](https://github.com/justprodev) for your idea at [#145](https://github.com/chooyan-eng/crop_your_image/issues/145)!
+* Change how to implement `ImageCropper` to make it more flexibly customizable.
+* `onMoved` callback passes additional `imageRect` parameter.
 * Errors are now implementing `Exception` instead of `Error`.
-* Fix a bug of `InvalidRectError` happening unexpectedly.
+* Change the type of `initialRectBuilder` to `InitialRectBuilder`, and now legacy `initialArea` and `initialSize` are removed and merged into `InitialRectBuilder` to avoid confusion.
+
+### New Features
+* Add undo / redo related features. See [README.md](README.md) for more details.
+* Respect original image format and output with the same format. Thank you [@komakur](https://github.com/komakur) for your idea and sample code at [#48](https://github.com/chooyan-eng/crop_your_image/issues/48)!
+* Add `filterQuality` argument to `Crop` widget. Thank you [@abichinger](https://github.com/abichinger) for your discussion and contribution at [#108](https://github.com/chooyan-eng/crop_your_image/pull/108)!
+* Add `onImageMoved` callback that notifies image moved when `interactive` is enabled. Thank you [@yujune](https://github.com/yujune) and [@eidolonFIRE](https://github.com/eidolonFIRE) for your contribution at [#159](https://github.com/chooyan-eng/crop_your_image/pull/159)! and [#92](https://github.com/chooyan-eng/crop_your_image/pull/92)!
+* Add `overlayBuilder` argument to `Crop` widget that enables to configure overlay on cropping area. Thank you [@abichinger](https://github.com/abichinger) for your contribution at [#107](https://github.com/chooyan-eng/crop_your_image/pull/107)!
+
+### Bug Fixes
+* Fix a bug of circle crop not working with JPEG images.
+* Fix a bug of `InvalidRectError` happening unexpectedly. Thank you [@feimenggo](https://github.com/feimenggo) and [@Lenkomotive](https://github.com/Lenkomotive) for your fixes at [#163](https://github.com/chooyan-eng/crop_your_image/pull/163)! and [#153](https://github.com/chooyan-eng/crop_your_image/pull/153)!
 * Fix a bug of using unmounted context.
-* Fix a bug of not expecting initial size of cropping rect when changing aspect ratio.
-* Fix some typos.
-
-## [2.0.0-dev.5] - 2024.12.11
-* **Important Breaking Change:** Change the type of `onCropped` callback from `Uint8List` to `CropResult`.
-* Add `filterQuality` argument to `Crop` widget.
-
-## [2.0.0-dev.4] - 2024.12.10
-* Add `onImageMoved` callback that notifies image moved when `interactive` is enabled.
-* Add `overlayBuilder` argument to `Crop` widget that enables to configure overlay on cropping area.
-* Fix a bug that UI goes to loading state when rebuild happens.
-* Fix a bug of `InvalidRectError` happening unexpectedly.
 * Fix a bug of crashing after disposing `Crop` widget.
 
-## [2.0.0-dev.3] - 2024.12.9
-* Change the type of `initialRectBuilder` to `InitialRectBuilder`, and now legacy `initialArea` and `initialSize` are removed and merged into `InitialRectBuilder`.
-* Add `InitialRectBuilder.withSizeAndRatio` to configure initial `aspectRatio`.
-
-## [2.0.0-dev.2] - 2024.12.08
-* Add undo / redo related features. See [README.md](README.md) for more details.
-
-## [2.0.0-dev.1] - 2024.12.07
-* `onMoved` callback passes additional `imageRect` parameter.
-* Refactor the entire codebase
-* Add test codes
-* Add `topic` to pubspec.yaml
+Big appreciation to all the contributors joining discussions and sending PRs!
 
 ## [1.1.0] - 2024.5.29
 * apply changes of latest version of `image` package
