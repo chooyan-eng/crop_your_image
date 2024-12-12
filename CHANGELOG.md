@@ -1,3 +1,7 @@
+## [2.0.0-dev.7] - 2024.12.13
+* Fix a bug of circle crop not working with JPEG images.
+* Fix a bug of causing cast error internally.
+
 ## [2.0.0-dev.6] - 2024.12.12
 * Respect original image format and output with the same format.
 * Change how to implement `ImageCropper`.
