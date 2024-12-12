@@ -12,7 +12,7 @@ class CropSuccess extends CropResult {
 }
 
 class CropFailure extends CropResult {
-  const CropFailure(this.error, [this.stackTrace]);
-  final Object error;
+  const CropFailure(this.cause, [this.stackTrace]);
+  final Object cause;
   final StackTrace? stackTrace;
 }

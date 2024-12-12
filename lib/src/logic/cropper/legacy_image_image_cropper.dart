@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:crop_your_image/crop_your_image.dart';
@@ -6,14 +5,16 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:image/image.dart' hide ImageFormat;
 
 /// an implementation of [ImageCropper] using image package
-class ImageImageCropper extends ImageCropper<Image> {
-  const ImageImageCropper();
+/// this implementation is legacy that behaves the same as the version 1.1.0 or earlier
+/// meaning that it doesn't respect the outputFormat and always encode result as png
+class LegacyImageImageCropper extends ImageCropper<Image> {
+  const LegacyImageImageCropper();
 
   @override
-  RectCropper<Image> get rectCropper => defaultRectCropper;
+  RectCropper<Image> get rectCropper => legacyRectCropper;
 
   @override
-  CircleCropper<Image> get circleCropper => defaultCircleCropper;
+  CircleCropper<Image> get circleCropper => legacyCircleCropper;
 
   @override
   RectValidator<Image> get rectValidator => defaultRectValidator;
@@ -21,13 +22,13 @@ class ImageImageCropper extends ImageCropper<Image> {
 
 /// process cropping image.
 /// this method is supposed to be called only via compute()
-final RectCropper<Image> defaultRectCropper = (
+final RectCropper<Image> legacyRectCropper = (
   Image original, {
   required Offset topLeft,
   required Size size,
   required ImageFormat? outputFormat,
 }) {
-  return _findEncodeFunc(outputFormat)(
+  return encodePng(
     copyCrop(
       original,
       x: topLeft.dx.toInt(),
@@ -40,7 +41,7 @@ final RectCropper<Image> defaultRectCropper = (
 
 /// process cropping image with circle shape.
 /// this method is supposed to be called only via compute()
-final CircleCropper<Image> defaultCircleCropper = (
+final CircleCropper<Image> legacyCircleCropper = (
   Image original, {
   required Offset center,
   required double radius,
@@ -50,7 +51,7 @@ final CircleCropper<Image> defaultCircleCropper = (
   final target =
       original.numChannels == 4 ? original : original.convert(numChannels: 4);
 
-  return _findCircleEncodeFunc(outputFormat)(
+  return encodePng(
     copyCropCircle(
       target,
       centerX: center.dx.toInt(),
@@ -59,23 +60,3 @@ final CircleCropper<Image> defaultCircleCropper = (
     ),
   );
 };
-
-Uint8List Function(Image) _findEncodeFunc(ImageFormat? outputFormat) {
-  return switch (outputFormat) {
-    ImageFormat.bmp => encodeBmp,
-    ImageFormat.ico => encodeIco,
-    ImageFormat.jpeg => encodeJpg,
-    ImageFormat.png => encodePng,
-    _ => encodePng,
-  };
-}
-
-Uint8List Function(Image) _findCircleEncodeFunc(ImageFormat? outputFormat) {
-  return switch (outputFormat) {
-    ImageFormat.bmp => encodeBmp,
-    ImageFormat.ico => encodeIco,
-    ImageFormat.jpeg => encodePng, // jpeg does not support circle crop
-    ImageFormat.png => encodePng,
-    _ => encodePng,
-  };
-}

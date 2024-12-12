@@ -52,7 +52,7 @@ void main() {
             testImage,
             inputFormat: ImageFormat.jpeg,
           ),
-          throwsA(const TypeMatcher<InvalidInputFormatError>()),
+          throwsA(const TypeMatcher<InvalidInputFormatException>()),
         );
       },
     );

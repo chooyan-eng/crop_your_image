@@ -13,7 +13,7 @@ final ImageParser<image.Image> imageImageParser = (data, {inputFormat}) {
   late final image.Image? tempImage;
   try {
     tempImage = _decodeWith(data, format: inputFormat);
-  } on InvalidInputFormatError {
+  } on InvalidInputFormatException {
     rethrow;
   }
 
@@ -45,6 +45,6 @@ image.Image? _decodeWith(Uint8List data, {ImageFormat? format}) {
       _ => image.decodeImage(data),
     };
   } on image.ImageException {
-    throw InvalidInputFormatError(format);
+    throw InvalidInputFormatException(format);
   }
 }

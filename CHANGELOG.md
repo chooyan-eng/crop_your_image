@@ -1,3 +1,40 @@
+## [2.0.0-dev.7] - 2024.12.13
+* Fix a bug of circle crop not working with JPEG images.
+* Fix a bug of causing cast error internally.
+
+## [2.0.0-dev.6] - 2024.12.12
+* Respect original image format and output with the same format.
+* Change how to implement `ImageCropper`.
+* Errors are now implementing `Exception` instead of `Error`.
+* Fix a bug of `InvalidRectError` happening unexpectedly.
+* Fix a bug of using unmounted context.
+* Fix a bug of not expecting initial size of cropping rect when changing aspect ratio.
+* Fix some typos.
+
+## [2.0.0-dev.5] - 2024.12.11
+* **Important Breaking Change:** Change the type of `onCropped` callback from `Uint8List` to `CropResult`.
+* Add `filterQuality` argument to `Crop` widget.
+
+## [2.0.0-dev.4] - 2024.12.10
+* Add `onImageMoved` callback that notifies image moved when `interactive` is enabled.
+* Add `overlayBuilder` argument to `Crop` widget that enables to configure overlay on cropping area.
+* Fix a bug that UI goes to loading state when rebuild happens.
+* Fix a bug of `InvalidRectError` happening unexpectedly.
+* Fix a bug of crashing after disposing `Crop` widget.
+
+## [2.0.0-dev.3] - 2024.12.9
+* Change the type of `initialRectBuilder` to `InitialRectBuilder`, and now legacy `initialArea` and `initialSize` are removed and merged into `InitialRectBuilder`.
+* Add `InitialRectBuilder.withSizeAndRatio` to configure initial `aspectRatio`.
+
+## [2.0.0-dev.2] - 2024.12.08
+* Add undo / redo related features. See [README.md](README.md) for more details.
+
+## [2.0.0-dev.1] - 2024.12.07
+* `onMoved` callback passes additional `imageRect` parameter.
+* Refactor the entire codebase
+* Add test codes
+* Add `topic` to pubspec.yaml
+
 ## [1.1.0] - 2024.5.29
 * apply changes of latest version of `image` package
 

@@ -5,6 +5,7 @@ import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/crop_editor_view_state.dart';
+import 'package:crop_your_image/src/widget/history_state.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -12,6 +13,9 @@ import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
+
+typedef History = ({int undoCount, int redoCount});
+typedef HistoryChangedCallback = void Function(History history);
 
 typedef WillUpdateScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
@@ -43,32 +47,33 @@ class Crop extends StatelessWidget {
   /// null, by default, means no fixed aspect ratio.
   final double? aspectRatio;
 
-  /// initial size of cropping rect.
-  /// Set double value less than 1.0.
-  /// if initialSize is 1.0 (or null),
-  /// cropping area would expand as much as possible.
-  final double? initialSize;
-
-  /// Builder for initial [ViewportBasedRect] of cropping rect.
-  /// Builder is called when calculating initial cropping rect
-  /// with passing [ViewportBasedRect] of viewport and image.
-  final CroppingRectBuilder? initialRectBuilder;
-
-  /// Initial [ImageBasedRect] of cropping rect, called "area" in this package.
+  /// builder object for initial cropping rect.
+  /// the legacy arguments of [initialSize], [initialArea], and [initialRectBuilder] are removed.
+  /// you can migrate to those arguments by passing [InitialRectBuilder.withSizeAndRatio], [InitialRectBuilder.withBuilder],
+  /// or [InitialRectBuilder.withArea].
+  ///
+  /// [InitialRectBuilder.withSizeAndRatio] enables you to set initial size and aspect ratio of cropping rect.
+  /// [size] need to be between 0.0 and 1.0, or null.
+  /// [aspectRatio] is an initial aspect ratio of cropping rect, which means user's interaction
+  /// will change this ratio.
+  ///
+  /// [InitialRectBuilder.withBuilder] enables you to build an initial [ViewportBasedRect] of cropping rect
+  /// with passed [ViewportBasedRect] of [viewportRect] and [imageRect].
+  ///
+  /// [InitialRectBuilder.withArea] enables you to set an initial [ViewportBasedRect] of cropping rect.
+  /// you can configure the rect based on [ImageBasedRect] and [Crop] will convert it to [ViewportBasedRect].
   ///
   /// Note that [ImageBasedRect] is [Rect] based on original [image] data, not screen.
   ///
   /// e.g. If the original image size is 1280x1024,
-  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [initialArea] would
+  /// giving [Rect.fromLTWH(240, 212, 800, 600)] as [area] would
   /// result in covering exact center of the image with 800x600 image size
   /// regardless of the size of viewport.
   ///
-  /// If [initialArea] is given, [initialSize] is ignored.
-  /// On the other hand, [aspectRatio] is still enabled although
-  /// [initialArea] is given and the initial shape of cropping rect looks ignoring [aspectRatio].
-  /// Once user moves cropping rect with their hand,
-  /// the shape of cropping area is re-calculated depending on [aspectRatio].
-  final ImageBasedRect? initialArea;
+  /// If [aspectRatio] is given at the same time, [Crop] will NOT cause error.
+  /// In that case, once user moves cropping rect with their hand,
+  /// the shape of cropping area is soon re-calculated depending on [aspectRatio].
+  final InitialRectBuilder? initialRectBuilder;
 
   /// flag if cropping image with circle shape.
   /// As oval shape is not supported, [aspectRatio] is fixed to 1 if [withCircleUi] is true.
@@ -125,6 +130,9 @@ class Crop extends StatelessWidget {
   /// If this function returns [false], scaling is canceled.
   final WillUpdateScale? willUpdateScale;
 
+  /// Callback called when history of crop editor operation is changed.
+  final HistoryChangedCallback? onHistoryChanged;
+
   /// (for Web) Sets the mouse-wheel zoom sensitivity for web applications.
   final double scrollZoomSensitivity;
 
@@ -148,9 +156,7 @@ class Crop extends StatelessWidget {
     required this.image,
     required this.onCropped,
     this.aspectRatio,
-    this.initialSize,
     this.initialRectBuilder,
-    this.initialArea,
     this.withCircleUi = false,
     this.controller,
     this.onMoved,
@@ -165,15 +171,15 @@ class Crop extends StatelessWidget {
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
     this.willUpdateScale,
-    this.formatDetector = defaultFormatDetector,
+    this.onHistoryChanged,
+    FormatDetector? formatDetector,
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
     this.filterQuality = FilterQuality.medium,
-  })  : assert((initialSize ?? 1.0) <= 1.0,
-            'initialSize must be less than 1.0, or null meaning not specified.'),
-        this.imageParser = imageParser ?? defaultImageParser;
+  })  : this.imageParser = imageParser ?? defaultImageParser,
+        this.formatDetector = formatDetector ?? defaultFormatDetector;
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +195,7 @@ class Crop extends StatelessWidget {
             image: image,
             onCropped: onCropped,
             aspectRatio: aspectRatio,
-            initialSize: initialSize,
             initialRectBuilder: initialRectBuilder,
-            initialArea: initialArea,
             withCircleUi: withCircleUi,
             controller: controller,
             onMoved: onMoved,
@@ -206,6 +210,7 @@ class Crop extends StatelessWidget {
             progressIndicator: progressIndicator,
             interactive: interactive,
             willUpdateScale: willUpdateScale,
+            onHistoryChanged: onHistoryChanged,
             scrollZoomSensitivity: scrollZoomSensitivity,
             imageCropper: imageCropper,
             formatDetector: formatDetector,
@@ -223,9 +228,7 @@ class _CropEditor extends StatefulWidget {
   final Uint8List image;
   final ValueChanged<CropResult> onCropped;
   final double? aspectRatio;
-  final double? initialSize;
-  final CroppingRectBuilder? initialRectBuilder;
-  final ImageBasedRect? initialArea;
+  final InitialRectBuilder? initialRectBuilder;
   final bool withCircleUi;
   final CropController? controller;
   final OnMovedCallback? onMoved;
@@ -240,6 +243,7 @@ class _CropEditor extends StatefulWidget {
   final Widget progressIndicator;
   final bool interactive;
   final WillUpdateScale? willUpdateScale;
+  final HistoryChangedCallback? onHistoryChanged;
   final ImageCropper imageCropper;
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
@@ -252,9 +256,7 @@ class _CropEditor extends StatefulWidget {
     required this.image,
     required this.onCropped,
     required this.aspectRatio,
-    required this.initialSize,
     required this.initialRectBuilder,
-    required this.initialArea,
     this.withCircleUi = false,
     required this.controller,
     required this.onMoved,
@@ -269,6 +271,7 @@ class _CropEditor extends StatefulWidget {
     required this.progressIndicator,
     required this.interactive,
     required this.willUpdateScale,
+    required this.onHistoryChanged,
     required this.imageCropper,
     required this.formatDetector,
     required this.imageParser,
@@ -287,6 +290,11 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// an object that preserve and expose all the state for _CropEditor
   late CropEditorViewState _viewState;
+
+  /// history state of crop editor operation for undo / redo
+  /// history is stored when zoom / pan is changed, as well as crop rect moved.
+  late final HistoryState _historyState;
+
   ReadyCropEditorViewState get _readyState =>
       _viewState as ReadyCropEditorViewState;
 
@@ -295,6 +303,8 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// detected image format with [widget.formatDetector]
   ImageFormat? _detectedFormat;
+
+  double? _sizeCache;
 
   @override
   void initState() {
@@ -305,41 +315,45 @@ class _CropEditorState extends State<_CropEditor> {
     _cropController.delegate = CropControllerDelegate()
       ..onCrop = _crop
       ..onChangeAspectRatio = (aspectRatio) {
-        _resizeWith(aspectRatio, null);
+        _resizeWithSizeAndRatio(_sizeCache, aspectRatio);
       }
       ..onChangeWithCircleUi = (withCircleUi) {
         _viewState = _readyState.copyWith(withCircleUi: withCircleUi);
-        _resizeWith(null, null);
+        _resizeWithSizeAndRatio(_sizeCache, null);
       }
       ..onImageChanged = _resetImage
       ..onChangeCropRect = (newCropRect) {
         _updateCropRect(_readyState.correct(newCropRect));
       }
       ..onChangeArea = (newArea) {
-        _resizeWith(widget.aspectRatio, newArea);
-      };
+        _resizeWithArea(newArea);
+      }
+      ..onUndo = _undo
+      ..onRedo = _redo;
+
+    // prepare for history state
+    _historyState = HistoryState(onHistoryChanged: widget.onHistoryChanged);
   }
 
   @override
   void didChangeDependencies() {
-    _viewState = PreparingCropEditorViewState(
-      viewportSize: MediaQuery.of(context).size,
-      withCircleUi: widget.withCircleUi,
-      aspectRatio: widget.aspectRatio,
-    );
-
     /// parse image with given parser and format detector
     _parseImageWith(
       parser: widget.imageParser,
       formatDetector: widget.formatDetector,
       image: widget.image,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
-        setState(() {
-          _viewState = (_viewState as PreparingCropEditorViewState).prepared(
-            Size(parsed.width, parsed.height),
-          );
-        });
+        if (_viewState is PreparingCropEditorViewState) {
+          setState(() {
+            _viewState = (_viewState as PreparingCropEditorViewState).prepared(
+              Size(parsed.width, parsed.height),
+            );
+          });
+        }
         _resetCropRect();
         widget.onStatusChanged?.call(CropStatus.ready);
       }
@@ -351,31 +365,33 @@ class _CropEditorState extends State<_CropEditor> {
   /// apply crop rect changed to view state
   void _updateCropRect(CropEditorViewState newState) {
     setState(() => _viewState = newState);
-    widget.onMoved?.call(_readyState.cropRect, _readyState.imageBaseRect);
+    widget.onMoved?.call(_readyState.cropRect, _readyState.rectToCrop);
   }
 
   /// reset image to be cropped
   void _resetImage(Uint8List targetImage) {
-    widget.onStatusChanged?.call(CropStatus.loading);
+    if (!mounted) {
+      return;
+    }
 
-    /// reset view state back to preparing state
-    _viewState = PreparingCropEditorViewState(
-      viewportSize: MediaQuery.of(context).size,
-      withCircleUi: widget.withCircleUi,
-      aspectRatio: widget.aspectRatio,
-    );
+    widget.onStatusChanged?.call(CropStatus.loading);
 
     _parseImageWith(
       parser: widget.imageParser,
       formatDetector: widget.formatDetector,
       image: targetImage,
     ).then((parsed) {
+      if (!mounted) {
+        return;
+      }
       if (parsed != null) {
-        setState(() {
-          _viewState = (_viewState as PreparingCropEditorViewState).prepared(
-            Size(parsed.width, parsed.height),
-          );
-        });
+        if (_viewState is PreparingCropEditorViewState) {
+          setState(() {
+            _viewState = (_viewState as PreparingCropEditorViewState).prepared(
+              Size(parsed.width, parsed.height),
+            );
+          });
+        }
         _resetCropRect();
         widget.onStatusChanged?.call(CropStatus.ready);
       }
@@ -397,12 +413,18 @@ class _CropEditorState extends State<_CropEditor> {
         _lastImage == image &&
         _lastFormatDetector == formatDetector) {
       // no change
-      return null;
+      return _parsedImageDetail;
     }
 
     _lastParser = parser;
     _lastFormatDetector = formatDetector;
     _lastImage = image;
+
+    _viewState = PreparingCropEditorViewState(
+      viewportSize: MediaQuery.of(context).size,
+      withCircleUi: widget.withCircleUi,
+      aspectRatio: widget.aspectRatio,
+    );
 
     final format = formatDetector?.call(image);
     final future = compute(
@@ -435,22 +457,29 @@ class _CropEditorState extends State<_CropEditor> {
       widget.onImageMoved?.call(_readyState.imageRect);
     });
 
-    if (widget.initialRectBuilder != null) {
-      _updateCropRect(
-        _readyState.copyWith(
-          cropRect: widget.initialRectBuilder!(
-            Rect.fromLTWH(
-              0,
-              0,
-              _readyState.viewportSize.width,
-              _readyState.viewportSize.height,
+    final builder = widget.initialRectBuilder;
+    switch (builder) {
+      case (WithBuilderInitialRectBuilder()):
+        _updateCropRect(
+          _readyState.copyWith(
+            cropRect: builder.build(
+              Rect.fromLTWH(
+                0,
+                0,
+                _readyState.viewportSize.width,
+                _readyState.viewportSize.height,
+              ),
+              _readyState.imageRect,
             ),
-            _readyState.imageRect,
           ),
-        ),
-      );
-    } else {
-      _resizeWith(widget.aspectRatio, widget.initialArea);
+        );
+      case (WithAreaInitialRectBuilder()):
+        _resizeWithArea(builder.area);
+      case (WithSizeAndRatioInitialRectBuilder()):
+        _resizeWithSizeAndRatio(builder.size, builder.aspectRatio);
+        _sizeCache = builder.size;
+      default:
+        _resizeWithSizeAndRatio(null, widget.aspectRatio);
     }
 
     if (widget.interactive) {
@@ -458,18 +487,32 @@ class _CropEditorState extends State<_CropEditor> {
     }
   }
 
+  void _resizeWithArea(ImageBasedRect area) {
+    // calculate how smaller the viewport is than the image
+    _updateCropRect(_readyState.cropRectWith(area));
+  }
+
   /// resize crop rect with given aspect ratio and area.
-  void _resizeWith(double? aspectRatio, ImageBasedRect? area) {
-    if (area == null) {
-      _updateCropRect(
-        _readyState.cropRectInitialized(
-          initialSize: widget.initialSize,
-          aspectRatio: aspectRatio,
-        ),
-      );
-    } else {
-      // calculate how smaller the viewport is than the image
-      _updateCropRect(_readyState.cropRectWith(area));
+  void _resizeWithSizeAndRatio(double? size, double? aspectRatio) {
+    _updateCropRect(
+      _readyState.cropRectInitialized(
+        initialSize: size,
+        aspectRatio: aspectRatio,
+      ),
+    );
+  }
+
+  void _undo() {
+    final last = _historyState.requestUndo(_readyState);
+    if (last != null) {
+      _updateCropRect(last);
+    }
+  }
+
+  void _redo() {
+    final last = _historyState.requestRedo(_readyState);
+    if (last != null) {
+      _updateCropRect(last);
     }
   }
 
@@ -493,7 +536,7 @@ class _CropEditorState extends State<_CropEditor> {
         ],
       );
       cropResult = CropSuccess(image);
-    } catch(e, trace) {
+    } catch (e, trace) {
       cropResult = CropFailure(e, trace);
     }
 
@@ -506,6 +549,7 @@ class _CropEditorState extends State<_CropEditor> {
 
   /// handle scale events with pinching
   void _handleScaleStart(ScaleStartDetails detail) {
+    _historyState.pushHistory(_readyState);
     _baseScale = _readyState.scale;
   }
 
@@ -521,9 +565,18 @@ class _CropEditorState extends State<_CropEditor> {
     );
   }
 
+  DateTime? _pointerSignalLastUpdated;
+
   /// handle mouse pointer signal event
   void _handlePointerSignal(PointerSignalEvent signal) {
     if (signal is PointerScrollEvent) {
+      final now = DateTime.now();
+      if (_pointerSignalLastUpdated == null ||
+          now.difference(_pointerSignalLastUpdated!).inMilliseconds > 500) {
+        _pointerSignalLastUpdated = now;
+        _historyState.pushHistory(_readyState);
+      }
+
       if (signal.scrollDelta.dy > 0) {
         _applyScale(
           _readyState.scale - widget.scrollZoomSensitivity,
@@ -617,6 +670,8 @@ class _CropEditorState extends State<_CropEditor> {
                   left: _readyState.cropRect.left,
                   top: _readyState.cropRect.top,
                   child: GestureDetector(
+                    onPanStart: (details) =>
+                        _historyState.pushHistory(_readyState),
                     onPanUpdate: (details) => _updateCropRect(
                       _readyState.moveRect(details.delta),
                     ),
@@ -631,6 +686,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.left - (dotTotalSize / 2),
                 top: _readyState.cropRect.top - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -645,6 +702,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.right - (dotTotalSize / 2),
                 top: _readyState.cropRect.top - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -659,6 +718,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.left - (dotTotalSize / 2),
                 top: _readyState.cropRect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -673,6 +734,8 @@ class _CropEditorState extends State<_CropEditor> {
                 left: _readyState.cropRect.right - (dotTotalSize / 2),
                 top: _readyState.cropRect.bottom - (dotTotalSize / 2),
                 child: GestureDetector(
+                  onPanStart: (details) =>
+                      _historyState.pushHistory(_readyState),
                   onPanUpdate: widget.fixCropRect
                       ? null
                       : (details) => _updateCropRect(
@@ -703,14 +766,13 @@ FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
   final originalImage = args[1];
   final rect = args[2] as Rect;
   final withCircleShape = args[3] as bool;
-
-  // TODO(chooyan-eng): currently always PNG
-  // final outputFormat = args[4] as ImageFormat?;
+  final outputFormat = args[4] as ImageFormat;
 
   return cropper.call(
     original: originalImage,
     topLeft: Offset(rect.left, rect.top),
     bottomRight: Offset(rect.right, rect.bottom),
     shape: withCircleShape ? ImageShape.circle : ImageShape.rectangle,
+    outputFormat: outputFormat,
   );
 }

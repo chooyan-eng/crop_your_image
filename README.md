@@ -6,9 +6,9 @@ A flutter plugin that provides `Crop` widget for cropping images.
 
 # Philosophy
 
-crop_your_image provides _flexible_ and _custamizable_ `Crop` widget that can be placed at anywhere in your well designed apps.
+crop_your_image provides _flexible_ and _customizable_ `Crop` widget that can be placed at anywhere in your well designed apps.
 
-As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed anywhere such as, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottomsheets. It's totally up to you!
+As `Crop` is a simple widget displaying minimum cropping UI, `Crop` can be placed anywhere such as, for example, occupying entire screen, at top half of the screen, or even on dialogs or bottom sheets. It's totally up to you!
 
 Users' cropping operation is also customizable. By default, images are fixed on the screen and users can move crop rect to decide where to crop. Once configured _interactive_ mode, images can be zoomed/panned, and crop rect can be configured as fixed.
 
@@ -26,6 +26,7 @@ Enjoy building your own cropping UI with __crop_your_image__!
 - Fix __aspect ratio__
 - Configure `Rect` of _crop rect_ programmatically
 - Detect events of users' operation
+- Undo / Redo operation
 - (advanced) Cropping backend logics are also customizable
 
 Note that this package _DON'T_
@@ -47,8 +48,13 @@ Widget build(BuildContext context) {
   return Crop(
     image: _imageData, 
     controller: _controller,
-    onCropped: (image) {
-      // do something with cropped image data 
+    onCropped: (result) {
+      switch(result) {
+        case CropResult.success(:final croppedImage):
+          // do something with cropped image data 
+        case CropResult.error(:final error):
+          // do something with error
+      }
     }
   );
 }
@@ -56,7 +62,7 @@ Widget build(BuildContext context) {
 
 Then, `Crop` widget will automatically display cropping editor UI on users screen with given image.
 
-By passing `CropController` instance to `controller` argument of `Crop`'s constructor, you can controll the `Crop` widget from anywhere on your source code.
+By passing `CropController` instance to `controller` argument of `Crop`'s constructor, you can control the `Crop` widget from anywhere on your source code.
 
 For example, when you want to crop the image with the current crop rect, you can just call `_controller.crop()` whenever you want, such like the code below.
 
@@ -69,6 +75,31 @@ ElevatedButton(
 
 Because `_controller.crop()` only kicks the cropping process, this method returns immediately without any cropped image data. You can obtain the result of cropping images via `onCropped` callback of `Crop` Widget.
 
+### Undo / Redo
+
+
+`CropController` also provides `undo` and `redo` methods.
+
+```dart
+ElevatedButton(
+  child: Text('Undo')
+  onPressed: () => _cropController.undo(),
+),
+```
+
+You can also detect history of crop rect changes via `onHistoryChanged` callback of `Crop` Widget. This callback exposes `History` object, which contains `undoCount` and `redoCount`, that indicates how many times undo / redo operation is available.
+
+```dart
+Crop(
+  onHistoryChanged: (history) {
+    setState(() {
+      _undoEnabled = history.undoCount > 0;
+      _redoEnabled = history.redoCount > 0;
+    });
+  },
+)
+```
+
 ### List of configurations 
 All the arguments of `Crop` and usages are below.
 
@@ -79,22 +110,45 @@ Widget build(BuildContext context) {
   return Crop(
     image: _imageData,
     controller: _controller,
-    onCropped: (image) {
-      // do something with image data 
+    onCropped: (result) {
+      switch(result) {
+        case CropResult.success(:final croppedImage):
+          // do something with cropped image data 
+        case CropResult.error(:final error):
+          // do something with error
+      }
     },
     aspectRatio: 4 / 3,
-    // initialSize: 0.5,
-    // initialArea: Rect.fromLTWH(240, 212, 800, 600),
-    initialRectBuilder: (rect) => Rect.fromLTRB(
-      rect.left + 24, rect.top + 32, rect.right - 24, rect.bottom - 32
-    ), 
+
+    initialRectBuilder: InitialRectBuilder.withBuilder((viewportRect, imageRect) {
+      return Rect.fromLTRB(
+        viewportRect.left + 24,
+        viewportRect.top + 32,
+        viewportRect.right - 24,
+        viewportRect.bottom - 32,
+      );
+    }),
+    // initialRectBuilder: InitialRectBuilder.withArea(
+    //   ImageBasedRect.fromLTWH(240, 212, 800, 600),
+    // ),
+    // initialRectBuilder: InitialRectBuilder.withSizeAndRatio(
+    //   size: 0.5,
+    //   aspectRatio: 4 / 3,
+    // ),
+
     // withCircleUi: true,
     baseColor: Colors.blue.shade900,
     maskColor: Colors.white.withAlpha(100),
+    overlayBuilder: (context, rect) {
+      return CustomPaint(painter: MyPainter(rect));
+    },
     progressIndicator: const CircularProgressIndicator(),
     radius: 20,
     onMoved: (newRect) {
       // do something with current crop rect.
+    },
+    onImageMoved: (newImageRect) {
+      // do something with current image rect.
     },
     onStatusChanged: (status) {
       // do something with current CropStatus
@@ -107,6 +161,7 @@ Widget build(BuildContext context) {
     clipBehavior: Clip.none,
     interactive: true,
     // fixCropRect: true,
+
     // formatDetector: (image) {},
     // imageCropper: myCustomImageCropper,
     // imageParser: (image, {format}) {},
@@ -117,17 +172,19 @@ Widget build(BuildContext context) {
 |argument|type|description|
 |-|-|-|
 |image|Uint8List|Original image data to be cropped. The result of cropping operation can be obtained via `onCropped` callback.|
-|onCropped|void Function(Uint8List)|Callback called when cropping operation is completed.|
+|onCropped|void Function(CropResult)|Callback called when cropping operation is completed. The result is exposed as `CropResult` object. `CropResult.success()` contains cropped image data, and `CropResult.error()` contains error object.|
 |controller|CropController|Controller for managing cropping operation.|
 |aspectRatio|double?| Initial aspect ratio of crop rect. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
 |initialSize|double?| is the initial size of crop rect. `1.0` (or `null`, by default) fits the size of image, which means crop rect extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
-|initialArea|Rect?|Initial `Rect` of crop rect based on actual image size.|
-|initialRectBuilder|Rect Function(Rect)|Callback to decide initial `Rect` of crop  rect based on viewport of `Crop` itself. `Rect` of `Crop`'s viewport is passed as an argument of the callback.|
+|initialRectBuilder|InitialRectBuilder?|An object preserving configuration for building the initial crop rect. `InitialRectBuilder.withBuilder` enables you to configure the rect with a function to decide initial `Rect` of crop rect based on viewport of `Crop` itself. `InitialRectBuilder.withArea` enables you to configure the rect with `ImageBasedRect` which is based on actual image size. `InitialRectBuilder.withSizeAndRatio` enables you to configure the rect with `size` and `aspectRatio`.|
 |withCircleUi|bool|Flag to decide the shape of cropping UI. If `true`, the shape of cropping UI is circle and `aspectRatio` is automatically set `1.0`. Note that this flag does NOT affect to the result of cropping image. If you want cropped images with circle shape, call `CropController.cropCircle` instead of `CropController.crop`.|
 |maskColor|Color?|Color of the mask widget which is placed over the cropping editor.|
 |baseColor|Color?|Color of the base color of the cropping editor.|
+|overlayBuilder|Widget Function(BuildContext, ViewportBasedRect)?|Builder function to build Widget placed over the cropping rect. `rect` of argument is current `ViewportBasedRect` of crop rect.|
 |radius|double?|Corner radius of crop rect.|
-|onMoved|void Function(Rect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `Rect` of crop rect.|
+|onMoved|void Function(ViewportBasedRect)?|Callback called when crop rect is moved regardless of its reasons. `newRect` of argument is current `ViewportBasedRect` of crop rect.|
+|onImageMoved|void Function(ViewportBasedRect)?|Callback called when image is moved regardless of its reasons. `newImageRect` of argument is current `ViewportBasedRect` of image.|
+|onHistoryChanged|void Function(History)?|Callback called when history of crop rect is changed. This history allows you to undo / redo feature is available or not.|
 |onStatusChanged|void Function(CropStatus)?|Callback called when status of Crop is changed.|
 |willUpdateScale|bool Function(double)?|Callback called before scale changes on _interactive_ mode. By returning `false` to this callback, updating scale will be canceled.|
 |cornerDotBuilder|Widget Function(Size, EdgeAlignment)?|Builder function to build Widget placed at four corners used to move crop rect. The builder passes `size` which widget must follow and `edgeAlignment` which indicates the position.|
@@ -135,6 +192,7 @@ Widget build(BuildContext context) {
 |interactive|bool?|Flag to enable _interactive_ mode that users can move / zoom images. `false` by default|
 |fixCropRect|bool?|Flag if crop rect should be fixed on _interactive_ mode. `false` by default|
 |clipBehavior|Clip?|Decide clipping strategy for `Crop`. `Clip.hardEdge` by default|
+|filterQuality|FilterQuality?|Decide filter quality for `Image` showing target image. `FilterQuality.low` by default|
 
 ### for Web
 
@@ -156,7 +214,7 @@ by passing the arguments below.
 |-|-|-|
 |formatDetector|ImageFormat Function(Uint8List)?|Function to detect the format of original image. By detecting the format before `imageParser` parses the original image from `Uint8List` to `ImageDetail`, `imageParser` will sufficiently parse the binary, which means the initializing operation speeds up. `defaultFormatDetector` is used by default|
 |imageParser|ImageDetail<T> Function(Uint8List, {ImageFormat})?|Function for parsing original image from `Uint8List` to `ImageDetail`, which preserve `height`, `width` and parsed `image` with generic type `<T>`. `image` is passed to `imageCropper` with `Rect` to be cropped. `defaultImageParser` is used by default|
-|imageCropper|ImageCropper<T>?|By implementing `ImageCropeper<T>` and passing its instance to this argument, you can exchange cropping logic. `defaultImageCropper` is used by default|
+|imageCropper|ImageCropper<T>?|By implementing `ImageCropper<T>` and passing its instance to this argument, you can exchange cropping logic. `defaultImageCropper` is used by default|
 
 # Gallery App
 
