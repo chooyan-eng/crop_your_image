@@ -347,11 +347,13 @@ class _CropEditorState extends State<_CropEditor> {
         return;
       }
       if (parsed != null) {
-        setState(() {
-          _viewState = (_viewState as PreparingCropEditorViewState).prepared(
-            Size(parsed.width, parsed.height),
-          );
-        });
+        if (_viewState is PreparingCropEditorViewState) {
+          setState(() {
+            _viewState = (_viewState as PreparingCropEditorViewState).prepared(
+              Size(parsed.width, parsed.height),
+            );
+          });
+        }
         _resetCropRect();
         widget.onStatusChanged?.call(CropStatus.ready);
       }
@@ -374,13 +376,6 @@ class _CropEditorState extends State<_CropEditor> {
 
     widget.onStatusChanged?.call(CropStatus.loading);
 
-    /// reset view state back to preparing state
-    _viewState = PreparingCropEditorViewState(
-      viewportSize: MediaQuery.of(context).size,
-      withCircleUi: widget.withCircleUi,
-      aspectRatio: widget.aspectRatio,
-    );
-
     _parseImageWith(
       parser: widget.imageParser,
       formatDetector: widget.formatDetector,
@@ -390,11 +385,13 @@ class _CropEditorState extends State<_CropEditor> {
         return;
       }
       if (parsed != null) {
-        setState(() {
-          _viewState = (_viewState as PreparingCropEditorViewState).prepared(
-            Size(parsed.width, parsed.height),
-          );
-        });
+        if (_viewState is PreparingCropEditorViewState) {
+          setState(() {
+            _viewState = (_viewState as PreparingCropEditorViewState).prepared(
+              Size(parsed.width, parsed.height),
+            );
+          });
+        }
         _resetCropRect();
         widget.onStatusChanged?.call(CropStatus.ready);
       }

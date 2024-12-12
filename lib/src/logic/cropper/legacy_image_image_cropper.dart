@@ -47,9 +47,13 @@ final CircleCropper<Image> legacyCircleCropper = (
   required double radius,
   required ImageFormat? outputFormat,
 }) {
+  // convert to rgba if necessary
+  final target =
+      original.numChannels == 4 ? original : original.convert(numChannels: 4);
+
   return encodePng(
     copyCropCircle(
-      original,
+      target,
       centerX: center.dx.toInt(),
       centerY: center.dy.toInt(),
       radius: radius.toInt(),

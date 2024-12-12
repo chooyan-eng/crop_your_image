@@ -27,7 +27,7 @@ final RectCropper<Image> defaultRectCropper = (
   required Size size,
   required ImageFormat? outputFormat,
 }) {
-  return _findCropFunc(outputFormat)(
+  return _findEncodeFunc(outputFormat)(
     copyCrop(
       original,
       x: topLeft.dx.toInt(),
@@ -46,9 +46,13 @@ final CircleCropper<Image> defaultCircleCropper = (
   required double radius,
   required ImageFormat? outputFormat,
 }) {
-  return _findCropFunc(outputFormat)(
+  // convert to rgba if necessary
+  final target =
+      original.numChannels == 4 ? original : original.convert(numChannels: 4);
+
+  return _findCircleEncodeFunc(outputFormat)(
     copyCropCircle(
-      original,
+      target,
       centerX: center.dx.toInt(),
       centerY: center.dy.toInt(),
       radius: radius.toInt(),
@@ -56,11 +60,21 @@ final CircleCropper<Image> defaultCircleCropper = (
   );
 };
 
-Uint8List Function(Image) _findCropFunc(ImageFormat? outputFormat) {
+Uint8List Function(Image) _findEncodeFunc(ImageFormat? outputFormat) {
   return switch (outputFormat) {
     ImageFormat.bmp => encodeBmp,
     ImageFormat.ico => encodeIco,
     ImageFormat.jpeg => encodeJpg,
+    ImageFormat.png => encodePng,
+    _ => encodePng,
+  };
+}
+
+Uint8List Function(Image) _findCircleEncodeFunc(ImageFormat? outputFormat) {
+  return switch (outputFormat) {
+    ImageFormat.bmp => encodeBmp,
+    ImageFormat.ico => encodeIco,
+    ImageFormat.jpeg => encodePng, // jpeg does not support circle crop
     ImageFormat.png => encodePng,
     _ => encodePng,
   };
