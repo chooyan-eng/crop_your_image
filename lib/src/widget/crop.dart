@@ -93,6 +93,9 @@ class Crop extends StatelessWidget {
   /// which is called after loading [image] data for the first time.
   final ValueChanged<CropStatus>? onStatusChanged;
 
+  /// [Color] of the interactive area widget which is placed over the cropping editor.
+  final Color? interactiveAreaColor;
+
   /// [Color] of the mask widget which is placed over the cropping editor.
   final Color? maskColor;
 
@@ -163,6 +166,7 @@ class Crop extends StatelessWidget {
     this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
+    this.interactiveAreaColor,
     this.baseColor = Colors.white,
     this.radius = 0,
     this.cornerDotBuilder,
@@ -202,6 +206,7 @@ class Crop extends StatelessWidget {
             onImageMoved: onImageMoved,
             onStatusChanged: onStatusChanged,
             maskColor: maskColor,
+            interactiveAreaColor: interactiveAreaColor,
             baseColor: baseColor,
             radius: radius,
             cornerDotBuilder: cornerDotBuilder,
@@ -235,6 +240,7 @@ class _CropEditor extends StatefulWidget {
   final void Function(Rect imageRect)? onImageMoved;
   final ValueChanged<CropStatus>? onStatusChanged;
   final Color? maskColor;
+  final Color? interactiveAreaColor;
   final Color baseColor;
   final double radius;
   final CornerDotBuilder? cornerDotBuilder;
@@ -264,6 +270,7 @@ class _CropEditor extends StatefulWidget {
     required this.onStatusChanged,
     required this.maskColor,
     required this.baseColor,
+    required this.interactiveAreaColor,
     required this.radius,
     required this.cornerDotBuilder,
     required this.clipBehavior,
@@ -678,7 +685,7 @@ class _CropEditorState extends State<_CropEditor> {
                     child: Container(
                       width: _readyState.cropRect.width,
                       height: _readyState.cropRect.height,
-                      color: Colors.transparent,
+                       color: widget.interactiveAreaColor ?? Colors.transparent,
                     ),
                   ),
                 ),
