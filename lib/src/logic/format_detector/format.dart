@@ -5,4 +5,5 @@ enum ImageFormat {
   webp,
   bmp,
   ico,
+  gif,
 }
