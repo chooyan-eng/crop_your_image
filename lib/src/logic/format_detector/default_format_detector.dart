@@ -12,6 +12,7 @@ final FormatDetector imageFormatDetector = (Uint8List data) {
     img.ImageFormat.webp => ImageFormat.webp,
     img.ImageFormat.bmp => ImageFormat.bmp,
     img.ImageFormat.ico => ImageFormat.ico,
+    img.ImageFormat.gif => ImageFormat.gif,
     _ => ImageFormat.png,
   };
 };

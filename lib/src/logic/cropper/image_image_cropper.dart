@@ -66,6 +66,7 @@ Uint8List Function(Image) _findEncodeFunc(ImageFormat? outputFormat) {
     ImageFormat.ico => encodeIco,
     ImageFormat.jpeg => encodeJpg,
     ImageFormat.png => encodePng,
+    ImageFormat.gif => encodeGif,
     _ => encodePng,
   };
 }
@@ -76,6 +77,7 @@ Uint8List Function(Image) _findCircleEncodeFunc(ImageFormat? outputFormat) {
     ImageFormat.ico => encodeIco,
     ImageFormat.jpeg => encodePng, // jpeg does not support circle crop
     ImageFormat.png => encodePng,
+    ImageFormat.gif => encodeGif,
     _ => encodePng,
   };
 }

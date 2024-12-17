@@ -42,6 +42,7 @@ image.Image? _decodeWith(Uint8List data, {ImageFormat? format}) {
       ImageFormat.bmp => image.decodeBmp(data),
       ImageFormat.ico => image.decodeIco(data),
       ImageFormat.webp => image.decodeWebP(data),
+      ImageFormat.gif => image.decodeGif(data),
       _ => image.decodeImage(data),
     };
   } on image.ImageException {
