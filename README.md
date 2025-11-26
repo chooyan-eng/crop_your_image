@@ -29,6 +29,19 @@ Enjoy building your own cropping UI with __crop_your_image__!
 - Undo / Redo operation
 - (advanced) Cropping backend logics are also customizable
 
+## Supported Image Formats
+
+crop_your_image supports the following image formats:
+
+- **JPEG** (.jpg, .jpeg)
+- **PNG** (.png)
+- **WebP** (.webp)
+- **BMP** (.bmp)
+- **ICO** (.ico)
+- **HEIF/HEIC** (.heif, .heic) - Supported on iOS and Android
+
+> **Note on HEIF/HEIC**: HEIF (High Efficiency Image Format) and HEIC are modern image formats commonly used by iOS devices. The package automatically detects and converts HEIF/HEIC images to JPEG for processing. Platform support is provided via the `heif_converter` package, which uses native platform capabilities for conversion.
+
 Note that this package _DON'T_
 
 - read / download image data from any storages, such as gallery, internet, etc.

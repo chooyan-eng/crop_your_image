@@ -1,3 +1,14 @@
+## [2.1.0] - 2025.11.26
+### New Features
+* Add HEIF/HEIC format support for iOS and Android. The package now automatically detects and converts HEIF/HEIC images (commonly used on iOS devices) to JPEG for processing.
+
+### Breaking Changes
+* `ImageParser` typedef now returns `Future<ImageDetail<T>>` instead of `ImageDetail<T>` to support async image decoding operations required for HEIF conversion.
+
+### Improvements
+* Replace assertion with proper error handling for unsupported image formats. The package now throws `UnsupportedImageFormatException` with a clear error message instead of failing with an assertion error.
+* Add `InvalidInputFormatException` and `UnsupportedImageFormatException` to public API for better error handling.
+
 ## [2.0.0] - 2024.12.13
 ### Breaking Changes
 This major update includes some breaking changes. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/176) for more details.

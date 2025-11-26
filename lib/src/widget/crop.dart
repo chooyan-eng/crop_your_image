@@ -427,9 +427,10 @@ class _CropEditorState extends State<_CropEditor> {
     );
 
     final format = formatDetector?.call(image);
-    final future = compute(
-      _parseFunc,
-      [widget.imageParser, format, image],
+    final future = _parseImageAsync(
+      parser,
+      format,
+      image,
     );
     _lastComputed = future;
     final parsed = await future;
@@ -749,14 +750,38 @@ class _CropEditorState extends State<_CropEditor> {
             ],
           );
   }
+
+  Future<ImageDetail?> _parseImageAsync(
+    ImageParser parser,
+    ImageFormat? format,
+    Uint8List image,
+  ) async {
+    try {
+      // For HEIF/HEIC formats, we cannot use compute() because the conversion
+      // requires platform channels which need the main isolate
+      if (format == ImageFormat.heif || format == ImageFormat.heic) {
+        return await parser(image, inputFormat: format);
+      }
+      
+      // For other formats, use compute to avoid blocking the UI
+      return await compute(
+        _parseFunc,
+        [parser, format, image],
+      );
+    } catch (e) {
+      // Return null on error to allow error handling in the calling code
+      debugPrint('Error parsing image: $e');
+      return null;
+    }
+  }
 }
 
 /// top-level function for [compute]
 /// calls [ImageParser.call] with given arguments
-ImageDetail _parseFunc(List<dynamic> args) {
+Future<ImageDetail> _parseFunc(List<dynamic> args) async { args) async {
   final parser = args[0] as ImageParser;
   final format = args[1] as ImageFormat?;
-  return parser(args[2] as Uint8List, inputFormat: format);
+  return await parser(args[2] as Uint8List, inputFormat: format);
 }
 
 /// top-level function for [compute]
