@@ -19,8 +19,8 @@ void main() {
 
     test(
       'imageParser generates ImageDetail with width: 656, height: 453',
-      () {
-        final actual = imageParser(testImage);
+      () async {
+        final actual = await imageParser(testImage);
 
         expect(actual.width, 656);
         expect(actual.height, 453);
@@ -31,8 +31,8 @@ void main() {
     test(
       'imageParser generates ImageDetail with width: 656, height: 453'
       'when passing inputFormat: ImageFormat.png',
-      () {
-        final actual = imageParser(
+      () async {
+        final actual = await imageParser(
           testImage,
           inputFormat: ImageFormat.png,
         );
@@ -48,7 +48,7 @@ void main() {
       'when passing wrong inputFormat, ImageFormat.jpeg',
       () {
         expect(
-          () => imageParser(
+          imageParser(
             testImage,
             inputFormat: ImageFormat.jpeg,
           ),

@@ -33,8 +33,14 @@ bool _isHeifFormat(Uint8List data) {
       data[6] == 0x79 && // 'y'
       data[7] == 0x70 && // 'p'
       data.length >= 12 &&
-      ((data[8] == 0x68 && data[9] == 0x65 && data[10] == 0x69 && data[11] == 0x66) || // 'heif'
-          (data[8] == 0x6D && data[9] == 0x69 && data[10] == 0x66 && data[11] == 0x31)); // 'mif1'
+      ((data[8] == 0x68 &&
+              data[9] == 0x65 &&
+              data[10] == 0x69 &&
+              data[11] == 0x66) || // 'heif'
+          (data[8] == 0x6D &&
+              data[9] == 0x69 &&
+              data[10] == 0x66 &&
+              data[11] == 0x31)); // 'mif1'
 }
 
 /// Check if the data is in HEIC format by examining the file signature

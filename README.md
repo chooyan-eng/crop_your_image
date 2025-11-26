@@ -38,9 +38,9 @@ crop_your_image supports the following image formats:
 - **WebP** (.webp)
 - **BMP** (.bmp)
 - **ICO** (.ico)
-- **HEIF/HEIC** (.heif, .heic) - Supported on iOS and Android
+- **HEIF/HEIC** (.heif, .heic) - Supported on iOS, Android, Web, and macOS (conversion handled automatically)
 
-> **Note on HEIF/HEIC**: HEIF (High Efficiency Image Format) and HEIC are modern image formats commonly used by iOS devices. The package automatically detects and converts HEIF/HEIC images to JPEG for processing. Platform support is provided via the `heif_converter` package, which uses native platform capabilities for conversion.
+> **Note on HEIF/HEIC**: HEIF (High Efficiency Image Format) and HEIC are modern image formats commonly used by iOS devices. The package automatically detects and converts HEIF/HEIC images to JPEG for processing. Conversion is powered by [`heic_to_png_jpg`](https://pub.dev/packages/heic_to_png_jpg) on Android, iOS, and Web, and [`flutter_image_compress`](https://pub.dev/packages/flutter_image_compress) on macOS.
 
 Note that this package _DON'T_
 

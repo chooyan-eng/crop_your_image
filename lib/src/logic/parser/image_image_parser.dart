@@ -3,8 +3,11 @@ import 'dart:typed_data';
 import 'package:crop_your_image/src/logic/format_detector/format.dart';
 import 'package:crop_your_image/src/logic/parser/errors.dart';
 import 'package:crop_your_image/src/logic/parser/image_detail.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:heic_to_png_jpg/heic_to_png_jpg.dart' hide ImageFormat;
 import 'package:image/image.dart' as image;
-import 'package:heif_converter/heif_converter.dart';
 
 import 'image_parser.dart';
 
@@ -28,11 +31,12 @@ final ImageParser<image.Image> imageImageParser = (data, {inputFormat}) async {
   }
 
   // check orientation
-  final parsed = switch (tempImage?.exif.exifIfd.orientation ?? -1) {
-    3 => image.copyRotate(tempImage!, angle: 180),
-    6 => image.copyRotate(tempImage!, angle: 90),
-    8 => image.copyRotate(tempImage!, angle: -90),
-    _ => tempImage!,
+  final normalizedImage = tempImage;
+  final parsed = switch (normalizedImage.exif.exifIfd.orientation ?? -1) {
+    3 => image.copyRotate(normalizedImage, angle: 180),
+    6 => image.copyRotate(normalizedImage, angle: 90),
+    8 => image.copyRotate(normalizedImage, angle: -90),
+    _ => normalizedImage,
   };
 
   return ImageDetail(
@@ -47,7 +51,7 @@ Future<image.Image?> _decodeWith(Uint8List data, {ImageFormat? format}) async {
     // Handle HEIF/HEIC formats by converting to JPEG first
     if (format == ImageFormat.heif || format == ImageFormat.heic) {
       try {
-        final convertedData = await HeifConverter.convert(data, format: 'jpeg');
+        final convertedData = await _convertHeifToJpeg(data);
         if (convertedData != null) {
           return image.decodeJpg(convertedData);
         }
@@ -69,5 +73,30 @@ Future<image.Image?> _decodeWith(Uint8List data, {ImageFormat? format}) async {
     };
   } on image.ImageException {
     throw InvalidInputFormatException(format);
+  }
+}
+
+/// Converts HEIF bytes into JPEG data using the most suitable platform helper.
+/// Returns null if the current platform cannot perform the conversion.
+Future<Uint8List?> _convertHeifToJpeg(Uint8List data) async {
+  if (kIsWeb) {
+    return HeicConverter.convertToJPG(heicData: data, quality: 100);
+  }
+
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.iOS:
+    case TargetPlatform.android:
+      return HeicConverter.convertToJPG(heicData: data, quality: 100);
+    case TargetPlatform.macOS:
+      final converted = await FlutterImageCompress.compressWithList(
+        data,
+        format: CompressFormat.jpeg,
+        quality: 100,
+      );
+      return converted.isEmpty ? null : converted;
+    case TargetPlatform.fuchsia:
+    case TargetPlatform.windows:
+    case TargetPlatform.linux:
+      return null;
   }
 }

@@ -12,7 +12,7 @@ HEIF (High Efficiency Image Format) and HEIC (the specific variant used by Apple
 
 The package automatically:
 1. **Detects** HEIF/HEIC format by examining the file signature
-2. **Converts** the image to JPEG format using native platform capabilities
+2. **Converts** the image to JPEG format using platform-specific helpers
 3. **Processes** the converted image for cropping
 
 This happens seamlessly in the background - you don't need to change your code!
@@ -80,10 +80,10 @@ Crop(
 ## Platform Support
 
 HEIF/HEIC conversion is supported on:
-- **iOS**: Native support via platform channels
-- **Android**: Native support via platform channels (Android 8.0+ / API 26+)
-- **Web**: Currently not supported
-- **Desktop** (Windows, macOS, Linux): Support depends on the platform
+- **iOS / Android**: [`heic_to_png_jpg`](https://pub.dev/packages/heic_to_png_jpg) leverages the native `heif_converter` plugin under the hood (Android 8.0+ / API 26+ required)
+- **Web**: [`heic_to_png_jpg`](https://pub.dev/packages/heic_to_png_jpg) ships a Web implementation backed by `libheif-js`
+- **macOS**: [`flutter_image_compress`](https://pub.dev/packages/flutter_image_compress) converts HEIC payloads to JPEG on-device (macOS 10.15+)
+- **Windows / Linux / Fuchsia**: HEIF conversion is currently not available
 
 ## Performance Considerations
 
@@ -201,7 +201,7 @@ Widget build(BuildContext context) {
 
 ## Dependencies
 
-HEIF support is provided by the [`heif_converter`](https://pub.dev/packages/heif_converter) package, which is automatically included as a dependency.
+HEIF support is provided by the [`heic_to_png_jpg`](https://pub.dev/packages/heic_to_png_jpg) (Android/iOS/Web) and [`flutter_image_compress`](https://pub.dev/packages/flutter_image_compress) (macOS) packages, which are automatically included as dependencies.
 
 ## Migration from Earlier Versions
 

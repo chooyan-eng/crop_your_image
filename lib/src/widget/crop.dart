@@ -762,7 +762,7 @@ class _CropEditorState extends State<_CropEditor> {
       if (format == ImageFormat.heif || format == ImageFormat.heic) {
         return await parser(image, inputFormat: format);
       }
-      
+
       // For other formats, use compute to avoid blocking the UI
       return await compute(
         _parseFunc,
@@ -778,10 +778,11 @@ class _CropEditorState extends State<_CropEditor> {
 
 /// top-level function for [compute]
 /// calls [ImageParser.call] with given arguments
-Future<ImageDetail> _parseFunc(List<dynamic> args) async { args) async {
+Future<ImageDetail> _parseFunc(List<dynamic> args) async {
   final parser = args[0] as ImageParser;
   final format = args[1] as ImageFormat?;
-  return await parser(args[2] as Uint8List, inputFormat: format);
+  final data = args[2] as Uint8List;
+  return parser(data, inputFormat: format);
 }
 
 /// top-level function for [compute]
