@@ -117,7 +117,8 @@ class ReadyCropEditorViewState extends CropEditorViewState {
   }
 
   ReadyCropEditorViewState correct(ViewportBasedRect newCropRect) {
-    return copyWith(cropRect: calculator.correct(newCropRect, imageRect));
+    return copyWith(
+        cropRect: calculator.correct(newCropRect, _visibleImageRect));
   }
 
   ReadyCropEditorViewState cropRectInitialized({
@@ -136,14 +137,13 @@ class ReadyCropEditorViewState extends CropEditorViewState {
   }
 
   ReadyCropEditorViewState cropRectWith(ImageBasedRect area) {
-    return copyWith(
-      cropRect: Rect.fromLTWH(
-        imageRect.left + area.left / screenSizeRatio,
-        imageRect.top + area.top / screenSizeRatio,
-        area.width / screenSizeRatio,
-        area.height / screenSizeRatio,
-      ),
+    final rect = Rect.fromLTWH(
+      imageRect.left + area.left / screenSizeRatio,
+      imageRect.top + area.top / screenSizeRatio,
+      area.width / screenSizeRatio,
+      area.height / screenSizeRatio,
     );
+    return copyWith(cropRect: calculator.correct(rect, _visibleImageRect));
   }
 
   // Methods for state updates
@@ -152,7 +152,7 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       cropRect,
       delta.dx,
       delta.dy,
-      imageRect,
+      _visibleImageRect,
     );
     return copyWith(cropRect: newCropRect);
   }
@@ -162,7 +162,7 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       cropRect,
       delta.dx,
       delta.dy,
-      imageRect,
+      _visibleImageRect,
       aspectRatio,
     );
     return copyWith(cropRect: newCropRect);
@@ -173,7 +173,7 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       cropRect,
       delta.dx,
       delta.dy,
-      imageRect,
+      _visibleImageRect,
       aspectRatio,
     );
     return copyWith(cropRect: newCropRect);
@@ -184,7 +184,7 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       cropRect,
       delta.dx,
       delta.dy,
-      imageRect,
+      _visibleImageRect,
       aspectRatio,
     );
     return copyWith(cropRect: newCropRect);
@@ -195,7 +195,7 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       cropRect,
       delta.dx,
       delta.dy,
-      imageRect,
+      _visibleImageRect,
       aspectRatio,
     );
     return copyWith(cropRect: newCropRect);
@@ -299,6 +299,20 @@ class ReadyCropEditorViewState extends CropEditorViewState {
       offset: offset ?? this.offset,
       aspectRatio: aspectRatio ?? this.aspectRatio,
       withCircleUi: withCircleUi ?? this.withCircleUi,
+    );
+  }
+
+  ViewportBasedRect get _visibleImageRect {
+    final left = max(imageRect.left, 0.0);
+    final top = max(imageRect.top, 0.0);
+    final right = min(imageRect.right, viewportSize.width);
+    final bottom = min(imageRect.bottom, viewportSize.height);
+
+    return Rect.fromLTRB(
+      left,
+      top,
+      max(left, right),
+      max(top, bottom),
     );
   }
 }
