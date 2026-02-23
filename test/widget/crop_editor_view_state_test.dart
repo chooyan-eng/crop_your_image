@@ -154,6 +154,33 @@ void main() {
       expect(ratio, closeTo(1.5, 0.01));
     });
 
+    test('rectToCrop never exceeds image dimensions', () {
+      // Simulate a scenario where the crop rect covers the full image area,
+      // which can produce floating-point values slightly exceeding image bounds.
+      final imageSize = Size(800, 600);
+      final viewportSize = Size(360, 200);
+
+      final readyState = ReadyCropEditorViewState.prepared(
+        imageSize,
+        viewportSize: viewportSize,
+        scale: 1.0,
+        aspectRatio: null,
+        withCircleUi: false,
+      );
+
+      // Set crop rect to exactly match the image rect (full image selected)
+      final fullCropState = readyState.copyWith(
+        cropRect: readyState.imageRect,
+      );
+
+      final rect = fullCropState.rectToCrop;
+
+      expect(rect.right, lessThanOrEqualTo(imageSize.width));
+      expect(rect.bottom, lessThanOrEqualTo(imageSize.height));
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.top, greaterThanOrEqualTo(0));
+    });
+
     test('withCircleUi forces aspect ratio to 1.0', () {
       final state = ReadyCropEditorViewState.prepared(
         defaultImageSize,

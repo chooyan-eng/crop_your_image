@@ -151,6 +151,9 @@ class Crop extends StatelessWidget {
   /// The rendering quality of the image
   final FilterQuality filterQuality;
 
+  /// Defines the minimum allowed crop area dimensions (width and height) for the image.
+  final Size? minCroppedImageSize;
+
   Crop({
     super.key,
     required this.image,
@@ -177,6 +180,7 @@ class Crop extends StatelessWidget {
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
+    this.minCroppedImageSize,
     this.filterQuality = FilterQuality.medium,
   })  : this.imageParser = imageParser ?? defaultImageParser,
         this.formatDetector = formatDetector ?? defaultFormatDetector;
@@ -217,6 +221,7 @@ class Crop extends StatelessWidget {
             imageParser: imageParser,
             overlayBuilder: overlayBuilder,
             filterQuality: filterQuality,
+            minCroppedImageSize: minCroppedImageSize,
           ),
         );
       },
@@ -250,6 +255,7 @@ class _CropEditor extends StatefulWidget {
   final double scrollZoomSensitivity;
   final OverlayBuilder? overlayBuilder;
   final FilterQuality filterQuality;
+  final Size? minCroppedImageSize;
 
   const _CropEditor({
     super.key,
@@ -276,8 +282,9 @@ class _CropEditor extends StatefulWidget {
     required this.formatDetector,
     required this.imageParser,
     required this.scrollZoomSensitivity,
-    this.overlayBuilder,
     required this.filterQuality,
+    required this.minCroppedImageSize,
+    this.overlayBuilder,
   });
 
   @override
@@ -363,9 +370,117 @@ class _CropEditorState extends State<_CropEditor> {
   }
 
   /// apply crop rect changed to view state
-  void _updateCropRect(CropEditorViewState newState) {
-    setState(() => _viewState = newState);
-    widget.onMoved?.call(_readyState.cropRect, _readyState.rectToCrop);
+  ///
+  /// This function updates the crop rectangle while ensuring that the resulting
+  /// cropped image meets a specified minimum size. The idea is to adjust
+  /// the crop rectangle if it falls below the minimum allowed dimensions,
+  /// so that the final cropped image is never smaller than the set minimum size.
+  void _updateCropRect(CropEditorViewState state) {
+    final minCroppedImageSize = widget.minCroppedImageSize;
+
+    // If the state is not ready or no minimum size is set, proceed with the normal update.
+    if (state is! ReadyCropEditorViewState || minCroppedImageSize == null) {
+      setState(() => _viewState = state);
+      if (state is ReadyCropEditorViewState) {
+        widget.onMoved?.call(state.cropRect, state.rectToCrop);
+      }
+      return;
+    }
+
+    // Cast the state to a ready state to access its properties safely.
+    final readyState = state;
+
+    // Get the current crop rectangle from the state.
+    final newCropRect = readyState.cropRect;
+
+    // Convert the viewport-based crop rectangle to image-based coordinates.
+    final newRectToCrop = Rect.fromLTWH(
+      (newCropRect.left - readyState.imageRect.left) *
+          readyState.screenSizeRatio /
+          readyState.scale,
+      (newCropRect.top - readyState.imageRect.top) *
+          readyState.screenSizeRatio /
+          readyState.scale,
+      newCropRect.width * readyState.screenSizeRatio / readyState.scale,
+      newCropRect.height * readyState.screenSizeRatio / readyState.scale,
+    );
+
+    // Get the minimum width and height in image coordinates.
+    final minWInImageCoords = minCroppedImageSize.width;
+    final minHInImageCoords = minCroppedImageSize.height;
+
+    // Initialize variables for the rectangle in image coordinates.
+    double left = newRectToCrop.left;
+    double top = newRectToCrop.top;
+    double width = newRectToCrop.width;
+    double height = newRectToCrop.height;
+
+    // Adjust the width and height if they are smaller than the minimum allowed.
+    if (width < minWInImageCoords) {
+      width = minWInImageCoords;
+    }
+    if (height < minHInImageCoords) {
+      height = minHInImageCoords;
+    }
+
+    // Create a new rectangle with the adjusted dimensions in image coordinates.
+    final clampedRectInImage = Rect.fromLTWH(left, top, width, height);
+
+    // Convert the adjusted image-based rectangle back to viewport coordinates.
+    var clampedRectInViewport = Rect.fromLTWH(
+      readyState.imageRect.left +
+          clampedRectInImage.left /
+              readyState.screenSizeRatio *
+              readyState.scale,
+      readyState.imageRect.top +
+          clampedRectInImage.top /
+              readyState.screenSizeRatio *
+              readyState.scale,
+      clampedRectInImage.width / readyState.screenSizeRatio * readyState.scale,
+      clampedRectInImage.height / readyState.screenSizeRatio * readyState.scale,
+    );
+
+    // Ensure that the new viewport rectangle stays within the bounds of the image.
+    final imageRect = readyState.imageRect;
+    double leftVp = clampedRectInViewport.left;
+    double topVp = clampedRectInViewport.top;
+    double widthVp = clampedRectInViewport.width;
+    double heightVp = clampedRectInViewport.height;
+
+    double rightVp = leftVp + widthVp;
+    double bottomVp = topVp + heightVp;
+
+    // Correct the rectangle if it extends beyond the left or top edges of the image.
+    if (leftVp < imageRect.left) {
+      leftVp = imageRect.left;
+      rightVp = leftVp + widthVp;
+    }
+    if (topVp < imageRect.top) {
+      topVp = imageRect.top;
+      bottomVp = topVp + heightVp;
+    }
+    // Correct the rectangle if it extends beyond the right or bottom edges of the image.
+    if (rightVp > imageRect.right) {
+      rightVp = imageRect.right;
+      leftVp = rightVp - widthVp;
+    }
+    if (bottomVp > imageRect.bottom) {
+      bottomVp = imageRect.bottom;
+      topVp = bottomVp - heightVp;
+    }
+
+    // Create the final clamped rectangle within viewport coordinates.
+    clampedRectInViewport = Rect.fromLTWH(leftVp, topVp, widthVp, heightVp);
+
+    // Create a new state with the updated crop rectangle.
+    final finalState = readyState.copyWith(cropRect: clampedRectInViewport);
+
+    // Update the view state and notify listeners of the change.
+    setState(() {
+      _viewState = finalState;
+    });
+
+    widget.onMoved?.call(finalState.cropRect, finalState.rectToCrop);
   }
 
   /// reset image to be cropped
@@ -759,8 +874,8 @@ ImageDetail _parseFunc(List<dynamic> args) {
   return parser(args[2] as Uint8List, inputFormat: format);
 }
 
-/// top-level function for [compute]
-/// calls [ImageCropper.call] with given arguments
+/// Top-level function for [compute].
+/// Calls [ImageCropper.call] with the given arguments.
 FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
   final cropper = args[0] as ImageCropper;
   final originalImage = args[1];
@@ -768,10 +883,18 @@ FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
   final withCircleShape = args[3] as bool;
   final outputFormat = args[4] as ImageFormat;
 
+  // Avoid rounding errors
+  final adjustedRect = Rect.fromLTRB(
+    rect.left.floorToDouble(),
+    rect.top.floorToDouble(),
+    rect.right.ceilToDouble(),
+    rect.bottom.ceilToDouble(),
+  );
+
   return cropper.call(
     original: originalImage,
-    topLeft: Offset(rect.left, rect.top),
-    bottomRight: Offset(rect.right, rect.bottom),
+    topLeft: Offset(adjustedRect.left, adjustedRect.top),
+    bottomRight: Offset(adjustedRect.right, adjustedRect.bottom),
     shape: withCircleShape ? ImageShape.circle : ImageShape.rectangle,
     outputFormat: outputFormat,
   );
