@@ -50,9 +50,9 @@ Widget build(BuildContext context) {
     controller: _controller,
     onCropped: (result) {
       switch(result) {
-        case CropResult.success(:final croppedImage):
+        case CropSuccess(:final croppedImage):
           // do something with cropped image data 
-        case CropResult.error(:final error):
+        case CropFailure(:final cause):
           // do something with error
       }
     }
@@ -112,9 +112,9 @@ Widget build(BuildContext context) {
     controller: _controller,
     onCropped: (result) {
       switch(result) {
-        case CropResult.success(:final croppedImage):
+        case CropSuccess(:final croppedImage):
           // do something with cropped image data 
-        case CropResult.error(:final error):
+        case CropFailure(:final cause):
           // do something with error
       }
     },
@@ -172,7 +172,7 @@ Widget build(BuildContext context) {
 |argument|type|description|
 |-|-|-|
 |image|Uint8List|Original image data to be cropped. The result of cropping operation can be obtained via `onCropped` callback.|
-|onCropped|void Function(CropResult)|Callback called when cropping operation is completed. The result is exposed as `CropResult` object. `CropResult.success()` contains cropped image data, and `CropResult.error()` contains error object.|
+|onCropped|void Function(CropResult)|Callback called when cropping operation is completed. The result is exposed as subtypes of a `CropResult` sealed class. `CropSuccess` contains cropped image data, and `CropFailure` contains error object and an optional stackTrace.|
 |controller|CropController|Controller for managing cropping operation.|
 |aspectRatio|double?| Initial aspect ratio of crop rect. Set `null` or just omit if you want to crop images with any aspect ratio. `aspectRatio` can be changed dynamically via setter of `CropController.aspectRatio`. (see below)|
 |initialSize|double?| is the initial size of crop rect. `1.0` (or `null`, by default) fits the size of image, which means crop rect extends as much as possible. `0.5` would be the half. This value is also referred when `aspectRatio` changes via `CropController.aspectRatio`.|
