@@ -196,6 +196,11 @@ Widget build(BuildContext context) {
 
 ### for Web
 
+On Flutter web, the default implementation avoids Dart-side pixel decoding for
+initial image parsing and uses browser canvas APIs for cropping. This keeps
+large images more responsive because Flutter web cannot run `compute()` work in
+a separate isolate.
+
 |argument|type|description|
 |-|-|-|
 |scrollZoomSensitivity|double?|Sensitivity for zoom gesture using mouse-wheel. For web applications only.|

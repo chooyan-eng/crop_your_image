@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:crop_your_image/crop_your_image.dart';
-import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/crop_editor_view_state.dart';

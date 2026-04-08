@@ -1,3 +1,7 @@
+## Unreleased
+### Bug Fixes
+* Improve default Flutter web performance by parsing image dimensions from headers and cropping with browser canvas APIs instead of Dart-side pixel decoding.
+
 ## [2.0.0] - 2024.12.13
 ### Breaking Changes
 This major update includes some breaking changes. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/176) for more details.
