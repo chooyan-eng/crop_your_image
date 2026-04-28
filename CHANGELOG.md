@@ -1,3 +1,18 @@
+## [2.1.0] - 2025.11.26
+### New Features
+* Add HEIF/HEIC format support across mobile, web, and macOS by automatically detecting and converting images via [`heic_to_png_jpg`](https://pub.dev/packages/heic_to_png_jpg) (Android/iOS/Web) and [`flutter_image_compress`](https://pub.dev/packages/flutter_image_compress) (macOS).
+* Document the updated HEIF pipeline in `README.md` and `docs/heif_support.md` and clarify supported platforms.
+
+### Breaking Changes
+* `ImageParser` typedef now returns `Future<ImageDetail<T>>` instead of `ImageDetail<T>` to support async image decoding operations required for HEIF conversion.
+
+### Improvements
+* Replace assertion with proper error handling for unsupported image formats. The package now throws `UnsupportedImageFormatException` with a clear error message instead of failing with an assertion error.
+* Add `InvalidInputFormatException` and `UnsupportedImageFormatException` to public API for better error handling.
+
+### Fixes
+* Ensure crop corner dots and rectangles stay inside the visible viewport when dragging, avoiding UI elements slipping off-screen.
+
 ## [2.0.0] - 2024.12.13
 ### Breaking Changes
 This major update includes some breaking changes. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/176) for more details.

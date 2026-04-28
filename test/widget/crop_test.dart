@@ -34,7 +34,7 @@ void main() {
     group('onCropped', () {
       testWidgets(
         'onCropped is called after calling CropController.crop()',
-            (tester) async {
+        (tester) async {
           // to ensure callback is called
           final completer = Completer<void>();
 
@@ -63,7 +63,7 @@ void main() {
 
       testWidgets(
         'onCropped returns an error if cropping fails',
-            (tester) async {
+        (tester) async {
           // to ensure callback is called
           bool hasError = false;
 
@@ -94,7 +94,6 @@ void main() {
         },
       );
     });
-
 
     testWidgets(
       'status is changing with null -> .ready -> .cropping -> .ready',
