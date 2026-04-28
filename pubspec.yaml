@@ -14,8 +14,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  image: ^4.5.4
-  heic_to_png_jpg: ^0.0.5
+  image: ^4.8.0
+  heic_to_png_jpg: ^0.1.1
   flutter_image_compress: ^2.4.0
 
 dev_dependencies:
