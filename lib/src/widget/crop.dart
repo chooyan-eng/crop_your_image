@@ -121,6 +121,10 @@ class Crop extends StatelessWidget {
   /// [false] by default.
   final bool interactive;
 
+  /// If [true], the image is initially scaled to fill the entire crop editor
+  /// viewport, similar to [BoxFit.cover]. [false] by default.
+  final bool scaleToCover;
+
   /// If [fixCropRect] and [interactive] are both [true], cropping rect is fixed and can't be moved.
   /// [false] by default.
   final bool fixCropRect;
@@ -170,6 +174,7 @@ class Crop extends StatelessWidget {
     this.fixCropRect = false,
     this.progressIndicator = const SizedBox.shrink(),
     this.interactive = false,
+    this.scaleToCover = false,
     this.willUpdateScale,
     this.onHistoryChanged,
     FormatDetector? formatDetector,
@@ -209,6 +214,7 @@ class Crop extends StatelessWidget {
             fixCropRect: fixCropRect,
             progressIndicator: progressIndicator,
             interactive: interactive,
+            scaleToCover: scaleToCover,
             willUpdateScale: willUpdateScale,
             onHistoryChanged: onHistoryChanged,
             scrollZoomSensitivity: scrollZoomSensitivity,
@@ -242,6 +248,7 @@ class _CropEditor extends StatefulWidget {
   final bool fixCropRect;
   final Widget progressIndicator;
   final bool interactive;
+  final bool scaleToCover;
   final WillUpdateScale? willUpdateScale;
   final HistoryChangedCallback? onHistoryChanged;
   final ImageCropper imageCropper;
@@ -270,6 +277,7 @@ class _CropEditor extends StatefulWidget {
     required this.fixCropRect,
     required this.progressIndicator,
     required this.interactive,
+    required this.scaleToCover,
     required this.willUpdateScale,
     required this.onHistoryChanged,
     required this.imageCropper,
@@ -482,7 +490,7 @@ class _CropEditorState extends State<_CropEditor> {
         _resizeWithSizeAndRatio(null, widget.aspectRatio);
     }
 
-    if (widget.interactive) {
+    if (widget.scaleToCover) {
       _applyScale(_readyState.scaleToCover);
     }
   }
