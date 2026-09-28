@@ -1,7 +1,5 @@
 ## [2.0.1] - 2026.09.28
-### Improvements
-* Remove dependency on the Material library following [Flutter's Material/Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino). `crop_your_image` now depends only on `flutter/widgets.dart`, so apps that don't use Material (e.g. Cupertino-only apps) no longer pull it in through this package. No behavior changes.
-* Migrate the example app to the standalone `material_ui` package.
+* Remove dependency on the Material library following [Flutter's Material/Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino). 
 
 ## [2.0.0] - 2024.12.13
 ### Breaking Changes
