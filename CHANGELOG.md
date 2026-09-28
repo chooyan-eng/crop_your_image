@@ -1,3 +1,6 @@
+## [2.0.1] - 2026.09.28
+* Remove dependency on the Material library following [Flutter's Material/Cupertino decoupling](https://flutter.dev/blog/decoupling-material-cupertino). 
+
 ## [2.0.0] - 2024.12.13
 ### Breaking Changes
 This major update includes some breaking changes. See [migration guide](https://github.com/chooyan-eng/crop_your_image/issues/176) for more details.
