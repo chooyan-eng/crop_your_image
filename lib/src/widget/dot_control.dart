@@ -1,16 +1,16 @@
 import 'package:crop_your_image/src/widget/constants.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// Default dot widget placed on corners to control cropping area.
 /// This Widget automatically fits the appropriate size.
 class DotControl extends StatelessWidget {
   const DotControl({
     Key? key,
-    this.color = Colors.white,
+    this.color = const Color(0xFFFFFFFF),
     this.padding = 8,
   }) : super(key: key);
 
-  /// [Color] of this widget. [Colors.white] by default.
+  /// [Color] of this widget. White (`Color(0xFFFFFFFF)`) by default.
   final Color color;
 
   /// The size of transparent padding which exists to make dot easier to touch.
@@ -21,7 +21,7 @@ class DotControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.transparent,
+      color: const Color(0x00000000),
       width: dotTotalSize,
       height: dotTotalSize,
       child: Center(

@@ -9,7 +9,7 @@ import 'package:crop_your_image/src/widget/history_state.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
@@ -163,7 +163,7 @@ class Crop extends StatelessWidget {
     this.onImageMoved,
     this.onStatusChanged,
     this.maskColor,
-    this.baseColor = Colors.white,
+    this.baseColor = const Color(0xFFFFFFFF),
     this.radius = 0,
     this.cornerDotBuilder,
     this.clipBehavior = Clip.hardEdge,
@@ -661,7 +661,7 @@ class _CropEditorState extends State<_CropEditor> {
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: widget.maskColor ?? Colors.black.withAlpha(100),
+                    color: widget.maskColor ?? const Color(0x64000000),
                   ),
                 ),
               ),
@@ -678,7 +678,7 @@ class _CropEditorState extends State<_CropEditor> {
                     child: Container(
                       width: _readyState.cropRect.width,
                       height: _readyState.cropRect.height,
-                      color: Colors.transparent,
+                      color: const Color(0x00000000),
                     ),
                   ),
                 ),

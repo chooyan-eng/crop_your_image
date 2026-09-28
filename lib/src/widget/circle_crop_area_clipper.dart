@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class CircleCropAreaClipper extends CustomClipper<Path> {
   final Rect rect;
