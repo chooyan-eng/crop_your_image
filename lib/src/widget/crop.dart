@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
@@ -151,6 +152,12 @@ class Crop extends StatelessWidget {
   /// The rendering quality of the image
   final FilterQuality filterQuality;
 
+  /// Minimum crop width for the cropping area.
+  final double? minCropWidth;
+
+  /// Minimum crop height for the cropping area.
+  final double? minCropHeight;
+
   Crop({
     super.key,
     required this.image,
@@ -178,6 +185,8 @@ class Crop extends StatelessWidget {
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
     this.filterQuality = FilterQuality.medium,
+    this.minCropWidth,
+    this.minCropHeight,
   })  : this.imageParser = imageParser ?? defaultImageParser,
         this.formatDetector = formatDetector ?? defaultFormatDetector;
 
@@ -217,6 +226,8 @@ class Crop extends StatelessWidget {
             imageParser: imageParser,
             overlayBuilder: overlayBuilder,
             filterQuality: filterQuality,
+            minCropWidth: minCropWidth,
+            minCropHeight: minCropHeight,
           ),
         );
       },
@@ -250,6 +261,8 @@ class _CropEditor extends StatefulWidget {
   final double scrollZoomSensitivity;
   final OverlayBuilder? overlayBuilder;
   final FilterQuality filterQuality;
+  final double? minCropWidth;
+  final double? minCropHeight;
 
   const _CropEditor({
     super.key,
@@ -278,6 +291,8 @@ class _CropEditor extends StatefulWidget {
     required this.scrollZoomSensitivity,
     this.overlayBuilder,
     required this.filterQuality,
+    required this.minCropWidth,
+    required this.minCropHeight,
   });
 
   @override
@@ -601,6 +616,8 @@ class _CropEditorState extends State<_CropEditor> {
       return;
     }
 
+    nextScale = _applyMinCropConstraints(nextScale, focalPoint);
+
     setState(() {
       _viewState = _readyState.scaleUpdated(
         nextScale,
@@ -608,6 +625,58 @@ class _CropEditorState extends State<_CropEditor> {
       );
       widget.onImageMoved?.call(_readyState.imageRect);
     });
+  }
+
+  /// Apply minimum crop constraints (width and height)
+  double _applyMinCropConstraints(double nextScale, Offset? focalPoint) {
+    if (!widget.interactive) return nextScale;
+
+    double constrainedScale = nextScale;
+
+    if (widget.minCropWidth != null) {
+      constrainedScale = _applyMinConstraint(
+        constrainedScale,
+        focalPoint,
+        widget.minCropWidth!,
+        isWidth: true,
+      );
+    }
+
+    if (widget.minCropHeight != null) {
+      constrainedScale = _applyMinConstraint(
+        constrainedScale,
+        focalPoint,
+        widget.minCropHeight!,
+        isWidth: false,
+      );
+    }
+
+    return constrainedScale;
+  }
+
+  /// Apply minimum crop constraints (width and height)
+  double _applyMinConstraint(
+    double currentScale,
+    Offset? focalPoint,
+    double minValue, {
+    required bool isWidth,
+  }) {
+    final potentialState =
+        _readyState.scaleUpdated(currentScale, focalPoint: focalPoint);
+    final potentialDimension = isWidth
+        ? potentialState.rectToCrop.width
+        : potentialState.rectToCrop.height;
+
+    if (potentialDimension < minValue) {
+      final currentDimension = isWidth
+          ? _readyState.rectToCrop.width
+          : _readyState.rectToCrop.height;
+      final scaleFactor = currentDimension / minValue;
+      final requiredScale = _readyState.scale * scaleFactor;
+      return max(requiredScale, 1.0);
+    }
+
+    return currentScale;
   }
 
   @override
